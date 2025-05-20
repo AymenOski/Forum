@@ -81,3 +81,77 @@ label {
 #submit_button:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
+
+@media screen and (max-width: 600px) {
+    #signup_container {
+        max-width: 90%;
+        padding: 15px;
+    }
+
+    form {
+        width: 90%;
+    }
+
+    #signup_container h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    #signup_container {
+        max-width: 95%;
+    }
+
+    form {
+        width: 95%
+    }
+
+    #username_input,
+    #email_input,
+    #password_input {
+        height: 40px;
+        margin-bottom: 15px;
+    }
+
+    #signup_container h1 {
+        font-size: 22px;
+        margin-bottom: 16px;
+    }
+
+    label {
+        font-size: 14px;
+    }
+
+    #submit_button {
+        height: 40px;
+        font-size: 15px;
+    }
+}
+
+@media screen and (max-width: 320px) {
+    #signup_container {
+        padding: 10px;
+    }
+
+    form {
+        width: 95%
+    }
+
+    #signup_container h1 {
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+
+    #username_input,
+    #email_input,
+    #password_input {
+        height: 36px;
+        font-size: 14px;
+    }
+
+    #submit_button {
+        height: 36px;
+        font-size: 14px;
+    }
+}
