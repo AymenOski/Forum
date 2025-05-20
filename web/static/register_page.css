@@ -20,7 +20,6 @@ form {
     background-color: rgba(9, 24, 51, 0.25);
     width: 100%;
     max-width: 480px;
-    border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -45,7 +44,6 @@ form {
     margin-bottom: 20px;
     padding-left: 8px;
     border: 2px solid rgba(19, 62, 124, 0.3);
-    border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
 }
@@ -69,13 +67,12 @@ label {
 #submit_button {
     width: 100%;
     height: 45px;
-    border-radius: 6px;
     font-size: 16px;
     border: none;
     color: white;
     font-weight: 600;
     background-color: #711c91;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.1s ease;
 }
 
 #submit_button:hover {
