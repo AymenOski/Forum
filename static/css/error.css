@@ -1,0 +1,109 @@
+body {
+    background: linear-gradient(135deg, #ea00d9, #091833);
+    color: #EDEDED;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.container {
+    padding: 30px;
+    border: 2px solid rgba(19, 62, 124, 0.3);
+    background-color: rgba(9, 24, 51, 0.25);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.container h1 {
+    font-size: 32px;
+    margin-bottom: 24px;
+    text-align: center;
+    color: white;
+}
+
+
+
+/* Responsive Styles */
+@media screen and (max-width: 600px) {
+    .container {
+        max-width: 90%;
+        padding: 25px 20px;
+    }
+    
+    .container h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .container p {
+        font-size: 16px;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .container {
+        max-width: 95%;
+        padding: 20px 15px;
+    }
+    
+    .container h1 {
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+    
+    .container p {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .container p:last-of-type {
+        padding: 8px 15px;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .container {
+        padding: 20px 15px;
+    }
+    
+    .container h1 {
+        margin-bottom: 16px;
+    }
+    
+    .container p {
+        margin-bottom: 10px;
+    }
+}
+
+/* For very small screens */
+@media screen and (max-width: 320px) {
+    .container {
+        padding: 15px 10px;
+    }
+    
+    .container h1 {
+        font-size: 22px;
+        margin-bottom: 14px;
+    }
+    
+    .container p {
+        font-size: 14px;
+    }
+    
+    .container p:last-of-type {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+}
