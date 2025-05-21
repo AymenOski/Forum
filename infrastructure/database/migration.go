@@ -29,7 +29,7 @@ func createUsersTable(db *sql.DB) {
 
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("❌ Failed to create users table:", err)
+		log.Fatal("Failed to create users table:", err)
 	}
 }
 
@@ -46,6 +46,6 @@ func createPostsTable(db *sql.DB) {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("❌ Failed to create posts table:", err)
+		log.Fatal("Failed to create posts table:", err)
 	}
 }
