@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"forum/domain/entity"
 	"time"
+
+	"forum/domain/entity"
 
 	"github.com/google/uuid"
 )
