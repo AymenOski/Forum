@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+    <title>Forum</title>
+</head>
+
+<body>
+    <script src="/static/js/themes.js"></script>
+    <header class="navbar">
+        <div id="in-logo">
+            <div class="logo-box">Forum</div>
+            <a href="/"></a>
+        </div>
+        <nav class="nav-links">
+            <div class="auth-buttons">
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            </div>
+            <div class="themes">
+                <button onclick="setTheme('pink')">🌸</button>
+                <button onclick="setTheme('forest')">🌲</button>
+                <button onclick="setTheme('aqua')">🌊</button>
+                <button onclick="setTheme('dark')">🌙</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="post-toggle-wrapper">
+
+
+            <input type="radio" name="post-toggle" id="show-filter" checked hidden>
+            <input type="radio" name="post-toggle" id="show-create" hidden>
+
+
+            <div class="toggle-buttons">
+                <label for="show-filter">🔍 Filter Posts</label>
+                <label for="show-create">➕ Make a Post</label>
+            </div>
+
+
+            <div class="post-sections">
+                <div class="post-section filter-section">
+                    <form>
+
+                        <select name="category" class="filter-section">
+                            <option value="">All</option>
+                            <option value="tech">Tech</option>
+                            <option value="sports">Gaming</option>
+                            <option value="general">General Discussion</option>
+                        </select>
+                        <label><input type="checkbox"> My Posts</label>
+                        <label><input type="checkbox"> Liked Posts</label>
+                        <button type="submit">Apply</button>
+                    </form>
+                </div>
+
+                <div class="post-section create-section">
+                    <form>
+
+                        <input type="text" placeholder="Title..." required>
+                        <textarea placeholder="Write your post..." required></textarea>
+                        <button type="submit">Post</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
