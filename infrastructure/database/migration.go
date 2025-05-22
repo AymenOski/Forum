@@ -81,9 +81,9 @@ func createCommentsTable(db *sql.DB) {
 
 func createPostCategoriesTables(db *sql.DB) {
 	query := `CREATE TABLE post_categories (
-			PRIMARY KEY (post_id, category_id)
 			post_id TEXT NOT NULL,
 			category_id INTEGER NOT NULL,
+			PRIMARY KEY (post_id, category_id)
 			FOREIGN KEY(post_id) REFERENCES posts(post_id),
 			FOREIGN KEY(category_id) REFERENCES categories(category_id)
 	);`
