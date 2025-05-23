@@ -46,25 +46,77 @@
 
             <div class="post-sections">
                 <div class="post-section filter-section">
-                    <form>
+                    <form method="GET" action="/filter">
+                        <div class="filter-options">
+                            <h4>Filter by Categories:</h4>
+                            <div class="category-tags-filter">
+                                <label class="category-tag">
+                                    <input type="checkbox" name="category-filter[]" value="tech">
+                                    <span>Technology</span>
+                                </label>
+                                <label class="category-tag">
+                                    <input type="checkbox" name="category-filter[]" value="sports">
+                                    <span>Gaming</span>
+                                </label>
+                                <label class="category-tag">
+                                    <input type="checkbox" name="category-filter[]" value="general">
+                                    <span>General Discussion</span>
+                                </label>
+                                <label class="category-tag">
+                                    <input type="checkbox" name="category-filter[]" value="art">
+                                    <span>Art & Creativity</span>
+                                </label>
+                                <label class="category-tag">
+                                    <input type="checkbox" name="category-filter[]" value="health">
+                                    <span>Lifestyle & Health</span>
+                                </label>
+                            </div>
+                        </div>
 
-                        <select name="category" class="filter-section">
-                            <option value="">All</option>
-                            <option value="tech">Tech</option>
-                            <option value="sports">Gaming</option>
-                            <option value="general">General Discussion</option>
-                        </select>
-                        <label><input type="checkbox"> My Posts</label>
-                        <label><input type="checkbox"> Liked Posts</label>
-                        <button type="submit">Apply</button>
+                        <div class="filter-checkboxes">
+                            <label class="filter-option">
+                                <input type="checkbox" name="myPosts">
+                                <span>My Posts</span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" name="likedPosts">
+                                <span>Liked Posts</span>
+                            </label>
+                        </div>
+
+                        <button type="submit">Apply Filters</button>
                     </form>
                 </div>
 
                 <div class="post-section create-section">
-                    <form>
+                    <form method="POST" action="/create-post">
 
-                        <input type="text" placeholder="Title..." required>
-                        <textarea placeholder="Write your post..." required></textarea>
+                        <input type="text" placeholder="Title..." required maxlength="50">
+                        <textarea placeholder="Write your post..." required maxlength="500"></textarea>
+
+                        <h4>Select Categories:</h4>
+                        <div class="category-options">
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="tech">
+                                <span>Technology</span>
+                            </label>
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="gaming">
+                                <span>Gaming</span>
+                            </label>
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="art">
+                                <span>Art & Design</span>
+                            </label>
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="science">
+                                <span>Science</span>
+                            </label>
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="general">
+                                <span>General Discussion</span>
+                            </label>
+                        </div>
                         <button type="submit">Post</button>
                     </form>
                 </div>

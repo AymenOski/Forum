@@ -13,7 +13,7 @@ func main() {
 	if err := server.Froum_server().ListenAndServe(); err != nil {
 		log.Fatalf("500 - Internal Server Error: %v", err)
 	}
-
+	
 	db := database.SetingUpDB()
 	defer db.Close()
 }
