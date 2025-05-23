@@ -8,13 +8,8 @@
   --navbar-border: #6f6f6f;
   --navlink-color: #c0c0c0;
   --navlink-hover: #e8e8e8;
-  
-  /* New variables for responsive design */
-  --content-padding: 20px;
-  --mobile-breakpoint: 768px;
 }
 
-/* Responsive body gradient */
 body {
   background-image: var(--bg-gradient);
   background-attachment: fixed; /* Prevents gradient distortion */
@@ -385,9 +380,6 @@ textarea:focus {
 /* responsivitie */
 
 @media (max-width: 768px) {
-  :root {
-    --content-padding: 15px;
-  }
   
   .navbar {
     flex-direction: column;
@@ -414,7 +406,7 @@ textarea:focus {
   }
   
   .post-toggle-wrapper {
-    padding: 0 var(--content-padding);
+    padding: 0px 15px;
   }
   
   .toggle-buttons {
@@ -447,9 +439,6 @@ textarea:focus {
 }
 
 @media (max-width: 480px) {
-  :root {
-    --content-padding: 10px;
-  }
   
   .posts-title {
     font-size: 1.5rem;
