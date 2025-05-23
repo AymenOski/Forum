@@ -17,7 +17,7 @@ func RunMigrations(db *sql.DB) {
 func createUsersTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
-		user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id TEXT PRIMARY KEY,
 		name TEXT UNIQUE NOT NULL,
 		email TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
@@ -35,7 +35,7 @@ func createUsersTable(db *sql.DB) {
 func createPostsTable(db *sql.DB) {
 	query := `
         CREATE TABLE IF NOT EXISTS posts (
-            user_id INTEGER NOT NULL,
+            user_id TEXT NOT NULL,
             post_id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT NOT NULL,
             likes_count INTEGER DEFAULT 0,
