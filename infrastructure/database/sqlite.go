@@ -27,3 +27,10 @@ func OpenDB(filePath string) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+func CloseDB(db *sql.DB) {
+	err := db.Close()
+	if err != nil {
+		log.Println("Error closing database:", err)
+	}
+}
