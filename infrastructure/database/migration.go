@@ -18,7 +18,7 @@ func createUsersTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
 		user_id TEXT PRIMARY KEY,
-		name TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL,
 		email TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
 		session_token TEXT,

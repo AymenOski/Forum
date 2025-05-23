@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"forum/domain/entity"
 
@@ -30,7 +32,7 @@ func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) 
 		err := rows.Scan(
 			&post.PostID,
 			&post.UserID,
-			&post.UserName,
+			&post.Authorname,
 			&post.Content,
 		)
 		if err != nil {
@@ -41,13 +43,20 @@ func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) 
 	return posts, nil
 }
 
-func (r *sqlitePostRepo) GetByCategory(categoryID ...int) ([]*entity.Post, error) {
-	query := `SELECT p.post_id, p.author_name, p.content
+func (r *sqlitePostRepo) GetByCategory(categoryIDs []uint8) ([]*entity.Post, error) {
+	holders := make([]string, len(categoryIDs))
+	args := make([]uint8, len(categoryIDs))
+	for i, id := range categoryIDs {
+		holders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`SELECT p.post_id, p.author_name, p.content
 			FROM posts p
 			JOIN post_categories pc ON pc.post_id = p.post_id
-			WHERE pc.category_id = ?`
+			WHERE pc.category_id IN (%s)`, strings.Join(holders, ","))
 
-	rows, err := r.db.Query(query, categoryID)
+	rows, err := r.db.Query(query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +67,7 @@ func (r *sqlitePostRepo) GetByCategory(categoryID ...int) ([]*entity.Post, error
 		post := &entity.Post{}
 		err := rows.Scan(
 			&post.PostID,
+			&post.Authorname,
 			&post.Content,
 		)
 		if err != nil {
