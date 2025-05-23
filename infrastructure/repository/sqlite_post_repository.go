@@ -13,7 +13,7 @@ type sqlitePostRepo struct {
 }
 
 func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT p.post_id, p.user_.id, p.author_name ,p.content
+	query := `SELECT p.post_id, p.user_id, u.name as author_name, p.content
 			FROM posts p
 			JOIN users u ON p.user_id = u.user_id
 			WHERE p.user_id = ?`
@@ -28,9 +28,9 @@ func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) 
 	for rows.Next() {
 		post := &entity.Post{}
 		err := rows.Scan(
-			&post.ID,
+			&post.PostID,
 			&post.UserID,
-			&post.AuthorName,
+			&post.UserName,
 			&post.Content,
 		)
 		if err != nil {
@@ -41,7 +41,7 @@ func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) 
 	return posts, nil
 }
 
-func (r *sqlitePostRepo) GetByCategory(categoryID int) ([]*entity.Post, error) {
+func (r *sqlitePostRepo) GetByCategory(categoryID ...int) ([]*entity.Post, error) {
 	query := `SELECT p.post_id, p.author_name, p.content
 			FROM posts p
 			JOIN post_categories pc ON pc.post_id = p.post_id
@@ -51,12 +51,13 @@ func (r *sqlitePostRepo) GetByCategory(categoryID int) ([]*entity.Post, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	var posts []*entity.Post
 	for rows.Next() {
 		post := &entity.Post{}
 		err := rows.Scan(
-			&post.ID,
-			&post.AuthorName,
+			&post.PostID,
 			&post.Content,
 		)
 		if err != nil {
