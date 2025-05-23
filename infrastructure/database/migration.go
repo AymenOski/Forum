@@ -8,10 +8,10 @@ import (
 func RunMigrations(db *sql.DB) {
 	createUsersTable(db)
 	createPostsTable(db)
+	createCategoriesTable(db)
 	createLikesDislikesTable(db)
 	createCommentsTable(db)
 	createPostCategoriesTables(db)
-	createCategoriesTable(db)
 }
 
 func createUsersTable(db *sql.DB) {
@@ -84,7 +84,6 @@ func createPostCategoriesTables(db *sql.DB) {
 	query := `CREATE TABLE post_categories (
 			post_id TEXT NOT NULL,
 			category_id INTEGER NOT NULL,
-			PRIMARY KEY (post_id, category_id)
 			FOREIGN KEY(post_id) REFERENCES posts(post_id),
 			FOREIGN KEY(category_id) REFERENCES categories(category_id)
 	);`
