@@ -8,16 +8,16 @@ import (
 func RunMigrations(db *sql.DB) {
 	createUsersTable(db)
 	createPostsTable(db)
+	createCategoriesTable(db)
 	createLikesDislikesTable(db)
 	createCommentsTable(db)
 	createPostCategoriesTables(db)
-	createCategoriesTable(db)
 }
 
 func createUsersTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
-		user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id TEXT PRIMARY KEY,
 		name TEXT UNIQUE NOT NULL,
 		email TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
@@ -35,8 +35,9 @@ func createUsersTable(db *sql.DB) {
 func createPostsTable(db *sql.DB) {
 	query := `
         CREATE TABLE IF NOT EXISTS posts (
-            user_id INTEGER NOT NULL,
+            user_id TEXT NOT NULL,
             post_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			author_name TEXT NOT NULL,
             content TEXT NOT NULL,
             likes_count INTEGER DEFAULT 0,
 			dislikes_count INTEGER DEFAULT 0,
@@ -83,7 +84,6 @@ func createPostCategoriesTables(db *sql.DB) {
 	query := `CREATE TABLE post_categories (
 			post_id TEXT NOT NULL,
 			category_id INTEGER NOT NULL,
-			PRIMARY KEY (post_id, category_id)
 			FOREIGN KEY(post_id) REFERENCES posts(post_id),
 			FOREIGN KEY(category_id) REFERENCES categories(category_id)
 	);`

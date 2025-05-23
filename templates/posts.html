@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .post {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .author {
+            font-weight: bold;
+            color: #333;
+        }
+        .post-id {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .post-content {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .engagement {
+            display: flex;
+            gap: 15px;
+        }
+        .likes, .dislikes {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .likes {
+            color: #28a745;
+        }
+        .dislikes {
+            color: #dc3545;
+        }
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .category {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        .comments-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .comments-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .comment {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 3px solid #007bff;
+        }
+        .comment-author {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .comment-content {
+            line-height: 1.4;
+        }
+        .no-posts {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Posts</h1>
+    
+    {{if .Posts}}
+        {{range .Posts}}
+        <div class="post">
+            <div class="post-header">
+                <span class="author">{{.UserName}}</span>
+                <span class="post-id">Post #{{.PostID}}</span>
+            </div>
+            
+            <div class="post-content">{{.Content}}</div>
+            
+            <div class="post-meta">
+                <div class="engagement">
+                    <div class="likes">
+                        <span>👍</span>
+                        <span>{{.LikesCount}}</span>
+                    </div>
+                    <div class="dislikes">
+                        <span>👎</span>
+                        <span>{{.DislikeCount}}</span>
+                    </div>
+                </div>
+                
+                {{if .Categories}}
+                <div class="categories">
+                    {{range .Categories}}
+                    <span class="category">{{.Name}}</span>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            
+            {{if .Comments}}
+            <div class="comments-section">
+                <div class="comments-header">
+                    Comments ({{len .Comments}})
+                </div>
+                {{range .Comments}}
+                <div class="comment">
+                    <div class="comment-author">{{.UserName}}</div>
+                    <div class="comment-content">{{.Content}}</div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    {{else}}
+        <div class="no-posts">No posts available</div>
+    {{end}}
+</body>
+</html>
