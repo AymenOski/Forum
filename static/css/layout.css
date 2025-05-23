@@ -1,15 +1,27 @@
 :root {
-  --bg-gradient: linear-gradient(25deg, #2f2f2f, rgb(116, 132, 139), #4f4f4f);
-  --text-color: #f0f0f0; /* every text that goes with the linear gradient back-ground */
-
+  --bg-gradient: linear-gradient(25deg, #2f2f2f 0%, rgb(116, 132, 139) 50%, #4f4f4f 100%);
+  --text-color: #f0f0f0;
   --logo-bg: #3f3f3f;
   --logo-color: #e0e0e0;
   --white-background-problem: #333333;
   --navbar-bg: rgba(50, 50, 50, 0.7);
   --navbar-border: #6f6f6f;
-
-  --navlink-color: #c0c0c0; /* theme color to be used if needed ,whithin the published posts section for example*/
+  --navlink-color: #c0c0c0;
   --navlink-hover: #e8e8e8;
+  
+  /* New variables for responsive design */
+  --content-padding: 20px;
+  --mobile-breakpoint: 768px;
+}
+
+/* Responsive body gradient */
+body {
+  background-image: var(--bg-gradient);
+  background-attachment: fixed; /* Prevents gradient distortion */
+  background-size: cover;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
 * {
@@ -17,13 +29,6 @@
   box-sizing: border-box;
 }
 
-body {
-  background-image: var(--bg-gradient);
-  /* color: var(--text-color); */
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
 
 #in-logo {
   display: flex;
@@ -375,4 +380,93 @@ textarea:focus {
   gap: 15px;
   color: var(--navlink-color);
   font-size: 0.9rem;
+}
+
+/* responsivitie */
+
+@media (max-width: 768px) {
+  :root {
+    --content-padding: 15px;
+  }
+  
+  .navbar {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .nav-links {
+    width: 100%;
+    margin-top: 15px;
+  }
+  
+  .auth-buttons {
+    justify-content: space-around;
+  }
+  
+  .themes {
+    justify-content: center;
+    margin-top: 15px !important;
+  }
+  
+  .logo-box {
+    font-size: 24px;
+    padding: 10px 25px;
+  }
+  
+  .post-toggle-wrapper {
+    padding: 0 var(--content-padding);
+  }
+  
+  .toggle-buttons {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .category-tags-filter, 
+  .category-options {
+    justify-content: center;
+  }
+  
+  .forum-post,
+  .post-section form {
+    padding: 15px;
+  }
+  
+  .post-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .post-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --content-padding: 10px;
+  }
+  
+  .posts-title {
+    font-size: 1.5rem;
+  }
+  
+  input[type="text"],
+  textarea {
+    padding: 8px 12px;
+  }
+  
+  button[type="submit"] {
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  .category-tag span {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
 }
