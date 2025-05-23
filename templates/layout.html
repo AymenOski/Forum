@@ -11,6 +11,9 @@
 
 <body>
     <script src="/static/js/themes.js"></script>
+
+    <!-- NavBar section -->
+
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -31,6 +34,9 @@
     </header>
 
     <main>
+
+        <!-- Feltering and Posting section -->
+        
         <div class="post-toggle-wrapper">
 
 
@@ -94,7 +100,7 @@
                         <input type="text" placeholder="Title..." required maxlength="50">
                         <textarea placeholder="Write your post..." required maxlength="500"></textarea>
 
-                        <h4>Select Categories:</h4>
+                        <h4 style="color: #f0f0f0;">Select Categories:</h4>
                         <div class="category-options">
                             <label class="category-tag">
                                 <input type="checkbox" name="categories[]" value="tech">
@@ -122,6 +128,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- Published Posts Section -->
+
+        <section class="posts-container">
+            <h2 class="posts-title">Published Posts</h2>
+
+            {{if .Posts}}
+            {{range .Posts}}
+            <article class="forum-post">
+                <h3 class="post-title">{{.Title}}</h3>
+                <div class="post-author">
+                    <span class="post-author">Posted by {{.Author}}</span>
+                </div>
+                <div class="post-content">{{.Content}}</div>
+
+                <div class="post-footer">
+                    <div class="post-categories">
+                        {{range .Categories}}
+                        <span class="category-badge">{{.}}</span>
+                        {{end}}
+                    </div>
+                    <div class="post-stats">
+                        <span class="likes">👍 {{.Likes}}</span> 
+                        <span class="dislikes">👎 {{.Dislikes}}</span>
+                        <span class="comments">💬 {{.CommentCount}} comments</span>
+                    </div>
+                </div>
+            </article>
+            {{end}}
+        </section>
     </main>
 </body>
 

@@ -1,14 +1,14 @@
 :root {
-  --bg-gradient: linear-gradient(25deg, #2f2f2f,rgb(116, 132, 139), #4f4f4f);
-  --text-color: #f0f0f0;
+  --bg-gradient: linear-gradient(25deg, #2f2f2f, rgb(116, 132, 139), #4f4f4f);
+  --text-color: #f0f0f0; /* every text that goes with the linear gradient back-ground */
 
   --logo-bg: #3f3f3f;
   --logo-color: #e0e0e0;
-  --white-background-problem:#333333;
+  --white-background-problem: #333333;
   --navbar-bg: rgba(50, 50, 50, 0.7);
   --navbar-border: #6f6f6f;
 
-  --navlink-color: #c0c0c0;
+  --navlink-color: #c0c0c0; /* theme color to be used if needed ,whithin the published posts section for example*/
   --navlink-hover: #e8e8e8;
 }
 
@@ -19,7 +19,7 @@
 
 body {
   background-image: var(--bg-gradient);
-  color: var(--text-color);
+  /* color: var(--text-color); */
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -72,9 +72,9 @@ body {
 
 .nav-links a:hover {
   color: var(--navlink-hover);
-} 
+}
 
-.auth-buttons{
+.auth-buttons {
   display: flex;
   gap: 20px;
   justify-content: center;
@@ -158,37 +158,33 @@ button[type="submit"]:hover {
 
 .post-sections {
   position: relative;
-  max-height: 20px;
-  /* overflow: hidden; */
 }
 
 .post-section {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
   opacity: 0;
+  max-height: 0;
+  overflow: hidden;
   transform: translateY(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.7s ease-in-out,
+    transform 0.7s ease-in-out,
+    max-height 0.7s ease-in-out;
   pointer-events: none;
 }
 
-#show-filter:checked ~ .toggle-buttons label[for="show-filter"],
-#show-create:checked ~ .toggle-buttons label[for="show-create"] {
+#show-filter:checked ~ .post-sections .filter-section,
+#show-create:checked ~ .post-sections .create-section {
+  opacity: 1;
+  max-height: 1000px;
+  transform: translateY(0px);
+  pointer-events: auto;
+}
+
+#show-filter:checked~.toggle-buttons label[for="show-filter"],
+#show-create:checked~.toggle-buttons label[for="show-create"] {
   background-color: #e94560;
 }
 
-#show-filter:checked ~ .post-sections .filter-section {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-#show-create:checked ~ .post-sections .create-section {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
 
 .post-section form {
   display: flex;
@@ -197,7 +193,9 @@ button[type="submit"]:hover {
   background-color: #36364b;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 
+  0 3px 6px rgba(0, 0, 0, 0.16),
+  0 3px 12px rgba(0, 0, 0, 0.23);
 }
 
 .category-options {
@@ -212,9 +210,18 @@ button[type="submit"]:hover {
 }
 
 
+.form h4 {
+  font-size: 1rem;
+  color: #f0f0f0;
+}
+
 .filter-options h4 {
   font-size: 1rem;
-  color: var(--text-color);
+  color: #f0f0f0;
+}
+
+.filter-checkboxes span {
+  color :#f0f0f0;
 }
 
 .post-section.create-section h4 {
@@ -251,7 +258,7 @@ button[type="submit"]:hover {
   border: 2px solid transparent;
 }
 
-.category-tag input[type="checkbox"]:checked + span {
+.category-tag input[type="checkbox"]:checked+span {
   background-color: #74992e;
   border-color: #5c7a25;
   transform: scale(1.05);
@@ -286,7 +293,7 @@ textarea {
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
-  resize: none; 
+  resize: none;
   box-sizing: border-box;
   transition: border-color 0.3s ease;
 }
@@ -296,4 +303,76 @@ textarea:focus {
   border-color: #e94560;
   outline: none;
   background-color: #fff;
+}
+
+/* users posts section */
+.posts-container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.posts-title {
+  color: var(--text-color);
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.post-title {
+  margin: 0 0 5px 0;
+  color: var(--navlink-hover); /* nice touch to make the titles goes along with its theme */
+  font-size: 1.3rem;
+}
+
+.forum-post {
+  background-color: #36364b;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 
+  0 3px 6px rgba(0, 0, 0, 0.16),
+  0 3px 12px rgba(0, 0, 0, 0.23);
+}
+
+
+.post-author {
+  color: var(--navlink-color);
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.post-content {
+  margin: 15px 0;
+  line-height: 1.6;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--navbar-border);
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
+.post-categories {
+  display: flex;
+  gap: 10px;
+}
+
+.category-badge {
+  background-color: #202a44;
+  color: #eee;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+}
+
+.post-stats {
+  display: flex;
+  gap: 15px;
+  color: var(--navlink-color);
+  font-size: 0.9rem;
 }
