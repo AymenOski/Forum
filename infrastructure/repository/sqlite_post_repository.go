@@ -41,8 +41,28 @@ func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) 
 	return posts, nil
 }
 
-func (r *sqlitePostRepo) GetByCategory(categoryID int) ([]*entity.Post, error){
+func (r *sqlitePostRepo) GetByCategory(categoryID int) ([]*entity.Post, error) {
 	query := `SELECT p.post_id, p.author_name, p.content
 			FROM posts p
-			JOIN categories ON p.`
+			JOIN post_categories pc ON pc.post_id = p.post_id
+			WHERE pc.category_id = ?`
+
+	rows, err := r.db.Query(query, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	var posts []*entity.Post
+	for rows.Next() {
+		post := &entity.Post{}
+		err := rows.Scan(
+			&post.ID,
+			&post.AuthorName,
+			&post.Content,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
 }
