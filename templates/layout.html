@@ -10,10 +10,14 @@
 </head>
 
 <body>
-    <script src="/static/js/themes.js"></script>
 
     <!-- NavBar section -->
-
+    <!-- Hidden radio inputs for each theme -->
+    <input type="radio" id="theme-pink" name="theme" class="theme-radio">
+    <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
+    <input type="radio" id="theme-forest" name="theme" class="theme-radio">
+    <input type="radio" id="theme-dark" name="theme" class="theme-radio" checked>
+    
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -25,10 +29,13 @@
                 <a href="/register">Register</a>
             </div>
             <div class="themes">
-                <button onclick="setTheme('pink')">🌸</button>
-                <button onclick="setTheme('forest')">🌲</button>
-                <button onclick="setTheme('aqua')">🌊</button>
-                <button onclick="setTheme('dark')">🌙</button>
+
+                <div class="theme-buttons">
+                    <label for="theme-pink">🌸</label>
+                    <label for="theme-aqua">🌊</label>
+                    <label for="theme-forest">🌲</label>
+                    <label for="theme-dark">🌙</label>
+                </div>
             </div>
         </nav>
     </header>
@@ -36,7 +43,7 @@
     <main>
 
         <!-- Feltering and Posting section -->
-        
+
         <div class="post-toggle-wrapper">
 
 
@@ -150,7 +157,7 @@
                         {{end}}
                     </div>
                     <div class="post-stats">
-                        <span class="likes">👍 {{.Likes}}</span> 
+                        <span class="likes">👍 {{.Likes}}</span>
                         <span class="dislikes">👎 {{.Dislikes}}</span>
                         <span class="comments">💬 {{.CommentCount}} comments</span>
                     </div>

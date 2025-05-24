@@ -10,20 +10,71 @@
   --navlink-hover: #e8e8e8;
 }
 
+/* Theme-specific variable overrides */
+#theme-pink:checked ~ * {
+  --bg-gradient: linear-gradient(25deg, #ee628e 0%, #fde0e0 50%, #ec6590 100%);
+  --text-color: #333333;
+  --logo-bg: #e77a9c;
+  --logo-color: #091833;
+  --navbar-bg: rgba(236, 101, 144, 0.3);
+  --navbar-border: #d4849d;
+  --navlink-color: #000000;
+  --navlink-hover: #e77a9c;
+}
+
+#theme-aqua:checked ~ * {
+  --bg-gradient: linear-gradient(25deg, rgb(63, 99, 156) 0%, #c2e9fb 50%, rgb(31, 100, 211) 100%);
+  --text-color: #0f1b2a;
+  --logo-bg: #4facfe;
+  --logo-color: #ffffff;
+  --navbar-bg: rgba(79, 172, 254, 0.4);
+  --navbar-border: #4facfe;
+  --navlink-color: #0f1b2a;
+  --navlink-hover: #0077b6;
+}
+
+#theme-forest:checked ~ * {
+  --bg-gradient: linear-gradient(25deg, #556270, #4ECDC4, #556270);
+  --text-color: #f1f8e9;
+  --logo-bg: #2e7d32;
+  --logo-color: #ffffff;
+  --navbar-bg: rgba(46, 125, 50, 0.4);
+  --navbar-border: #4d9e51;
+  --navlink-color: #f1f8e9;
+  --navlink-hover: #8ba869;
+}
+
+#theme-dark:checked ~ * {
+  --bg-gradient: linear-gradient(25deg, #2f2f2f 0%, rgb(116, 132, 139) 50%, #4f4f4f 100%);
+  --text-color: #f0f0f0;
+  --logo-bg: #3f3f3f;
+  --logo-color: #e0e0e0;
+  --navbar-bg: rgba(50, 50, 50, 0.7);
+  --navbar-border: #5e4d4d;
+  --navlink-color: #c0c0c0;
+  --navlink-hover: #e8e8e8;
+}
+
 body {
-  background-image: var(--bg-gradient);
-  background-attachment: fixed; /* Prevents gradient distortion */
-  background-size: cover;
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  background-color: transparent; /* Removed background-image to let <main> dominate */
+}
+
+main {
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh; /* Ensures full viewport height */
+  height: auto; /*Allows growth with content*/
+  margin-top: -7px;
 }
 
 * {
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
 }
-
 
 #in-logo {
   display: flex;
@@ -37,8 +88,9 @@ body {
   align-items: center;
   padding: 1rem 2rem;
   margin-bottom: 10px;
-  background-color: var(--navbar-bg);
+  background-color: var(--navbar-bg); /* Ensured navbar uses theme background */
   border-bottom: 3px solid var(--navbar-border);
+  background-image: none; /* Prevent override to white */
 }
 
 .logo-box {
@@ -54,8 +106,6 @@ body {
     0 0 8px rgba(255, 255, 255, 0.6),
     0 0 20px rgba(255, 255, 255, 0.7),
     0 4px 10px rgba(255, 255, 255, 0.2);
-
-
   transition: transform 0.3s ease;
 }
 
@@ -95,7 +145,6 @@ body {
 
 .themes button {
   background-color: transparent;
-  /*transparent means it will take the background color of the parent element so the white background of the buttons will be deleated*/
   border: none;
   font-size: 18px;
   cursor: pointer;
@@ -107,6 +156,44 @@ body {
   transform: scale(1.2);
   color: #e77a9c;
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.theme-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.theme-buttons label {
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 5px;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.theme-buttons label:hover {
+  transform: scale(1.2);
+}
+
+/* Navbar icon "circle" effect */
+#theme-pink:checked ~ .navbar .theme-buttons label[for="theme-pink"],
+#theme-aqua:checked ~ .navbar .theme-buttons label[for="theme-aqua"],
+#theme-forest:checked ~ .navbar .theme-buttons label[for="theme-forest"],
+#theme-dark:checked ~ .navbar .theme-buttons label[for="theme-dark"] {
+  outline: 2px solid var(--navlink-hover);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#theme-pink:checked ~ .navbar {
+  margin-bottom:10px;
+  border-bottom: 3.5px solid var(--navbar-border);
 }
 
 input[type="checkbox"] {
@@ -139,7 +226,7 @@ button[type="submit"]:hover {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .toggle-buttons label {
@@ -180,11 +267,10 @@ button[type="submit"]:hover {
   pointer-events: auto;
 }
 
-#show-filter:checked~.toggle-buttons label[for="show-filter"],
-#show-create:checked~.toggle-buttons label[for="show-create"] {
+#show-filter:checked ~ .toggle-buttons label[for="show-filter"],
+#show-create:checked ~ .toggle-buttons label[for="show-create"] {
   background-color: #e94560;
 }
-
 
 .post-section form {
   display: flex;
@@ -194,8 +280,8 @@ button[type="submit"]:hover {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 
-  0 3px 6px rgba(0, 0, 0, 0.16),
-  0 3px 12px rgba(0, 0, 0, 0.23);
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 12px rgba(0, 0, 0, 0.23);
 }
 
 .category-options {
@@ -204,11 +290,6 @@ button[type="submit"]:hover {
   justify-content: center;
   gap: 10px;
 }
-
-.category-tag:hover span {
-  background-color: #31406e;
-}
-
 
 .form h4 {
   font-size: 1rem;
@@ -221,7 +302,7 @@ button[type="submit"]:hover {
 }
 
 .filter-checkboxes span {
-  color :#f0f0f0;
+  color: #f0f0f0;
 }
 
 .post-section.create-section h4 {
@@ -258,7 +339,7 @@ button[type="submit"]:hover {
   border: 2px solid transparent;
 }
 
-.category-tag input[type="checkbox"]:checked+span {
+.category-tag input[type="checkbox"]:checked + span {
   background-color: #74992e;
   border-color: #5c7a25;
   transform: scale(1.05);
@@ -305,11 +386,10 @@ textarea:focus {
   background-color: #fff;
 }
 
-/* users posts section */
 .posts-container {
   max-width: 1000px;
   margin: 30px auto;
-  padding: 0 20px;
+  padding: 0 20px 40px; /* Added padding-bottom to ensure last post isn't cut off */
 }
 
 .posts-title {
@@ -317,13 +397,14 @@ textarea:focus {
   margin-bottom: 20px;
   font-size: 1.8rem;
   text-align: center;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .post-title {
   margin: 0 0 5px 0;
-  color: var(--navlink-hover); /* nice touch to make the titles goes along with its theme */
+  color: var(--navlink-hover); /* Updated to use theme-specific hover color */
   font-size: 1.3rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Added shadow for better contrast */
 }
 
 .forum-post {
@@ -332,20 +413,21 @@ textarea:focus {
   padding: 20px;
   margin-bottom: 25px;
   box-shadow: 
-  0 3px 6px rgba(0, 0, 0, 0.16),
-  0 3px 12px rgba(0, 0, 0, 0.23);
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 12px rgba(0, 0, 0, 0.23);
 }
 
-
 .post-author {
-  color: var(--navlink-color);
+  color: var(--navlink-color); /* Updated to use theme-specific color */
   font-size: 0.9rem;
   margin-bottom: 15px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Added shadow for readability */
 }
 
 .post-content {
   margin: 15px 0;
   line-height: 1.6;
+  color: #ffffff; /* Light text for better contrast on gray background */
 }
 
 .post-footer {
@@ -355,11 +437,13 @@ textarea:focus {
   border-top: 1px solid var(--navbar-border);
   padding-top: 15px;
   margin-top: 15px;
+  gap: 10px; /* Added to ensure spacing between children when stacked */
 }
 
 .post-categories {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap; /* Added to prevent overflow on small screens */
 }
 
 .category-badge {
@@ -368,19 +452,25 @@ textarea:focus {
   padding: 5px 12px;
   border-radius: 15px;
   font-size: 0.8rem;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Added shadow for readability */
 }
 
 .post-stats {
   display: flex;
   gap: 15px;
-  color: var(--navlink-color);
+  color: var(--navlink-color); /* Updated to use theme-specific color */
   font-size: 0.9rem;
+  flex-wrap: wrap; /* Added to prevent overflow on small screens */
 }
 
-/* responsivitie */
+.post-stats span {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Ensures icons and text are spaced nicely */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Added shadow for readability */
+}
 
 @media (max-width: 768px) {
-  
   .navbar {
     flex-direction: column;
     padding: 1rem;
@@ -428,20 +518,38 @@ textarea:focus {
   
   .post-footer {
     flex-direction: column;
-    gap: 10px;
+    gap: 15px; /* Increased gap for better spacing when stacked */
     align-items: flex-start;
   }
   
   .post-stats {
     width: 100%;
     justify-content: space-between;
+    gap: 10px; /* Adjusted for better spacing */
   }
 }
 
 @media (max-width: 480px) {
-  
   .posts-title {
     font-size: 1.5rem;
+  }
+  
+  .posts-container {
+    padding: 0 15px 30px; /* Adjusted padding for smaller screens */
+  }
+  
+  .forum-post {
+    padding: 15px;
+    margin-bottom: 20px; /* Slightly reduced to fit more content */
+  }
+  
+  .post-footer {
+    gap: 12px; /* Adjusted for smaller screens */
+  }
+  
+  .post-stats {
+    gap: 8px; /* Adjusted for smaller screens */
+    font-size: 0.85rem; /* Slightly smaller text for better fit */
   }
   
   input[type="text"],
