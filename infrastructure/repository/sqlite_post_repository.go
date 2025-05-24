@@ -6,12 +6,31 @@ import (
 	"strings"
 
 	"forum/domain/entity"
+	"forum/domain/repository"
 
 	"github.com/google/uuid"
 )
 
 type sqlitePostRepo struct {
 	db *sql.DB
+}
+
+func NewSqlitePostRepository(db *sql.DB) repository.PostRepository {
+	return &sqlitePostRepo{
+		db: db,
+	}
+}
+
+func (r *sqlitePostRepo) Create(post *entity.Post) error {
+	return nil
+}
+
+func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
+	return nil, nil
+}
+
+func (r *sqlitePostRepo) GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error) {
+return nil, nil
 }
 
 func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) {

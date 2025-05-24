@@ -1,7 +1,9 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
+	"forum/infrastructure/repository"
 	"html/template"
 	"log"
 	"net/http"
@@ -28,8 +30,9 @@ func Froum_server() *http.Server {
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 	mux.HandleFunc("/signup", registerHandler)
+	mux.HandleFunc("/layout", homeHandler)
 	mux.HandleFunc("/", loginHandler)
-	
+
 	serve := &http.Server{
 		Addr:    ":8080",
 		Handler: logMiddleware(notFoundMiddleware(mux)),
@@ -48,11 +51,11 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowedPaths := map[string]bool{
 			"/":                        true,
-			"/signup":   true,  // Add this line
+			"/signup":                  true, // Add this line
 			"/artist/":                 true,
 			"/static/css/login.css":    true,
-			"/static/css/register.css":   true,
-			"/static/css/posts.css": true,
+			"/static/css/register.css": true,
+			"/static/css/posts.css":    true,
 		}
 		if !allowedPaths[r.URL.Path] {
 			// notFoundHandler(w)
@@ -62,16 +65,22 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func homeHandler(wr http.ResponseWriter, r *http.Request) {
+	postRepo := repository.NewSqlitePostRepository(&sql.DB{})
+	posts, err := postRepo.GetAll()
+	if err!= nil {
+		log.Fatal(err)
+	}
+	renderTemplate(wr, posts, "layout.html")
+}
+
 func loginHandler(wr http.ResponseWriter, r *http.Request) {
-	renderTemplate(wr,"", "login.html")
-	fmt.Fprintf(wr, "this is test")
+	renderTemplate(wr, "", "login.html")
 }
 
 func registerHandler(wr http.ResponseWriter, r *http.Request) {
-	renderTemplate(wr,"", "register.html")
-	fmt.Fprintf(wr, "this is test")
+	renderTemplate(wr, "", "register.html")
 }
-
 
 func renderTemplate(wr http.ResponseWriter, data interface{}, template string) {
 	if isFileAvailable(template) {
