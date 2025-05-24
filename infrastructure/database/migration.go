@@ -50,7 +50,7 @@ func createPostsTable(db *sql.DB) {
 }
 
 func createLikesDislikesTable(db *sql.DB) {
-	query := `CREATE TABLE likes_dislikes (
+	query := `CREATE TABLE IF NOT EXISTS likes_dislikes (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			post_id INTEGER NOT NULL,
 			user_id TEXT NOT NULL,
@@ -65,7 +65,7 @@ func createLikesDislikesTable(db *sql.DB) {
 }
 
 func createCommentsTable(db *sql.DB) {
-	query := `CREATE TABLE comments (
+	query := `CREATE TABLE IF NOT EXISTS comments (
 			comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			post_id TEXT NOT NULL,
 			user_id TEXT NOT NULL,
@@ -80,7 +80,7 @@ func createCommentsTable(db *sql.DB) {
 }
 
 func createPostCategoriesTables(db *sql.DB) {
-	query := `CREATE TABLE post_categories (
+	query := `CREATE TABLE IF NOT EXISTS post_categories (
 			post_id TEXT NOT NULL,
 			category_id INTEGER NOT NULL,
 			FOREIGN KEY(post_id) REFERENCES posts(post_id),
@@ -93,7 +93,7 @@ func createPostCategoriesTables(db *sql.DB) {
 }
 
 func createCategoriesTable(db *sql.DB) {
-	query := `CREATE TABLE categories (
+	query := `CREATE TABLE IF NOT EXISTS categories (
 			category_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL
 	);`
