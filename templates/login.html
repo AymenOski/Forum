@@ -1,23 +1,26 @@
 <html>
-<header>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+
     </link>
-</header>
+</head>
 
 <body>
     <div class="login_container">
         <h1>Login</h1>
         <form action="/login" method="POST">
-            <label for="username_input">Username / Email</label><br>
-            <input type="text" id="username_input"><br>
-            <label for="password_input">Password</label><br>
-            <input type="password" id="password_input"><br>
+            <label for="username_input">Username / Email</label>
+                <input type="text" id="username_input" placeholder="Enter your username or email"><br>
+            
+            <label for="password_input">Password</label>
+                <input type="password" id="password_input" placeholder="Enter your password"><br>
             <div class="new_account_div">
                 <b>don't have an account?</b>
                 <a href="/signup">create here!</a>
             </div>
-            <input type="submit" class="login_button">
+        <input type="submit" class="login_button" value="Sign In">
         </form>
     </div>
 </body>

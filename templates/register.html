@@ -1,21 +1,25 @@
 <html>
-<header>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
     </link>
-</header>
+</head>
 
 <body>
     <div id="signup_container">
         <h1>Sign up</h1>
         <form action="/signup" method="POST">
-            <label id="un">username</label><br>
-            <input type="text" id="username_input"><br>
-            <label id="email">email</label><br>
-            <input type="email" id="email_input"><br>
-            <label id="password">password</label><br>
-            <input type="password" id="password_input"><br>
-            <input type="submit" id="submit_button">
+            <label for="username_input">username</label>
+                <input type="text" id="username_input" name="username" required placeholder="Enter your username"><br>
+            
+            <label for="email_input">email</label>
+                <input type="email" id="email_input" name="email" required placeholder="Enter your email address"><br>
+                
+            <label for="password_input">password</label>
+                <input type="password" id="password_input" name="password" required placeholder="Create a secure password"><br><br>
+            
+            <input type="submit" id="submit_button" value="Sign Up">
         </form>
     </div>
 </body>
