@@ -7,8 +7,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func SetingUpDB() *sql.DB {
-	db, err := OpenDB("./forum.db")
+func SetingUpDB(datapath string) *sql.DB {
+	db, err := OpenDB(datapath)
 	if err != nil {
 		log.Fatal("Error opening database:", err)
 	}
