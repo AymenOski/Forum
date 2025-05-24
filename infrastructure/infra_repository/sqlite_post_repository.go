@@ -1,4 +1,4 @@
-package repository
+package infra_repository
 
 import (
 	"database/sql"
@@ -6,9 +6,19 @@ import (
 	"strings"
 
 	"forum/domain/entity"
+	"forum/domain/repository"
 
 	"github.com/google/uuid"
 )
+
+// Ensure sqlitePostRepo implements PostRepository interface
+var _ repository.PostRepository = (*sqlitePostRepo)(nil)
+
+func NewSQLitePostRepository(db *sql.DB) repository.PostRepository {
+	return &sqlitePostRepo{
+		db: db,
+	}
+}
 
 type sqlitePostRepo struct {
 	db *sql.DB
@@ -76,4 +86,41 @@ func (r *sqlitePostRepo) GetByCategory(categoryIDs []uint8) ([]*entity.Post, err
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
+	query := `SELECT * FROM posts`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var posts []*entity.Post
+	for rows.Next() {
+		post := &entity.Post{}
+		err := rows.Scan(
+			&post.PostID,
+			&post.Authorname,
+			&post.Content,
+			&post.LikesCount,
+			&post.DislikesCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (r *sqlitePostRepo) Create(post *entity.Post) error {
+	return nil
+}
+
+func (r *sqlitePostRepo) GetByID(postID int) (*entity.Post, error) {
+	return nil, nil
+}
+
+func (r *sqlitePostRepo) GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error) {
+	return nil, nil
 }

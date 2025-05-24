@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"forum/config"
-	"forum/infrastructure/database"
+		"forum/infrastructure/database"
 	"forum/infrastructure/server"
 )
 

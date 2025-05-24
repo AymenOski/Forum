@@ -1,11 +1,14 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+
+	"forum/infrastructure/infra_repository"
 )
 
 var tmpl *template.Template
@@ -28,8 +31,9 @@ func Froum_server() *http.Server {
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 	mux.HandleFunc("/signup", registerHandler)
+	mux.HandleFunc("/layout", layoutHandler)
 	mux.HandleFunc("/", loginHandler)
-	
+
 	serve := &http.Server{
 		Addr:    ":8080",
 		Handler: logMiddleware(notFoundMiddleware(mux)),
@@ -48,11 +52,12 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowedPaths := map[string]bool{
 			"/":                        true,
-			"/signup":   true,  // Add this line
+			"/signup":                  true, // Add this line
+			"/layout":                  true,
 			"/artist/":                 true,
 			"/static/css/login.css":    true,
-			"/static/css/register.css":   true,
-			"/static/css/posts.css": true,
+			"/static/css/register.css": true,
+			"/static/css/layout.css":   true,
 		}
 		if !allowedPaths[r.URL.Path] {
 			// notFoundHandler(w)
@@ -63,15 +68,25 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 }
 
 func loginHandler(wr http.ResponseWriter, r *http.Request) {
-	renderTemplate(wr,"", "login.html")
+	renderTemplate(wr, "", "login.html")
 	fmt.Fprintf(wr, "this is test")
+}
+
+func layoutHandler(wr http.ResponseWriter, r *http.Request) {
+	postRepo := infra_repository.NewSQLitePostRepository(&sql.DB{})
+	posts, err := postRepo.GetAll()
+	if err != nil {
+		// log.Fatal("posts error")
+		//	return
+	}
+	renderTemplate(wr, posts, "layout.html")
+	// fmt.Fprintf(wr, "this is test")
 }
 
 func registerHandler(wr http.ResponseWriter, r *http.Request) {
-	renderTemplate(wr,"", "register.html")
+	renderTemplate(wr, "", "register.html")
 	fmt.Fprintf(wr, "this is test")
 }
-
 
 func renderTemplate(wr http.ResponseWriter, data interface{}, template string) {
 	if isFileAvailable(template) {
