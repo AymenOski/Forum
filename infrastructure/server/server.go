@@ -3,17 +3,16 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	infra_repository "forum/infrastructure/repository"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-
-	"forum/infrastructure/infra_repository"
 )
 
 var (
 	tmpl *template.Template
-	Gdb *sql.DB
+	Gdb  *sql.DB
 )
 
 type Err struct {
@@ -30,7 +29,7 @@ func init() {
 }
 
 func Froum_server(db *sql.DB) *http.Server {
-	Gdb=db
+	Gdb = db
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
@@ -77,15 +76,15 @@ func loginHandler(wr http.ResponseWriter, r *http.Request) {
 }
 
 func layoutHandler(wr http.ResponseWriter, r *http.Request) {
-    postRepo := infra_repository.NewSQLitePostRepository(Gdb)
-    posts, err := postRepo.GetAll()
-    if err != nil {
-        // Handle this error properly
-        http.Error(wr, "Failed to fetch posts", http.StatusInternalServerError)
-        log.Printf("Error fetching posts: %v", err)
-        return
-    }
-    renderTemplate(wr, posts, "test.html")
+	postRepo := infra_repository.NewSQLitePostRepository(Gdb)
+	posts, err := postRepo.GetAll()
+	if err != nil {
+		// Handle this error properly
+		http.Error(wr, "Failed to fetch posts", http.StatusInternalServerError)
+		log.Printf("Error fetching posts: %v", err)
+		return
+	}
+	renderTemplate(wr, posts, "layout.html")
 }
 
 func registerHandler(wr http.ResponseWriter, r *http.Request) {
