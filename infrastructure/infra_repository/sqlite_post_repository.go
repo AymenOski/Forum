@@ -89,12 +89,13 @@ func (r *sqlitePostRepo) GetByCategory(categoryIDs []uint8) ([]*entity.Post, err
 }
 
 func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
-	query := `SELECT * FROM posts`
+	query := `SELECT post_id, user_id, content, likes_count, dislikes_count FROM posts`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	var posts []*entity.Post
 	for rows.Next() {
 		post := &entity.Post{}
@@ -110,6 +111,12 @@ func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
 		}
 		posts = append(posts, post)
 	}
+
+	// Check for errors that occurred during iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return posts, nil
 }
 

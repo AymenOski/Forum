@@ -11,7 +11,10 @@ import (
 	"forum/infrastructure/infra_repository"
 )
 
-var tmpl *template.Template
+var (
+	tmpl *template.Template
+	Gdb *sql.DB
+)
 
 type Err struct {
 	Message string
@@ -26,7 +29,8 @@ func init() {
 	}
 }
 
-func Froum_server() *http.Server {
+func Froum_server(db *sql.DB) *http.Server {
+	Gdb=db
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
@@ -73,14 +77,15 @@ func loginHandler(wr http.ResponseWriter, r *http.Request) {
 }
 
 func layoutHandler(wr http.ResponseWriter, r *http.Request) {
-	postRepo := infra_repository.NewSQLitePostRepository(&sql.DB{})
-	posts, err := postRepo.GetAll()
-	if err != nil {
-		// log.Fatal("posts error")
-		//	return
-	}
-	renderTemplate(wr, posts, "layout.html")
-	// fmt.Fprintf(wr, "this is test")
+    postRepo := infra_repository.NewSQLitePostRepository(Gdb)
+    posts, err := postRepo.GetAll()
+    if err != nil {
+        // Handle this error properly
+        http.Error(wr, "Failed to fetch posts", http.StatusInternalServerError)
+        log.Printf("Error fetching posts: %v", err)
+        return
+    }
+    renderTemplate(wr, posts, "test.html")
 }
 
 func registerHandler(wr http.ResponseWriter, r *http.Request) {
