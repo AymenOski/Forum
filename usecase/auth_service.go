@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"regexp"
 	"strings"
 	"time"
 
@@ -23,20 +24,35 @@ func NewAuthService(userRepo repository.UserRepository) *AuthService {
 }
 
 func (s *AuthService) Register(name, email, password string) (*entity.User, error) {
+	if !isValidEmail(email) {
+		return nil, errors.New("this is the correct email address format : example@domain.com")
+	}
 	// Check if user already exists
-	email = strings.ToLower(email)
+	// if there is no error when getting anemail that means the user already exists
+	email = strings.ToLower(strings.TrimSpace(email))
 	_, err := s.userRepo.GetByEmail(email)
 	if err == nil {
 		return nil, errors.New("user already exists")
 	}
 
-	// Hash password
+	if len(name) < 3 || len(name) > 9 {
+		return nil, errors.New("name should be between 3 and 9 characters")
+	}
+	name = strings.TrimSpace(name)
+	if !isValidName(name) {
+		return nil, errors.New("name should contain only letters and numbers")
+	}
+
+	password = strings.TrimSpace(password)
+	if len(password) < 4 || len(password) > 64 {
+		return nil, errors.New("password should be between 4 and 64 characters")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create user
 	user := &entity.User{
 		Name:         name,
 		Email:        email,
@@ -52,6 +68,9 @@ func (s *AuthService) Register(name, email, password string) (*entity.User, erro
 }
 
 func (s *AuthService) Login(email, password string) (string, *entity.User, error) {
+	if !isValidEmail(email) {
+		return "", nil, errors.New("this is the correct email address format : example@domain.com")
+	}
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
@@ -61,7 +80,7 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 	// Check password
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", nil, errors.New("invalid credentials")
+		return "", nil, errors.New("incorrect password")
 	}
 
 	// Generate session token
@@ -70,7 +89,6 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 		return "", nil, err
 	}
 
-	// Set session expiry (24 hours from now)
 	expiry := time.Now().Add(24 * time.Hour)
 
 	// Create session using your repository method
