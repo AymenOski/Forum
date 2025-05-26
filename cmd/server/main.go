@@ -15,7 +15,7 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("Server started on http://localhost:8080")
-	if err := server.Froum_server(db).ListenAndServe(); err != nil {
+	if err := server.Forum_server(db).ListenAndServe(); err != nil {
 		log.Fatalf("500 - Internal Server Error: %v", err)
 	}
 }
