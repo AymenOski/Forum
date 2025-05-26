@@ -6,12 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
+
 type PostRepository interface {
 	Create(post *entity.Post) error
-	GetByID(postID int) (*entity.Post, error)
+	Delete(postID int) error
 
 	GetAll() ([]*entity.Post, error)
 	GetByUserID(userID *uuid.UUID) ([]*entity.Post, error)
-	GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error)
-	GetByCategory(categoryID int) ([]*entity.Post, error)
+	GetLikedPost() ([]*entity.Post, error) // 
+	GetByCategory(categoryID []uint8) ([]*entity.Post, error)
 }

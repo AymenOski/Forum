@@ -1,1 +1,1 @@
-package repository
+package infra_repository

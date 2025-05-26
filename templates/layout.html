@@ -141,29 +141,28 @@
         <section class="posts-container">
             <h2 class="posts-title">Published Posts</h2>
 
-            {{if .Posts}}
-            {{range .Posts}}
+            {{if .}}
+            {{range .}}
             <article class="forum-post">
-                <h3 class="post-title">{{.Title}}</h3>
                 <div class="post-author">
-                    <span class="post-author">Posted by {{.Author}}</span>
+                    <span class="post-author">Posted by {{.Authorname}}</span>
                 </div>
                 <div class="post-content">{{.Content}}</div>
 
                 <div class="post-footer">
                     <div class="post-categories">
-                        {{range .Categories}}
-                        <span class="category-badge">{{.}}</span>
-                        {{end}}
+                        <span class="category-badge">General</span>
                     </div>
                     <div class="post-stats">
-                        <span class="likes">👍 {{.Likes}}</span>
-                        <span class="dislikes">👎 {{.Dislikes}}</span>
-                        <span class="comments">💬 {{.CommentCount}} comments</span>
+                        <span class="likes">👍 {{.LikesCount}}</span>
+                        <span class="dislikes">👎 {{.DislikesCount}}</span>
+                        <span class="comments">💬 3 comments</span>
                     </div>
                 </div>
             </article>
             {{end}}
+            {{else}}
+            <p>No posts available.</p>
             {{end}}
         </section>
     </main>
