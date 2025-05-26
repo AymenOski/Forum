@@ -3,19 +3,16 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	infra_repository "forum/infrastructure/repository"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-
-	"forum/infrastructure/infra_repository"
-	"forum/interface/controller"
-	"forum/usecase"
 )
 
 var (
-	tmpl     *template.Template
-	database *sql.DB
+	tmpl *template.Template
+	Gdb  *sql.DB
 )
 
 type Err struct {
@@ -32,6 +29,7 @@ func init() {
 }
 
 func Froum_server(db *sql.DB) *http.Server {
+	Gdb = db
 	mux := http.NewServeMux()
 	database = db
 
@@ -88,14 +86,15 @@ func loginHandler(wr http.ResponseWriter, r *http.Request) {
 }
 
 func layoutHandler(wr http.ResponseWriter, r *http.Request) {
-	postRepo := infra_repository.NewSQLitePostRepository(&sql.DB{})
+	postRepo := infra_repository.NewSQLitePostRepository(Gdb)
 	posts, err := postRepo.GetAll()
 	if err != nil {
-		// log.Fatal("posts error")
-		//	return
+		// Handle this error properly
+		http.Error(wr, "Failed to fetch posts", http.StatusInternalServerError)
+		log.Printf("Error fetching posts: %v", err)
+		return
 	}
 	renderTemplate(wr, posts, "layout.html")
-	// fmt.Fprintf(wr, "this is test")
 }
 
 func registerHandler(wr http.ResponseWriter, r *http.Request) {
