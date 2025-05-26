@@ -1,13 +1,17 @@
 package entity
 
-import "time"
+import (
+	"time"
 
-// User represents a user in the system
+	"github.com/google/uuid"
+)
+
 type User struct {
-	UserID        string     `json:"user_id"`
+	UserID        uuid.UUID  `json:"user_id"`
 	Name          string     `json:"name"`
 	Email         string     `json:"email"`
-	PasswordHash  string     `json:"-"`
-	SessionToken  *string    `json:"-"`
-	SessionExpiry *time.Time `json:"-"`
+	PasswordHash  string     `json:"-"` // Don't expose password hash
+	SessionToken  *string    `json:"-"` // Don't expose session token
+	SessionExpiry *time.Time `json:"-"` // Don't expose session expiry
+	CreatedAt     time.Time  `json:"created_at"`
 }

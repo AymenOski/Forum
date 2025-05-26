@@ -26,13 +26,17 @@ func SeedTestData(db *sql.DB) {
 func createUsersTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
-		user_id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		email TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL,
-		session_token TEXT,
-		session_expiry DATETIME
-	);
+    user_id TEXT PRIMARY KEY,           -- UUID as TEXT
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    session_token TEXT UNIQUE,
+    session_expiry DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_session_token ON users(session_token);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 	`
 	_, err := db.Exec(query)
 	if err != nil {
@@ -119,34 +123,50 @@ func seedUsers(db *sql.DB) {
 		name          string
 		email         string
 		passwordHash  string
-		sessionToken  string
-		sessionExpiry string
+		sessionToken  *string
+		sessionExpiry *string
 	}{
-		{"user1", "John Doe", "john.doe@email.com", "hash1", "token1", "2024-12-31 23:59:59"},
-		{"user2", "Jane Smith", "jane.smith@email.com", "hash2", "token2", "2024-12-31 23:59:59"},
-		{"user3", "Bob Johnson", "bob.johnson@email.com", "hash3", "token3", "2024-12-31 23:59:59"},
-		{"user4", "Alice Brown", "alice.brown@email.com", "hash4", "token4", "2024-12-31 23:59:59"},
-		{"user5", "Charlie Wilson", "charlie.wilson@email.com", "hash5", "token5", "2024-12-31 23:59:59"},
-		{"user6", "Diana Davis", "diana.davis@email.com", "hash6", "token6", "2024-12-31 23:59:59"},
-		{"user7", "Frank Miller", "frank.miller@email.com", "hash7", "token7", "2024-12-31 23:59:59"},
-		{"user8", "Grace Taylor", "grace.taylor@email.com", "hash8", "token8", "2024-12-31 23:59:59"},
-		{"user9", "Henry Moore", "henry.moore@email.com", "hash9", "token9", "2024-12-31 23:59:59"},
-		{"user10", "Ivy White", "ivy.white@email.com", "hash10", "token10", "2024-12-31 23:59:59"},
-		{"user11", "Jack Black", "jack.black@email.com", "hash11", "token11", "2024-12-31 23:59:59"},
-		{"user12", "Kelly Green", "kelly.green@email.com", "hash12", "token12", "2024-12-31 23:59:59"},
-		{"user13", "Liam Blue", "liam.blue@email.com", "hash13", "token13", "2024-12-31 23:59:59"},
-		{"user14", "Mia Red", "mia.red@email.com", "hash14", "token14", "2024-12-31 23:59:59"},
-		{"user15", "Noah Gray", "noah.gray@email.com", "hash15", "token15", "2024-12-31 23:59:59"},
+		// Users with no active session
+		{"550e8400-e29b-41d4-a716-446655440000", "John Doe", "john.doe@email.com", "hash1", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440001", "Bob Johnson", "bob.johnson@email.com", "hash3", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440002", "Charlie Wilson", "charlie.wilson@email.com", "hash5", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440003", "Frank Miller", "frank.miller@email.com", "hash7", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440004", "Henry Moore", "henry.moore@email.com", "hash9", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440005", "Jack Black", "jack.black@email.com", "hash11", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440006", "Liam Blue", "liam.blue@email.com", "hash13", nil, nil},
+		{"550e8400-e29b-41d4-a716-446655440007", "Noah Gray", "noah.gray@email.com", "hash15", nil, nil},
+
+		// Users with active sessions (expiring at end of 2025)
+		{"550e8400-e29b-41d4-a716-446655440008", "Jane Smith", "jane.smith@email.com", "hash2", stringPtr("token2"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440009", "Alice Brown", "alice.brown@email.com", "hash4", stringPtr("token4"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440010", "Diana Davis", "diana.davis@email.com", "hash6", stringPtr("token6"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440011", "Grace Taylor", "grace.taylor@email.com", "hash8", stringPtr("token8"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440012", "Ivy White", "ivy.white@email.com", "hash10", stringPtr("token10"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440013", "Kelly Green", "kelly.green@email.com", "hash12", stringPtr("token12"), stringPtr("2025-12-31T23:59:59Z")},
+		{"550e8400-e29b-41d4-a716-446655440014", "Mia Red", "mia.red@email.com", "hash14", stringPtr("token14"), stringPtr("2025-12-31T23:59:59Z")},
 	}
 
 	for _, user := range users {
-		query := `INSERT OR IGNORE INTO users (user_id, name, email, password_hash, session_token, session_expiry) 
-				  VALUES (?, ?, ?, ?, ?, ?)`
-		_, err := db.Exec(query, user.userID, user.name, user.email, user.passwordHash, user.sessionToken, user.sessionExpiry)
+		query := `INSERT OR IGNORE INTO users 
+                  (user_id, name, email, password_hash, session_token, session_expiry)
+                  VALUES (?, ?, ?, ?, ?, ?)`
+		_, err := db.Exec(query,
+			user.userID,
+			user.name,
+			user.email,
+			user.passwordHash,
+			user.sessionToken,
+			user.sessionExpiry,
+		)
 		if err != nil {
 			log.Printf("Failed to insert user %s: %v", user.name, err)
 		}
 	}
+}
+
+// Helper function to create string pointers
+func stringPtr(s string) *string {
+	return &s
 }
 
 func seedCategories(db *sql.DB) {
