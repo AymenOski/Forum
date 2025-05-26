@@ -179,3 +179,4 @@ func (r *SQLiteUserRepository) CleanExpiredSessions() error {
 	_, err := r.db.Exec(query, time.Now())
 	return err
 }
+ 

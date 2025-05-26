@@ -13,6 +13,6 @@ type PostRepository interface {
 
 	GetAll() ([]*entity.Post, error)
 	GetByUserID(userID *uuid.UUID) ([]*entity.Post, error)
-	GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error)
+	GetLikedPost() ([]*entity.Post, error) // 
 	GetByCategory(categoryID []uint8) ([]*entity.Post, error)
 }

@@ -4,9 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"time"
 	"forum/domain/entity"
 	"forum/domain/repository"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -21,6 +23,7 @@ func NewAuthService(userRepo repository.UserRepository) *AuthService {
 
 func (s *AuthService) Register(name, email, password string) (*entity.User, error) {
 	// Check if user already exists
+		email=strings.ToLower(email)
 	_, err := s.userRepo.GetByEmail(email)
 	if err == nil {
 		return nil, errors.New("user already exists")
@@ -44,7 +47,6 @@ func (s *AuthService) Register(name, email, password string) (*entity.User, erro
 	if err != nil {
 		return nil, err
 	}
-
 	return user, nil
 }
 

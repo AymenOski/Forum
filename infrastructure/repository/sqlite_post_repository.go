@@ -128,6 +128,6 @@ func (r *sqlitePostRepo) GetByID(postID int) (*entity.Post, error) {
 	return nil, nil
 }
 
-func (r *sqlitePostRepo) GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error) {
+func (r *sqlitePostRepo) GetLikedPost()([]*entity.Post, error) {
 	return nil, nil
 }
