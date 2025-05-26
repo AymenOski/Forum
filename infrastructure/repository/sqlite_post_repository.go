@@ -124,6 +124,16 @@ func (r *sqlitePostRepo) GetByID(postID int) (*entity.Post, error) {
 	return nil, nil
 }
 
-func (r *sqlitePostRepo) GetLikedPost()([]*entity.Post, error) {
+func (r *sqlitePostRepo) GetLikedPost() ([]*entity.Post, error) {
 	return nil, nil
+}
+
+func (r *sqlitePostRepo) Delete(postID int) error {
+	query := `DELETE FROM posts WHERE post_id = ?`
+	_, err := r.db.Exec(query, postID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

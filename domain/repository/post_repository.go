@@ -9,6 +9,7 @@ import (
 
 type PostRepository interface {
 	Create(post *entity.Post) error
+	Delete(postID int) error
 
 	GetAll() ([]*entity.Post, error)
 	GetByUserID(userID *uuid.UUID) ([]*entity.Post, error)

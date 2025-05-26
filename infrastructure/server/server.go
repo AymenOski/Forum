@@ -3,16 +3,17 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	infra_repository "forum/infrastructure/repository"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+
+	infra_repository "forum/infrastructure/repository"
 )
 
 var (
-	tmpl *template.Template
-	Gdb  *sql.DB
+	tmpl     *template.Template
+	database *sql.DB
 )
 
 type Err struct {
@@ -29,9 +30,8 @@ func init() {
 }
 
 func Froum_server(db *sql.DB) *http.Server {
-	Gdb = db
-	mux := http.NewServeMux()
 	database = db
+	mux := http.NewServeMux()
 
 	// entities
 	postRepo := infra_repository.NewSQLitePostRepository(database)
