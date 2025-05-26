@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+
 type PostRepository interface {
 	Create(post *entity.Post) error
 

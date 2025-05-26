@@ -136,11 +136,11 @@
 <body>
     <h1>All Posts</h1>
 
-    {{if .Posts}}
-    {{range .Posts}}
+    {{if .}}
+    {{range .}}
     <div class="post">
         <div class="post-header">
-            <span class="author">{{.UserName}}</span>
+            <span class="author">{{.Authorname}}</span>
             <span class="post-id">Post #{{.PostID}}</span>
         </div>
 
@@ -154,17 +154,9 @@
                 </div>
                 <div class="dislikes">
                     <span>👎</span>
-                    <span>{{.DislikeCount}}</span>
+                    <span>{{.DislikesCount}}</span>
                 </div>
             </div>
-
-            {{if .Categories}}
-            <div class="categories">
-                {{range .Categories}}
-                <span class="category">{{.Name}}</span>
-                {{end}}
-            </div>
-            {{end}}
         </div>
 
         {{if .Comments}}

@@ -1,4 +1,4 @@
-package repository
+package infra_repository
 
 import (
 	"database/sql"
@@ -15,22 +15,10 @@ type sqlitePostRepo struct {
 	db *sql.DB
 }
 
-func NewSqlitePostRepository(db *sql.DB) repository.PostRepository {
+func NewSQLitePostRepository(db *sql.DB) repository.PostRepository {
 	return &sqlitePostRepo{
 		db: db,
 	}
-}
-
-func (r *sqlitePostRepo) Create(post *entity.Post) error {
-	return nil
-}
-
-func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
-	return nil, nil
-}
-
-func (r *sqlitePostRepo) GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error) {
-return nil, nil
 }
 
 func (r *sqlitePostRepo) GetByUserID(userID *uuid.UUID) ([]*entity.Post, error) {
@@ -95,4 +83,40 @@ func (r *sqlitePostRepo) GetByCategory(categoryIDs []uint8) ([]*entity.Post, err
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func (r *sqlitePostRepo) GetAll() ([]*entity.Post, error) {
+	query := `SELECT p.post_id, p.content, p.likes_count, p.dislikes_count FROM posts p`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var posts []*entity.Post
+	for rows.Next() {
+		post := &entity.Post{}
+		err := rows.Scan(
+			&post.PostID,
+			&post.Content,
+			&post.LikesCount,
+			&post.DislikesCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (r *sqlitePostRepo) Create(post *entity.Post) error {
+	return nil
+}
+
+func (r *sqlitePostRepo) GetByID(postID int) (*entity.Post, error) {
+	return nil, nil
+}
+
+func (r *sqlitePostRepo) GetLikedByUser(userID *uuid.UUID) ([]*entity.Post, error) {
+	return nil, nil
 }
