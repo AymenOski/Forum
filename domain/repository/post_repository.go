@@ -10,7 +10,6 @@ import (
 type PostRepository interface {
 	Create(post *entity.Post) error
 	GetByID(postID int) (*entity.Post, error)
-
 	GetAll() ([]*entity.Post, error)
 	GetByUserID(userID *uuid.UUID) ([]*entity.Post, error)
 	GetLikedPost() ([]*entity.Post, error) // 
