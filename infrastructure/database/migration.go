@@ -49,6 +49,7 @@ func createPostsTable(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS posts (
 		user_id TEXT NOT NULL,
 		post_id INTEGER PRIMARY KEY AUTOINCREMENT,
+		author_name TEXT NOT NULL,
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
@@ -62,17 +63,18 @@ func createPostsTable(db *sql.DB) {
 }
 
 func createLikesDislikesTable(db *sql.DB) {
-	query := `CREATE TABLE IF NOT EXISTS likes_dislikes (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		post_id INTEGER NOT NULL,
-		user_id TEXT NOT NULL,
-		is_like BOOLEAN NOT NULL,
-		FOREIGN KEY(post_id) REFERENCES posts(post_id),
-		FOREIGN KEY(user_id) REFERENCES users(user_id)
-	);`
+	query := `CREATE TABLE reactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL,  -- Can be post_id or comment_id
+    user_id TEXT NOT NULL,        -- Storing as string/UUID
+    is_like BOOLEAN NOT NULL,     -- TRUE for like, FALSE for dislike
+    is_post BOOLEAN NOT NULL,     -- TRUE if parent is post, FALSE if comment
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(parent_id, user_id, is_post)  -- One reaction per user per parent
+);`
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("Failed to create likes_dislikes table:", err)
+		log.Fatal("Failed to create reactions table:", err)
 	}
 }
 

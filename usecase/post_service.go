@@ -23,7 +23,7 @@ func NewPostService(postRepo repository.PostRepository, userRepo repository.User
 	}
 }
 
-func (ps *PostService) CreatePost(userID *uuid.UUID, content string, categoryIDs []uint8) (*entity.Post, error) {
+func (ps *PostService) CreatePost(userID *uuid.UUID, authorName string, content string, categoryIDs []uint8) (*entity.Post, error) {
 	user, err := ps.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -51,17 +51,18 @@ func (ps *PostService) CreatePost(userID *uuid.UUID, content string, categoryIDs
 		}
 	}
 	post := &entity.Post{
-		UserID:  userID.String(),
-		Content: content,
+		UserID:     *userID,
+		Authorname: authorName,
+		Content:    content,
 	}
 	err = ps.postRepo.Create(post)
 	if err != nil {
 		return nil, err
 	}
 	// Associate the categories to the post
-	err = ps.postCategory.AddCategoriesToPost(int(post.PostID), categoryIDs)
+	err = ps.postCategory.AddCategoriesToPost(post.PostID, categoryIDs)
 	if err != nil {
-		err := ps.postRepo.Delete(int(post.PostID))
+		err := ps.postRepo.Delete(post.PostID)
 		if err != nil {
 			return nil, err
 		}
