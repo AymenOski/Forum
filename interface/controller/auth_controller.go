@@ -20,6 +20,11 @@ func NewAuthController(authService *usecase.AuthService, templates *template.Tem
 	}
 }
 
+//this my update
+func (c *AuthController) GetAuthService() *usecase.AuthService {
+    return c.authService
+}
+
 func (c *AuthController) ShowLogin(w http.ResponseWriter, r *http.Request) {
 	err := c.templates.ExecuteTemplate(w, "login.html", nil)
 	if err != nil {

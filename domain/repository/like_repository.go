@@ -7,10 +7,9 @@ import (
 )
 
 type LikeRepository interface {
-	AddPostReaction(postID int, userID *uuid.UUID, isLike bool) error
-	RemovePostReaction(postID int, userID *uuid.UUID) error
-	GetPostReaction(postID int, userID *uuid.UUID) (*entity.LikeDislike, error) 
-
-	CountPostLikes(postID int)(int, error)
-	CountPostDislikes(postID int)(int, error)
+	AddParentReaction(postID int, userID *uuid.UUID, isLike bool) error
+	RemoveParentReaction(postID int, userID *uuid.UUID) error
+	GetParentReaction(postID int, userID *uuid.UUID) (*entity.LikeDislike, error) 
+	CountParentLikes(postID int)(int, error)
+	CountParentDislikes(postID int)(int, error)
 }

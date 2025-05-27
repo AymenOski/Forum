@@ -6,5 +6,5 @@ type LikeDislike struct {
 	ParentID int64  `json:"post_id"`
 	UserID string `json:"user_id"`
 	IsLike bool   `json:"is_like"`
-	IsPost bool `json:"is_post"`
+	IsPost bool   `json:"is_post`
 }
