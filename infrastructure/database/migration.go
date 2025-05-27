@@ -49,6 +49,7 @@ func createPostsTable(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS posts (
 		user_id TEXT NOT NULL,
 		post_id INTEGER PRIMARY KEY AUTOINCREMENT,
+		author_name TEXT NOT NULL,
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,

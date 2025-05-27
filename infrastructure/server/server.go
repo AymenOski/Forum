@@ -9,6 +9,8 @@ import (
 	"os"
 
 	infra_repository "forum/infrastructure/repository"
+	"forum/interface/controller"
+	"forum/usecase"
 )
 
 var (
@@ -38,23 +40,24 @@ func Froum_server(db *sql.DB) *http.Server {
 	userRepo := infra_repository.NewSQLiteUserRepository(database)
 	// usecase
 	postService := usecase.NewPostService(postRepo, userRepo)
+	authService := usecase.NewAuthService(userRepo)
 	// controller where the handlers should live
 	postController := controller.NewPostController(*postService)
-
+	authController := controller.NewAuthController(authService, tmpl)
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
-	mux.HandleFunc("/signup", registerHandler)
+	mux.HandleFunc("/signup", authController.HandleRegister)
 	mux.HandleFunc("/layout", layoutHandler)
 	mux.HandleFunc("/", loginHandler)
 
 	serve := &http.Server{
 		Addr:    ":8080",
-		Handler: logMiddleware(notFoundMiddleware(mux)),
+		Handler: LogMiddleware(notFoundMiddleware(mux)),
 	}
 	return serve
 }
 
-func logMiddleware(next http.Handler) http.Handler {
+func LogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
@@ -65,7 +68,7 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowedPaths := map[string]bool{
 			"/":                        true,
-			"/signup":                  true, // Add this line
+			"/signup":                  true,
 			"/layout":                  true,
 			"/artist/":                 true,
 			"/static/css/login.css":    true,
@@ -82,7 +85,6 @@ func notFoundMiddleware(next http.Handler) http.Handler {
 
 func loginHandler(wr http.ResponseWriter, r *http.Request) {
 	renderTemplate(wr, "", "login.html")
-	fmt.Fprintf(wr, "this is test")
 }
 
 func layoutHandler(wr http.ResponseWriter, r *http.Request) {
@@ -102,7 +104,7 @@ func registerHandler(wr http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(wr, "this is test")
 }
 
-func renderTemplate(wr http.ResponseWriter, data interface{}, template string) {
+func renderTemplate(wr http.ResponseWriter, data any, template string) {
 	if isFileAvailable(template) {
 		err := tmpl.ExecuteTemplate(wr, template, data)
 		if err != nil {
