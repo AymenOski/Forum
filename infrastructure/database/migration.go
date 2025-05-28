@@ -65,12 +65,12 @@ func createPostsTable(db *sql.DB) {
 func createLikesDislikesTable(db *sql.DB) {
 	query := `CREATE TABLE reactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    parent_id INTEGER NOT NULL,  -- Can be post_id or comment_id
-    user_id TEXT NOT NULL,        -- Storing as string/UUID
-    is_like BOOLEAN NOT NULL,     -- TRUE for like, FALSE for dislike
-    is_post BOOLEAN NOT NULL,     -- TRUE if parent is post, FALSE if comment
+    parent_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL,
+    is_like BOOLEAN NOT NULL,
+    is_post BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(parent_id, user_id, is_post)  -- One reaction per user per parent
+    UNIQUE(parent_id, user_id, is_post)
 );`
 	_, err := db.Exec(query)
 	if err != nil {
