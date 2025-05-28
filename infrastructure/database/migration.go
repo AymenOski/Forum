@@ -84,6 +84,8 @@ func createCommentsTable(db *sql.DB) {
 		post_id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
 		content TEXT NOT NULL,
+		likes_count INTEGER DEFAULT 0,
+		dislikes_count INTEGER DEFAULT 0,
 		FOREIGN KEY(post_id) REFERENCES posts(post_id),
 		FOREIGN KEY(user_id) REFERENCES users(user_id)
 	);`
