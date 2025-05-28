@@ -53,7 +53,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*entity.User, error) {
 
 	if sessionToken.Valid {
 		user.SessionToken = &sessionToken.String
-	}
+	}        
 	if sessionExpiry.Valid {
 		user.SessionExpiry = &sessionExpiry.Time
 	}
