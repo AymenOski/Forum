@@ -13,7 +13,6 @@ func SetingUpDB(datapath string) *sql.DB {
 		log.Fatal("Error opening database:", err)
 	}
 	RunMigrations(db)
-	SeedTestData(db)
 	return db
 }
 

@@ -19,27 +19,33 @@ func NewSQLiteLikeRepository(db *sql.DB) *SQLiteLikeRepository {
 }
 
 func (r *SQLiteLikeRepository) AddParentReaction(parentID int64, userID uuid.UUID, isLike bool, isPost bool) error {
-	// First check if reaction already exists
+	tableName := "comment_reactions"
+	if isPost {
+		tableName = "post_reactions"
+	}
+
+	// Check if reaction already exists
 	var existingReaction bool
-	query := `SELECT EXISTS(
-		SELECT 1 FROM reactions 
-		WHERE parent_id = ? AND user_id = ? AND is_post = ?
-	)`
-	err := r.db.QueryRow(query, parentID, userID, isPost).Scan(&existingReaction)
+	query := fmt.Sprintf(`SELECT EXISTS(
+		SELECT 1 FROM %s 
+		WHERE %s_id = ? AND user_id = ?
+	)`, tableName, getParentColumn(isPost))
+	
+	err := r.db.QueryRow(query, parentID, userID).Scan(&existingReaction)
 	if err != nil {
 		return fmt.Errorf("failed to check existing reaction: %w", err)
 	}
 
 	if existingReaction {
 		// Update existing reaction
-		query = `UPDATE reactions SET is_like = ? 
-				WHERE parent_id = ? AND user_id = ? AND is_post = ?`
-		_, err = r.db.Exec(query, isLike, parentID, userID, isPost)
+		query = fmt.Sprintf(`UPDATE %s SET is_like = ? 
+				WHERE %s_id = ? AND user_id = ?`, tableName, getParentColumn(isPost))
+		_, err = r.db.Exec(query, isLike, parentID, userID)
 	} else {
 		// Insert new reaction
-		query = `INSERT INTO reactions (parent_id, user_id, is_like, is_post)
-				VALUES (?, ?, ?, ?)`
-		_, err = r.db.Exec(query, parentID, userID, isLike, isPost)
+		query = fmt.Sprintf(`INSERT INTO %s (%s_id, user_id, is_like)
+				VALUES (?, ?, ?)`, tableName, getParentColumn(isPost))
+		_, err = r.db.Exec(query, parentID, userID, isLike)
 	}
 
 	if err != nil {
@@ -50,9 +56,14 @@ func (r *SQLiteLikeRepository) AddParentReaction(parentID int64, userID uuid.UUI
 }
 
 func (r *SQLiteLikeRepository) RemoveParentReaction(parentID int64, userID uuid.UUID, isPost bool) error {
-	query := `DELETE FROM reactions 
-			WHERE parent_id = ? AND user_id = ? AND is_post = ?`
-	result, err := r.db.Exec(query, parentID, userID, isPost)
+	tableName := "comment_reactions"
+	if isPost {
+		tableName = "post_reactions"
+	}
+
+	query := fmt.Sprintf(`DELETE FROM %s 
+			WHERE %s_id = ? AND user_id = ?`, tableName, getParentColumn(isPost))
+	result, err := r.db.Exec(query, parentID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to remove reaction: %w", err)
 	}
@@ -70,10 +81,15 @@ func (r *SQLiteLikeRepository) RemoveParentReaction(parentID int64, userID uuid.
 }
 
 func (r *SQLiteLikeRepository) GetParentReaction(parentID int64, userID uuid.UUID, isPost bool) (*entity.LikeDislike, error) {
-	query := `SELECT id, parent_id, user_id, is_like, is_post
-			FROM reactions
-			WHERE parent_id = ? AND user_id = ? AND is_post = ?`
-	row := r.db.QueryRow(query, parentID, userID, isPost)
+	tableName := "comment_reactions"
+	if isPost {
+		tableName = "post_reactions"
+	}
+
+	query := fmt.Sprintf(`SELECT id, %s_id, user_id, is_like
+			FROM %s
+			WHERE %s_id = ? AND user_id = ?`, getParentColumn(isPost), tableName, getParentColumn(isPost))
+	row := r.db.QueryRow(query, parentID, userID)
 
 	reaction := &entity.LikeDislike{}
 	var userIDStr string
@@ -83,7 +99,6 @@ func (r *SQLiteLikeRepository) GetParentReaction(parentID int64, userID uuid.UUI
 		&reaction.ParentID,
 		&userIDStr,
 		&reaction.IsLike,
-		&reaction.IsPost,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -93,14 +108,20 @@ func (r *SQLiteLikeRepository) GetParentReaction(parentID int64, userID uuid.UUI
 	}
 
 	reaction.UserID = userIDStr
+	reaction.IsPost = isPost
 	return reaction, nil
 }
 
 func (r *SQLiteLikeRepository) CountParentLikes(parentID int64, isPost bool) (int, error) {
-	query := `SELECT COUNT(*) FROM reactions
-			WHERE parent_id = ? AND is_like = ? AND is_post = ?`
+	tableName := "comment_reactions"
+	if isPost {
+		tableName = "post_reactions"
+	}
+
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s
+			WHERE %s_id = ? AND is_like = ?`, tableName, getParentColumn(isPost))
 	var count int
-	err := r.db.QueryRow(query, parentID, true, isPost).Scan(&count)
+	err := r.db.QueryRow(query, parentID, true).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count likes: %w", err)
 	}
@@ -108,12 +129,25 @@ func (r *SQLiteLikeRepository) CountParentLikes(parentID int64, isPost bool) (in
 }
 
 func (r *SQLiteLikeRepository) CountParentDislikes(parentID int64, isPost bool) (int, error) {
-	query := `SELECT COUNT(*) FROM reactions
-			WHERE parent_id = ? AND is_like = ? AND is_post = ?`
+	tableName := "comment_reactions"
+	if isPost {
+		tableName = "post_reactions"
+	}
+
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s
+			WHERE %s_id = ? AND is_like = ?`, tableName, getParentColumn(isPost))
 	var count int
-	err := r.db.QueryRow(query, parentID, false, isPost).Scan(&count)
+	err := r.db.QueryRow(query, parentID, false).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count dislikes: %w", err)
 	}
 	return count, nil
+}
+
+// Helper function to get the correct column name based on reaction type
+func getParentColumn(isPost bool) string {
+	if isPost {
+		return "post"
+	}
+	return "comment"
 }
