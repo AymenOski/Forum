@@ -1,7 +1,8 @@
 package entity
 
-// PostCategory represents the many-to-many relationship between posts and categories
+import "github.com/google/uuid"
+
 type PostCategory struct {
-	PostID     string `json:"post_id"`
-	CategoryID int64  `json:"category_id"`
+	PostID     uuid.UUID `json:"post_id" db:"post_id"`
+	CategoryID uuid.UUID `json:"category_id" db:"category_id"`
 }

@@ -7,11 +7,9 @@ import (
 )
 
 type User struct {
-	UserID        uuid.UUID  `json:"user_id"`
-	Name          string     `json:"name"`
-	Email         string     `json:"email"`
-	PasswordHash  string     `json:"-"` // Don't expose password hash
-	SessionToken  *string    `json:"-"` // Don't expose session token
-	SessionExpiry *time.Time `json:"-"` // Don't expose session expiry
-	CreatedAt     time.Time  `json:"created_at"`
+	ID           uuid.UUID `json:"id" db:"id"`
+	UserName     string    `json:"user_name" db:"user_name"`
+	Email        string    `json:"email" db:"email"`
+	PasswordHash string    `json:"-" db:"password_hash"` // Don't expose password hash
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
