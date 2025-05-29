@@ -1,7 +1,15 @@
 package entity
 
-// Category represents a category that can be assigned to posts
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+
 type Category struct {
-	CategoryID int64  `json:"category_id"`
-	Name       string `json:"name"`
+	ID          uuid.UUID `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	Description string    `json:"description" db:"description"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 }
