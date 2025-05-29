@@ -11,17 +11,19 @@ import (
 )
 
 type CommentService struct {
-	userRepo    repository.UserRepository
-	commentRepo repository.CommentRepository
-	postRepo    repository.PostRepository
+	userRepo            repository.UserRepository
+	commentRepo         repository.CommentRepository
+	postRepo            repository.PostRepository
+	commentReactionRepo repository.CommentReactionRepository
 }
 
 func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
-	postRepo repository.PostRepository) *CommentService {
+	postRepo repository.PostRepository, commentReactionRepo repository.CommentReactionRepository) *CommentService {
 	return &CommentService{
-		userRepo:    userRepo,
-		commentRepo: commentRepo,
-		postRepo:    postRepo,
+		userRepo:            userRepo,
+		commentRepo:         commentRepo,
+		postRepo:            postRepo,
+		commentReactionRepo: commentReactionRepo,
 	}
 }
 
@@ -55,4 +57,45 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, co
 	}
 
 	return comment, nil
+}
+
+// ReactToComment - Like/dislike a comment with toggle support.
+// Same reaction twice = remove (toggle), different reaction = update.
+// Returns nil when reaction is removed, reaction entity when created/updated.
+func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID, reaction bool) (*entity.CommentReaction, error) {
+	_, err := cs.userRepo.GetByID(*userID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+	_, err = cs.commentRepo.GetByID(*commentID)
+	if err != nil {
+		return nil, errors.New("comment not found")
+	}
+
+	cr, err := cs.commentReactionRepo.GetByUserAndComment(*userID, *commentID)
+	if err == nil {
+		// user reacted, should update the reaction
+		if cr.Reaction == reaction {
+			cs.commentReactionRepo.Delete(cr.ID)
+			return cr, nil
+		} else if cr.Reaction != reaction {
+			cr.Reaction = reaction
+			cr.CreatedAt = time.Now()
+			cs.commentReactionRepo.Update(cr)
+			return cr, nil
+		}
+	}
+	// no reaction of the user on the post, need to create a reaction
+	commentReaction := &entity.CommentReaction{
+		UserID:    *userID,
+		CommentID: *commentID,
+		Reaction:  reaction,
+		CreatedAt: time.Now(),
+	}
+	err = cs.commentReactionRepo.Create(commentReaction)
+	if err != nil {
+		return nil, err
+	}
+	return commentReaction, nil
+
 }

@@ -38,7 +38,7 @@ func NewSQLitePostAggregateRepository(
 	}
 }
 
-func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Post, categoryIDs []uuid.UUID) error {
+func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Post, categoryIDs []*uuid.UUID) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 		return nil, err
 	}
 
-//	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
+	//	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +88,9 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 	}
 
 	return &entity.PostWithDetails{
-		Post:         *post,
-		Author:       *author,
-	//	Categories:   *categories,
+		Post:   *post,
+		Author: *author,
+		//	Categories:   *categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,
 	}, nil
@@ -319,17 +319,17 @@ func NewSQLiteRepositories(db *sql.DB) repository.Repositories {
 	userAggregateRepo := NewSQLiteUserAggregateRepository(db, userRepo, userSessionRepo, postRepo, commentRepo)
 
 	return &SQLiteRepositories{
-		db:                  db,
-		userRepo:            userRepo,
-		userSessionRepo:     userSessionRepo,
-		postRepo:            postRepo,
-		commentRepo:         commentRepo,
-		categoryRepo:        categoryRepo,
+		db:              db,
+		userRepo:        userRepo,
+		userSessionRepo: userSessionRepo,
+		postRepo:        postRepo,
+		commentRepo:     commentRepo,
+		categoryRepo:    categoryRepo,
 		//postCategoryRepo:    postCategoryRepo,
 		postReactionRepo:    postReactionRepo,
 		commentReactionRepo: commentReactionRepo,
 		//postAggregateRepo:   postAggregateRepo,
-		userAggregateRepo:   userAggregateRepo,
+		userAggregateRepo: userAggregateRepo,
 	}
 }
 

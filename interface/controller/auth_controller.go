@@ -104,7 +104,7 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	// Get user from context (set by auth middleware)
 	user, ok := r.Context().Value("user").(*entity.User)
 	if ok {
-		c.authService.Logout(user.UserID)
+		c.authService.Logout(user.ID)
 	}
 
 	// Clear session cookie
