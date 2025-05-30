@@ -11,3 +11,4 @@ func NewPostController(service usecase.PostService) *PostController {
 		service: service,
 	}
 }
+

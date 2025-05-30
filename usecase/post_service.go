@@ -20,7 +20,8 @@ type PostService struct {
 
 func NewPostService(postRepo repository.PostRepository, userRepo repository.UserRepository,
 	categoryRepo repository.CategoryRepository, postCategoryRepo repository.PostAggregateRepository,
-	postReactionRepo repository.PostReactionRepository) *PostService {
+	postReactionRepo repository.PostReactionRepository,
+) *PostService {
 	return &PostService{
 		postRepo:          postRepo,
 		userRepo:          userRepo,

@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"errors"
-	"forum/domain/entity"
-	"forum/domain/repository"
 	"strings"
 	"time"
+
+	"forum/domain/entity"
+	"forum/domain/repository"
 
 	"github.com/google/uuid"
 )
@@ -18,7 +19,8 @@ type CommentService struct {
 }
 
 func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
-	postRepo repository.PostRepository, commentReactionRepo repository.CommentReactionRepository) *CommentService {
+	postRepo repository.PostRepository, commentReactionRepo repository.CommentReactionRepository,
+) *CommentService {
 	return &CommentService{
 		userRepo:            userRepo,
 		commentRepo:         commentRepo,
@@ -97,5 +99,4 @@ func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID
 		return nil, err
 	}
 	return commentReaction, nil
-
 }
