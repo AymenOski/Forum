@@ -14,29 +14,29 @@ import (
 type SQLitePostAggregateRepository struct {
 	db               *sql.DB
 	postRepo         repository.PostRepository
-	categoryRepo     repository.CategoryRepository
+	//categoryRepo     repository.CategoryRepository
 	postCategoryRepo repository.PostCategoryRepository
 	userRepo         repository.UserRepository
 	reactionRepo     repository.PostReactionRepository
 }
 
-func NewSQLitePostAggregateRepository(
-	db *sql.DB,
-	postRepo repository.PostRepository,
-	categoryRepo repository.CategoryRepository,
-	postCategoryRepo repository.PostCategoryRepository,
-	userRepo repository.UserRepository,
-	reactionRepo repository.PostReactionRepository,
-) repository.PostAggregateRepository {
-	return &SQLitePostAggregateRepository{
-		db:               db,
-		postRepo:         postRepo,
-		categoryRepo:     categoryRepo,
-		postCategoryRepo: postCategoryRepo,
-		userRepo:         userRepo,
-		reactionRepo:     reactionRepo,
-	}
-}
+// func NewSQLitePostAggregateRepository(
+// 	db *sql.DB,
+// 	postRepo repository.PostRepository,
+// 	categoryRepo repository.CategoryRepository,
+// 	postCategoryRepo repository.PostCategoryRepository,
+// 	userRepo repository.UserRepository,
+// 	reactionRepo repository.PostReactionRepository,
+// ) repository.PostAggregateRepository {
+// 	return &SQLitePostAggregateRepository{
+// 		db:               db,
+// 		postRepo:         postRepo,
+// 		categoryRepo:     categoryRepo,
+// 		postCategoryRepo: postCategoryRepo,
+// 		userRepo:         userRepo,
+// 		reactionRepo:     reactionRepo,
+// 	}
+// }
 
 func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Post, categoryIDs []*uuid.UUID) error {
 	tx, err := r.db.Begin()
@@ -55,7 +55,7 @@ func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Po
 	for _, categoryID := range categoryIDs {
 		postCategory := &entity.PostCategory{
 			PostID:     post.ID,
-			CategoryID: categoryID,
+			CategoryID: *categoryID,
 		}
 		err = r.postCategoryRepo.Create(postCategory)
 		if err != nil {
@@ -77,7 +77,7 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 		return nil, err
 	}
 
-	//	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
+	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,30 +90,30 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 	return &entity.PostWithDetails{
 		Post:   *post,
 		Author: *author,
-		//	Categories:   *categories,
+		Categories:   categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,
 	}, nil
 }
 
-func (r *SQLitePostAggregateRepository) GetFeedForUser(userID uuid.UUID, limit, offset int) ([]*entity.PostWithDetails, error) {
-	// Simple implementation - get all recent posts
-	posts, err := r.postRepo.GetWithPagination(limit, offset)
-	if err != nil {
-		return nil, err
-	}
+// func (r *SQLitePostAggregateRepository) GetFeedForUser(userID uuid.UUID, limit, offset int) ([]*entity.PostWithDetails, error) {
+// 	// Simple implementation - get all recent posts
+// 	posts, err := r.postRepo.GetWithPagination(limit, offset)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	var feedPosts []*entity.PostWithDetails
-	for _, post := range posts {
-		postWithDetails, err := r.GetPostWithAllDetails(post.ID)
-		if err != nil {
-			continue // Skip posts with errors
-		}
-		feedPosts = append(feedPosts, postWithDetails)
-	}
+// 	var feedPosts []*entity.PostWithDetails
+// 	for _, post := range posts {
+// 		postWithDetails, err := r.GetPostWithAllDetails(post.ID)
+// 		if err != nil {
+// 			continue // Skip posts with errors
+// 		}
+// 		feedPosts = append(feedPosts, postWithDetails)
+// 	}
 
-	return feedPosts, nil
-}
+// 	return feedPosts, nil
+// }
 
 func (r *SQLitePostAggregateRepository) GetTrendingPosts(since time.Time, limit int) ([]*entity.PostWithDetails, error) {
 	query := `SELECT p.id, p.title, p.content, p.user_id, p.created_at 
@@ -216,41 +216,36 @@ func NewSQLiteUserAggregateRepository(
 // 	}, nil
 // }
 
-func (r *SQLiteUserAggregateRepository) GetUserActivity(userID uuid.UUID, limit int) (posts []*entity.Post, comments []*entity.Comment, err error) {
-	posts, err = r.postRepo.GetByUserID(userID)
-	if err != nil {
-		return nil, nil, err
-	}
+// func (r *SQLiteUserAggregateRepository) GetUserActivity(userID uuid.UUID, limit int) (posts []*entity.Post, comments []*entity.Comment, err error) {
+// 	posts, err = r.postRepo.GetByUserID(userID)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
 
-	// Limit posts if needed
-	if len(posts) > limit {
-		posts = posts[:limit]
-	}
+// 	// Limit posts if needed
+// 	if len(posts) > limit {
+// 		posts = posts[:limit]
+// 	}
 
-	comments, err = r.commentRepo.GetByUserID(userID)
-	if err != nil {
-		return posts, nil, err
-	}
+// 	comments, err = r.commentRepo.GetByUserID(userID)
+// 	if err != nil {
+// 		return posts, nil, err
+// 	}
 
-	// Limit comments if needed
-	if len(comments) > limit {
-		comments = comments[:limit]
-	}
+// 	// Limit comments if needed
+// 	if len(comments) > limit {
+// 		comments = comments[:limit]
+// 	}
 
-	return posts, comments, nil
-}
+// 	return posts, comments, nil
+// }
 
-func (r *SQLiteUserAggregateRepository) CreateUserWithSession(user *entity.User) (*entity.UserSession, error) {
+func (r *SQLiteUserAggregateRepository) CreateUserSession(user *entity.User) (*entity.UserSession, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-
-	err = r.userRepo.Create(user)
-	if err != nil {
-		return nil, err
-	}
 
 	session := &entity.UserSession{
 		UserID:       user.ID,

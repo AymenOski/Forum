@@ -8,10 +8,10 @@ import (
 
 type CommentReactionRepository interface {
 	Create(reaction *entity.CommentReaction) error
-	// GetByID(reactionID uuid.UUID) (*entity.CommentReaction, error)
+	//GetByID(reactionID uuid.UUID) (*entity.CommentReaction, error)
 	GetByUserAndComment(userID, commentID uuid.UUID) (*entity.CommentReaction, error)
-	// GetByCommentID(commentID uuid.UUID) ([]*entity.CommentReaction, error)
-	// GetByUserID(userID uuid.UUID) ([]*entity.CommentReaction, error)
+//	GetByCommentID(commentID uuid.UUID) ([]*entity.CommentReaction, error)
+//	GetByUserID(userID uuid.UUID) ([]*entity.CommentReaction, error)
 	Update(reaction *entity.CommentReaction) error
 	Delete(reactionID uuid.UUID) error
 	// DeleteByUserAndComment(userID, commentID uuid.UUID) error

@@ -47,8 +47,8 @@ func Forum_server(db *sql.DB) *http.Server {
 	mux := http.NewServeMux()
 
 	// Initialize services and controllers
-	userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
 	sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
+	userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
 	authService := usecase.NewAuthService(userRepo, sessionRepo)
 	authController := controller.NewAuthController(authService, tmpl)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
@@ -127,36 +127,6 @@ func handleLogin(authController *controller.AuthController) http.HandlerFunc {
 		default:
 			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		}
-	}
-}
-
-func handleLogout(authController *controller.AuthController) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-			return
-		}
-
-		// Get user from context
-		user := getUserFromContext(r)
-		if user != nil {
-			authController.GetAuthService().Logout(user.ID)
-		}
-
-		// Clear session cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-		})
-
-		response := SuccessResponse{
-			Success: true,
-			Message: "Logout successful",
-		}
-		sendJSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -314,8 +284,9 @@ func requireAuth(authMiddleware *middleware.AuthMiddleware, next http.HandlerFun
 		}
 
 		// Validate session directly using auth service
+		sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
 		userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
-		authService := usecase.NewAuthService(userRepo)
+		authService := usecase.NewAuthService(userRepo, sessionRepo)
 		user, err := authService.ValidateSession(cookie.Value)
 		if err != nil {
 			// Clear invalid cookie
@@ -369,7 +340,7 @@ func getUserFromContext(r *http.Request) *entity.User {
 	return user
 }
 
-func setUserInContext(ctx context.Context, user *entity.User) context.Context {
+func setUserInContext(ctx context.Context, user *entity.UserSession) context.Context {
 	return context.WithValue(ctx, "user", user)
 }
 
