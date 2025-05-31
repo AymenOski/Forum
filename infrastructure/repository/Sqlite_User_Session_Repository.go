@@ -60,7 +60,7 @@ func (r *SQLiteUserSessionRepository) GetByToken(token string) (*entity.UserSess
 
 func (r *SQLiteUserSessionRepository) GetByUserID(userID uuid.UUID) (*entity.UserSession, error) {
 	query := `SELECT id, user_id, session_token, expires_at, created_at 
-			  FROM user_sessions WHERE user_id = ? ORDER BY created_at DESC`
+			  FROM user_sessions WHERE user_id = ? `
 	
 	rows, err := r.db.Query(query, userID.String())
 	if err != nil {
@@ -68,7 +68,7 @@ func (r *SQLiteUserSessionRepository) GetByUserID(userID uuid.UUID) (*entity.Use
 	}
 	defer rows.Close()
 	
-	var sessions []*entity.UserSession
+	var sessions *entity.UserSession
 	
 	for rows.Next() {
 		session := &entity.UserSession{}
@@ -88,8 +88,6 @@ func (r *SQLiteUserSessionRepository) GetByUserID(userID uuid.UUID) (*entity.Use
 		if err != nil {
 			return nil, err
 		}
-		
-		sessions = append(sessions, session)
 	}
 	
 	return sessions, nil
