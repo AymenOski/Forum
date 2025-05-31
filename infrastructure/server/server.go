@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	tmpl     *template.Template
-	Gdb *sql.DB
+	tmpl *template.Template
+	Gdb  *sql.DB
 )
 
 type ErrorResponse struct {
@@ -48,7 +48,8 @@ func Forum_server(db *sql.DB) *http.Server {
 
 	// Initialize services and controllers
 	userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
-	authService := usecase.NewAuthService(userRepo)
+	sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
+	authService := usecase.NewAuthService(userRepo, sessionRepo)
 	authController := controller.NewAuthController(authService, tmpl)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
@@ -96,7 +97,7 @@ func handleRegister(authController *controller.AuthController) http.HandlerFunc 
 		switch r.Method {
 		case http.MethodGet:
 			if tmpl != nil {
-				authController.ShowRegister(w, r)
+				authController.ShowRegisterPage(w, r)
 			} else {
 				sendJSONResponse(w, http.StatusOK, map[string]string{
 					"message": "Registration endpoint ready. Send POST request with name, email, and password.",
@@ -115,7 +116,7 @@ func handleLogin(authController *controller.AuthController) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if tmpl != nil {
-				authController.ShowLogin(w, r)
+				authController.ShowLoginPage(w, r)
 			} else {
 				sendJSONResponse(w, http.StatusOK, map[string]string{
 					"message": "Login endpoint ready. Send POST request with email and password.",
@@ -139,7 +140,7 @@ func handleLogout(authController *controller.AuthController) http.HandlerFunc {
 		// Get user from context
 		user := getUserFromContext(r)
 		if user != nil {
-			authController.GetAuthService().Logout(user.UserID)
+			authController.GetAuthService().Logout(user.ID)
 		}
 
 		// Clear session cookie
