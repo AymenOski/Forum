@@ -58,7 +58,7 @@ func (r *SQLiteUserSessionRepository) GetByToken(token string) (*entity.UserSess
 	return session, nil
 }
 
-func (r *SQLiteUserSessionRepository) GetByUserID(userID uuid.UUID) ([]*entity.UserSession, error) {
+func (r *SQLiteUserSessionRepository) GetByUserID(userID uuid.UUID) (*entity.UserSession, error) {
 	query := `SELECT id, user_id, session_token, expires_at, created_at 
 			  FROM user_sessions WHERE user_id = ? ORDER BY created_at DESC`
 	
