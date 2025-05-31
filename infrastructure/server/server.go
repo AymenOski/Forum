@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	tmpl     *template.Template
-	Gdb *sql.DB
+	tmpl *template.Template
+	Gdb  *sql.DB
 )
 
 type ErrorResponse struct {
@@ -47,8 +47,9 @@ func Forum_server(db *sql.DB) *http.Server {
 	mux := http.NewServeMux()
 
 	// Initialize services and controllers
+	sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
 	userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
-	authService := usecase.NewAuthService(userRepo)
+	authService := usecase.NewAuthService(userRepo, sessionRepo)
 	authController := controller.NewAuthController(authService, tmpl)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
@@ -139,7 +140,7 @@ func handleLogout(authController *controller.AuthController) http.HandlerFunc {
 		// Get user from context
 		user := getUserFromContext(r)
 		if user != nil {
-			authController.GetAuthService().Logout(user.UserID)
+			authController.GetAuthService().Logout(user.ID)
 		}
 
 		// Clear session cookie
@@ -313,8 +314,9 @@ func requireAuth(authMiddleware *middleware.AuthMiddleware, next http.HandlerFun
 		}
 
 		// Validate session directly using auth service
+		sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
 		userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
-		authService := usecase.NewAuthService(userRepo)
+		authService := usecase.NewAuthService(userRepo, sessionRepo)
 		user, err := authService.ValidateSession(cookie.Value)
 		if err != nil {
 			// Clear invalid cookie
@@ -368,7 +370,7 @@ func getUserFromContext(r *http.Request) *entity.User {
 	return user
 }
 
-func setUserInContext(ctx context.Context, user *entity.User) context.Context {
+func setUserInContext(ctx context.Context, user *entity.UserSession) context.Context {
 	return context.WithValue(ctx, "user", user)
 }
 
