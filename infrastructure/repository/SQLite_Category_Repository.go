@@ -2,15 +2,17 @@ package infra_repository
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"forum/domain/entity"
+	custom_errors "forum/domain/errors"
 	"forum/domain/repository"
 
 	"github.com/google/uuid"
 )
 
-// SQLiteCategoryRepository implements CategoryRepository interface
 type SQLiteCategoryRepository struct {
 	db *sql.DB
 }
@@ -27,7 +29,13 @@ func (r *SQLiteCategoryRepository) Create(category *entity.Category) error {
 			  VALUES (?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query, category.ID.String(), category.Name, category.Description, category.CreatedAt)
-	return err
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return custom_errors.ErrCategoryExists
+		}
+		return fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+	return nil
 }
 
 func (r *SQLiteCategoryRepository) GetByID(categoryID uuid.UUID) (*entity.Category, error) {
@@ -40,12 +48,15 @@ func (r *SQLiteCategoryRepository) GetByID(categoryID uuid.UUID) (*entity.Catego
 
 	err := row.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, custom_errors.ErrCategoryNotFound
+		}
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
 	category.ID, err = uuid.Parse(idStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
 	return category, nil
@@ -61,12 +72,15 @@ func (r *SQLiteCategoryRepository) GetByName(name string) (*entity.Category, err
 
 	err := row.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, custom_errors.ErrCategoryNotFound
+		}
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
 	category.ID, err = uuid.Parse(idStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
 	return category, nil
@@ -77,7 +91,7 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 	defer rows.Close()
 
@@ -89,12 +103,12 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 
 		err := rows.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}
 
 		category.ID, err = uuid.Parse(idStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}
 
 		categories = append(categories, category)
@@ -106,15 +120,44 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 func (r *SQLiteCategoryRepository) Update(category *entity.Category) error {
 	query := `UPDATE categories SET name = ?, description = ? WHERE id = ?`
 
-	_, err := r.db.Exec(query, category.Name, category.Description, category.ID.String())
-	return err
+	result, err := r.db.Exec(query, category.Name, category.Description, category.ID.String())
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return custom_errors.ErrCategoryExists
+		}
+		return fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+
+	if rowsAffected == 0 {
+		return custom_errors.ErrCategoryNotFound
+	}
+
+	return nil
 }
 
 func (r *SQLiteCategoryRepository) Delete(categoryID uuid.UUID) error {
 	query := `DELETE FROM categories WHERE id = ?`
 
-	_, err := r.db.Exec(query, categoryID.String())
-	return err
+	result, err := r.db.Exec(query, categoryID.String())
+	if err != nil {
+		return fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+
+	if rowsAffected == 0 {
+		return custom_errors.ErrCategoryNotFound
+	}
+
+	return nil
 }
 
 func (r *SQLiteCategoryRepository) CheckNameExists(name string) (bool, error) {
@@ -123,7 +166,7 @@ func (r *SQLiteCategoryRepository) CheckNameExists(name string) (bool, error) {
 	var count int
 	err := r.db.QueryRow(query, name).Scan(&count)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
 	return count > 0, nil
@@ -138,7 +181,7 @@ func (r *SQLiteCategoryRepository) GetWithPostCount() ([]*entity.Category, error
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 	defer rows.Close()
 
@@ -147,16 +190,16 @@ func (r *SQLiteCategoryRepository) GetWithPostCount() ([]*entity.Category, error
 	for rows.Next() {
 		category := &entity.Category{}
 		var idStr string
-		var postCount int // We're not storing this in the entity, but you could extend it
+		var postCount int
 
 		err := rows.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt, &postCount)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}
 
 		category.ID, err = uuid.Parse(idStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}
 
 		categories = append(categories, category)

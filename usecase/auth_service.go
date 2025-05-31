@@ -27,12 +27,12 @@ func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.U
 }
 
 func (s *AuthService) Register(name, email, password string) (*entity.User, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(email) {
 		return nil, errors.New("this is the correct email address format : example@domain.com")
 	}
 	// Check if user already exists
 	// if there is no error when getting anemail that means the user already exists
-	email = strings.ToLower(strings.TrimSpace(email))
 	_, err := s.userRepo.GetByEmail(email)
 	if err == nil {
 		return nil, errors.New("user already exists")
