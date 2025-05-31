@@ -1,393 +1,280 @@
 package server
 
 import (
-	"context"
 	"database/sql"
-	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
-
-	"forum/domain/entity"
+	"os"
+	"path/filepath"
+	"time"
 	infra_repository "forum/infrastructure/repository"
 	"forum/interface/controller"
 	"forum/interface/middleware"
 	"forum/usecase"
 )
 
-var (
-	tmpl *template.Template
-	Gdb  *sql.DB
-)
-
-type ErrorResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
+type Server struct {
+	authController *controller.AuthController
+	authMiddleware *middleware.AuthMiddleware
+	templates      *template.Template
+	router         *http.ServeMux
+	httpServer     *http.Server
 }
 
-type SuccessResponse struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
-	Token   string      `json:"token,omitempty"`
-	User    interface{} `json:"user,omitempty"`
-}
+func Forum_server(db *sql.DB) *Server {
+	// Initialize repositories
+	userRepo := infra_repository.NewSQLiteUserRepository(db)
+	sessionRepo := infra_repository.NewSQLiteUserSessionRepository(db)
 
-func init() {
-	var err error
-	tmpl, err = template.ParseGlob("./templates/*.html")
-	if err != nil {
-		log.Printf("Warning: Failed to initialize templates: %v", err)
-	}
-}
-
-func Forum_server(db *sql.DB) *http.Server {
-	Gdb = db
-	mux := http.NewServeMux()
-
-	// Initialize services and controllers
-	sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
-	userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
+	// Initialize services
 	authService := usecase.NewAuthService(userRepo, sessionRepo)
-	authController := controller.NewAuthController(authService, tmpl)
-	authMiddleware := middleware.NewAuthMiddleware(authService)
 
-	// Static files
-	fileServer := http.FileServer(http.Dir("./static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+	// Load templates
+	templates := loadTemplates()
 
-	// Authentication routes
-	mux.HandleFunc("/auth/register", handleRegister(authController))
-	mux.HandleFunc("/auth/login", handleLogin(authController))
-	mux.HandleFunc("/auth/logout", requireAuth(authMiddleware, handleLogout(authController)))
-	mux.HandleFunc("/auth/me", requireAuth(authMiddleware, handleMe(authService)))
+	// Initialize controllers
+	authController := controller.NewAuthController(authService, templates)
 
-	// Legacy routes for compatibility
-	mux.HandleFunc("/register", handleRegister(authController))
-	mux.HandleFunc("/login", handleLogin(authController))
-	mux.HandleFunc("/logout", requireAuth(authMiddleware, handleLogout(authController)))
+	// Initialize middleware
+	authMiddleware := middleware.NewAuthMiddleware(authService, userRepo)
 
-	// Root endpoint
-	mux.HandleFunc("/", handleRoot)
-
-	// Health check
-	mux.HandleFunc("/health", handleHealth)
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: LogMiddleware(corsMiddleware(mux)),
+	// Create server
+	server := &Server{
+		authController: authController,
+		authMiddleware: authMiddleware,
+		templates:      templates,
+		router:         http.NewServeMux(),
 	}
 
-	log.Println("Auth server starting on :8080")
-	log.Println("Available endpoints:")
-	log.Println("  POST /auth/register - Register new user")
-	log.Println("  POST /auth/login    - Login user")
-	log.Println("  POST /auth/logout   - Logout user (requires auth)")
-	log.Println("  GET  /auth/me       - Get current user (requires auth)")
-	log.Println("  GET  /health        - Health check")
+	// Setup routes
+	server.setupRoutes()
+
+	// Configure HTTP server
+	server.httpServer = &http.Server{
+		Addr:         ":8080",
+		Handler:      server.router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Start background tasks
+	server.startBackgroundTasks()
 
 	return server
 }
 
-// Route Handlers
+func (s *Server) setupRoutes() {
+	// Static files
+	fs := http.FileServer(http.Dir("./static/"))
+	s.router.Handle("/static/", http.StripPrefix("/static/", fs))
 
-func handleRegister(authController *controller.AuthController) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			if tmpl != nil {
-				authController.ShowRegister(w, r)
-			} else {
-				sendJSONResponse(w, http.StatusOK, map[string]string{
-					"message": "Registration endpoint ready. Send POST request with name, email, and password.",
-				})
-			}
-		case http.MethodPost:
-			handleAPIRegister(w, r, authController)
-		default:
-			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		}
-	}
+	// Public routes (redirect if authenticated)
+	//s.router.Handle("/login", s.authMiddleware.RedirectIfAuthenticated(http.HandlerFunc(s.authController.ShowLogin)))
+	//s.router.Handle("/register", s.authMiddleware.RedirectIfAuthenticated(http.HandlerFunc(s.authController.ShowRegister)))
+
+	// Auth routes
+	s.router.HandleFunc("/login", s.authController.HandleLogin)
+	s.router.HandleFunc("/register", s.authController.HandleRegister)
+	s.router.HandleFunc("/logout", s.authController.HandleLogout)
+	s.router.HandleFunc("/refresh-session", s.authController.HandleRefreshSession)
+
+	// Protected routes
+	s.router.Handle("/", s.authMiddleware.OptionalAuth(http.HandlerFunc(s.handleHome)))
+	s.router.Handle("/profile", s.authMiddleware.RequireAuth(http.HandlerFunc(s.handleProfile)))
+	s.router.Handle("/create-post", s.authMiddleware.RequireAuth(http.HandlerFunc(s.handleCreatePost)))
+
+	// Admin routes (if needed)
+	s.router.Handle("/admin", s.authMiddleware.RequireAuth(http.HandlerFunc(s.handleAdmin)))
+
+	// API routes (if needed)
+	s.router.HandleFunc("/api/validate-session", s.handleValidateSession)
 }
 
-func handleLogin(authController *controller.AuthController) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			if tmpl != nil {
-				authController.ShowLogin(w, r)
-			} else {
-				sendJSONResponse(w, http.StatusOK, map[string]string{
-					"message": "Login endpoint ready. Send POST request with email and password.",
-				})
-			}
-		case http.MethodPost:
-			handleAPILogin(w, r, authController)
-		default:
-			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		}
-	}
+// ListenAndServe starts the HTTP server
+func (s *Server) ListenAndServe() error {
+	log.Printf("Server starting on %s", s.httpServer.Addr)
+	return s.httpServer.ListenAndServe()
 }
 
-func handleLogout(authController *controller.AuthController) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-			return
-		}
-
-		// Get user from context
-		user := getUserFromContext(r)
-		if user != nil {
-			authController.GetAuthService().Logout(user.ID)
-		}
-
-		// Clear session cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-		})
-
-		response := SuccessResponse{
-			Success: true,
-			Message: "Logout successful",
-		}
-		sendJSONResponse(w, http.StatusOK, response)
-	}
+// SetPort allows changing the server port
+func (s *Server) SetPort(port string) {
+	s.httpServer.Addr = ":" + port
 }
 
-func handleMe(authService *usecase.AuthService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-			return
-		}
-
-		user := getUserFromContext(r)
-		if user == nil {
-			sendJSONError(w, http.StatusUnauthorized, "User not found")
-			return
-		}
-
-		response := SuccessResponse{
-			Success: true,
-			Message: "User retrieved successfully",
-			User:    user,
-		}
-		sendJSONResponse(w, http.StatusOK, response)
-	}
-}
-
-func handleRoot(w http.ResponseWriter, r *http.Request) {
+// Handler functions
+func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		sendJSONError(w, http.StatusNotFound, "Endpoint not found")
+		http.NotFound(w, r)
 		return
 	}
 
-	info := map[string]interface{}{
-		"service": "Authentication Server",
-		"version": "1.0.0",
-		"endpoints": map[string]string{
-			"POST /auth/register": "Register new user",
-			"POST /auth/login":    "Login user",
-			"POST /auth/logout":   "Logout user (requires auth)",
-			"GET /auth/me":        "Get current user (requires auth)",
-			"GET /health":         "Health check",
-		},
-		"usage": map[string]interface{}{
-			"register": map[string]string{
-				"method": "POST",
-				"url":    "/auth/register",
-				"body":   "name=John&email=john@example.com&password=securepass",
-			},
-			"login": map[string]string{
-				"method": "POST",
-				"url":    "/auth/login",
-				"body":   "email=john@example.com&password=securepass",
-			},
-		},
+	user, isAuthenticated := middleware.GetUserFromContext(r)
+
+	data := map[string]interface{}{
+		"IsAuthenticated": isAuthenticated,
+		"User":            user,
+		"Title":           "Forum Home",
 	}
 
-	sendJSONResponse(w, http.StatusOK, info)
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		sendJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	health := map[string]interface{}{
-		"status":    "healthy",
-		"service":   "auth-server",
-		"database":  "connected",
-		"timestamp": "2024-01-01T00:00:00Z",
-	}
-
-	// Test database connection
-	if err := Gdb.Ping(); err != nil {
-		health["status"] = "unhealthy"
-		health["database"] = "disconnected"
-		health["error"] = err.Error()
-		sendJSONResponse(w, http.StatusServiceUnavailable, health)
-		return
-	}
-
-	sendJSONResponse(w, http.StatusOK, health)
-}
-
-// API Handlers
-
-func handleAPILogin(w http.ResponseWriter, r *http.Request, authController *controller.AuthController) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	if email == "" || password == "" {
-		sendJSONError(w, http.StatusBadRequest, "Email and password are required")
-		return
-	}
-
-	token, user, err := authController.GetAuthService().Login(email, password)
+	err := s.templates.ExecuteTemplate(w, "home.html", data)
 	if err != nil {
-		sendJSONError(w, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	// Set cookie for session
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    token,
-		Path:     "/",
-		MaxAge:   86400, // 24 hours
-		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-	})
-
-	response := SuccessResponse{
-		Success: true,
-		Message: "Login successful",
-		Token:   token,
-		User:    user,
-	}
-
-	sendJSONResponse(w, http.StatusOK, response)
-}
-
-func handleAPIRegister(w http.ResponseWriter, r *http.Request, authController *controller.AuthController) {
-	name := r.FormValue("name")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	if name == "" || email == "" || password == "" {
-		sendJSONError(w, http.StatusBadRequest, "Name, email, and password are required")
-		return
-	}
-
-	user, err := authController.GetAuthService().Register(name, email, password)
-	if err != nil {
-		sendJSONError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	response := SuccessResponse{
-		Success: true,
-		Message: "Registration successful",
-		User:    user,
-	}
-
-	sendJSONResponse(w, http.StatusCreated, response)
-}
-
-// Middleware
-
-func requireAuth(authMiddleware *middleware.AuthMiddleware, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Get session token from cookie
-		cookie, err := r.Cookie("session_token")
-		if err != nil {
-			sendJSONError(w, http.StatusUnauthorized, "Authentication required")
-			return
-		}
-
-		// Validate session directly using auth service
-		sessionRepo := infra_repository.NewSQLiteUserSessionRepository(Gdb)
-		userRepo := infra_repository.NewSQLiteUserRepository(Gdb)
-		authService := usecase.NewAuthService(userRepo, sessionRepo)
-		user, err := authService.ValidateSession(cookie.Value)
-		if err != nil {
-			// Clear invalid cookie
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_token",
-				Value:    "",
-				Path:     "/",
-				MaxAge:   -1,
-				HttpOnly: true,
-			})
-			sendJSONError(w, http.StatusUnauthorized, "Invalid session")
-			return
-		}
-
-		// Add user to request context
-		ctx := r.Context()
-		ctx = setUserInContext(ctx, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func LogMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.Method, r.URL.Path, r.RemoteAddr)
-		next.ServeHTTP(w, r)
-	})
-}
-
-// Helper functions
-
-func getUserFromContext(r *http.Request) *entity.User {
-	user, ok := r.Context().Value("user").(*entity.User)
+func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
 	if !ok {
-		return nil
+		http.Error(w, "User not found in context", http.StatusInternalServerError)
+		return
 	}
-	return user
+
+	data := map[string]interface{}{
+		"User":  user,
+		"Title": "User Profile",
+	}
+
+	err := s.templates.ExecuteTemplate(w, "profile.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
-func setUserInContext(ctx context.Context, user *entity.UserSession) context.Context {
-	return context.WithValue(ctx, "user", user)
+func (s *Server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "User not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	if r.Method == http.MethodGet {
+		data := map[string]interface{}{
+			"User":  user,
+			"Title": "Create Post",
+		}
+
+		err := s.templates.ExecuteTemplate(w, "create-post.html", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		// Handle post creation logic here
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+
+		// TODO: Implement post creation logic
+		log.Printf("Creating post: %s by user %s", title, user.UserName)
+		log.Printf("Post content: %s", content)
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
-func sendJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+func (s *Server) handleAdmin(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "User not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: Add admin role checking logic
+	// if !user.IsAdmin {
+	//     http.Error(w, "Forbidden", http.StatusForbidden)
+	//     return
+	// }
+
+	data := map[string]interface{}{
+		"User":  user,
+		"Title": "Admin Panel",
+	}
+
+	err := s.templates.ExecuteTemplate(w, "admin.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (s *Server) handleValidateSession(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		http.Error(w, "No session found", http.StatusUnauthorized)
+		return
+	}
+
+	_, err = s.authController.ValidateSessionToken(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("JSON encoding error: %v", err)
-	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"valid": true}`))
 }
 
-func sendJSONError(w http.ResponseWriter, statusCode int, message string) {
-	response := ErrorResponse{
-		Success: false,
-		Error:   http.StatusText(statusCode),
-		Message: message,
+// Background task to clean up expired sessions
+func (s *Server) startBackgroundTasks() {
+	// Clean up expired sessions every hour
+	ticker := time.NewTicker(1 * time.Hour)
+	go func() {
+		for range ticker.C {
+			err := s.authController.CleanupExpiredSessions()
+			if err != nil {
+				log.Printf("Error cleaning up expired sessions: %v", err)
+			} else {
+				log.Println("Cleaned up expired sessions")
+			}
+		}
+	}()
+}
+
+// Load templates from templates directory
+func loadTemplates() *template.Template {
+	templateDir := "templates"
+
+	// Create template with helper functions
+	tmpl := template.New("").Funcs(template.FuncMap{
+		"formatTime": func(t time.Time) string {
+			return t.Format("2006-01-02 15:04:05")
+		},
+		"since": func(t time.Time) string {
+			duration := time.Since(t)
+			if duration < time.Minute {
+				return "just now"
+			} else if duration < time.Hour {
+				return time.Since(t).Round(time.Minute).String() + " ago"
+			} else if duration < 24*time.Hour {
+				return time.Since(t).Round(time.Hour).String() + " ago"
+			}
+			return t.Format("2006-01-02")
+		},
+	})
+
+	// Walk through templates directory
+	err := filepath.Walk(templateDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && filepath.Ext(path) == ".html" {
+			_, err = tmpl.ParseFiles(path)
+			if err != nil {
+				log.Printf("Error parsing template %s: %v", path, err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal("Error loading templates:", err)
 	}
-	sendJSONResponse(w, statusCode, response)
+
+	return tmpl
 }
