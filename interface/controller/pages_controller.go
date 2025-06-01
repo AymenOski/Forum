@@ -11,6 +11,7 @@ type ErrorMessage struct {
 }
 
 func (c *AuthController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
+	w.Header().Set("Content-type", "text/html")
 	err := c.templates.ExecuteTemplate(w, template, data)
 	if err != nil {
 		c.ShowErrorPage(w, ErrorMessage{
@@ -33,6 +34,7 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(data.StatusCode)
 
 	err := c.templates.ExecuteTemplate(w, "error.html", data)
