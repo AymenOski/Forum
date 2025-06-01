@@ -12,31 +12,16 @@ import (
 
 // SQLitePostAggregateRepository implements PostAggregateRepository interface
 type SQLitePostAggregateRepository struct {
-	db               *sql.DB
-	postRepo         repository.PostRepository
-	//categoryRepo     repository.CategoryRepository
-	postCategoryRepo repository.PostCategoryRepository
-	userRepo         repository.UserRepository
-	reactionRepo     repository.PostReactionRepository
+	db *sql.DB
 }
 
-// func NewSQLitePostAggregateRepository(
-// 	db *sql.DB,
-// 	postRepo repository.PostRepository,
-// 	categoryRepo repository.CategoryRepository,
-// 	postCategoryRepo repository.PostCategoryRepository,
-// 	userRepo repository.UserRepository,
-// 	reactionRepo repository.PostReactionRepository,
-// ) repository.PostAggregateRepository {
-// 	return &SQLitePostAggregateRepository{
-// 		db:               db,
-// 		postRepo:         postRepo,
-// 		categoryRepo:     categoryRepo,
-// 		postCategoryRepo: postCategoryRepo,
-// 		userRepo:         userRepo,
-// 		reactionRepo:     reactionRepo,
-// 	}
-// }
+func NewSQLitePostAggregateRepository(
+	db *sql.DB,
+) repository.PostAggregateRepository {
+	return &SQLitePostAggregateRepository{
+		db: db,
+	}
+}
 
 func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Post, categoryIDs []*uuid.UUID) error {
 	tx, err := r.db.Begin()
@@ -88,8 +73,8 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 	}
 
 	return &entity.PostWithDetails{
-		Post:   *post,
-		Author: *author,
+		Post:         *post,
+		Author:       *author,
 		Categories:   categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,

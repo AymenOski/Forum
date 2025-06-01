@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"forum/domain/entity"
-	//"forum/domain/repository"
+	"forum/domain/repository"
 
 	"github.com/google/uuid"
 )
@@ -14,9 +14,9 @@ type SQLitePostCategoryRepository struct {
 	db *sql.DB
 }
 
-// func NewSQLitePostCategoryRepository(db *sql.DB) repository.PostCategoryRepository {
-// 	return SQLitePostCategoryRepository{db: db}
-// }
+func NewSQLitePostCategoryRepository(db *sql.DB) repository.PostCategoryRepository {
+	return &SQLitePostCategoryRepository{db: db}
+}
 
 func (r *SQLitePostCategoryRepository) Create(postCategory *entity.PostCategory) error {
 	query := `INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`

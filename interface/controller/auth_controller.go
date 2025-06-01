@@ -20,7 +20,7 @@ func NewAuthController(authService *usecase.AuthService, templates *template.Tem
 	}
 }
 
-func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// If the method is GET that means loading the html page
 	if r.Method == http.MethodGet {
 		c.renderTemplate(w, "register.html", nil)
@@ -40,7 +40,7 @@ func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, err := c.authService.Register(name, email, password)
+	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
 		// Showing the error page temporarily
 		c.ShowErrorPage(w, ErrorMessage{
@@ -93,6 +93,10 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
+	c.ShowMainPage(w, r)
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
