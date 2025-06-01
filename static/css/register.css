@@ -1,179 +1,89 @@
 body {
-    background: linear-gradient(135deg, #ea00d9, #091833);
-    color: #EDEDED;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     margin: 0;
     padding: 0;
-    font-family: 'Inter', sans-serif;
-
-}
-
-form {
-    width: 85%;
+    min-height: 100vh;
+    font-family: "Inter", sans-serif;
+    background: linear-gradient(25deg, #2f2f2f 0%, rgb(116, 132, 139) 50%, #4f4f4f 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #signup_container {
-    padding: 20px;
-    border: 2px solid rgba(19, 62, 124, 0.3);
-    background-color: rgba(9, 24, 51, 0.25);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 480px;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+    max-width: 400px;
+    text-align: center;
 }
 
 #signup_container h1 {
-    font-size: 28px;
-    margin-bottom: 28px;
-    text-align: center;
-    color: white;
-}
-
-#username_input,
-#email_input,
-#password_input {
-    width: 100%;
-    height: 43px;
-    box-sizing: border-box;
-    margin-top: 8px;
     margin-bottom: 20px;
-    padding-left: 8px;
-    border: 2px solid rgba(19, 62, 124, 0.3);
-    border-radius: 6px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 16px;
+    color: #4f4f4f; /* Matches gradient end */
+    font-size: 32px;
 }
 
-#username_input:focus,
-#email_input:focus,
-#password_input:focus {
-    outline: none;
-    color: white;
-    font-size: 16px;
-    font-weight: 500;
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
-    border-color: rgba(113, 28, 145, 0.8);
-}
-
-label {
-    font-weight: 550;
-    font-size: 16px;
-    color: white;
+#signup_container label {
     display: block;
+    text-align: left;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: bold;
 }
 
-#submit_button {
+#signup_container input[type="text"],
+#signup_container input[type="email"],
+#signup_container input[type="password"] {
     width: 100%;
-    height: 45px;
-    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     font-size: 16px;
-    border: none;
+    color: #333;
+}
+
+#signup_container input[type="text"]::placeholder,
+#signup_container input[type="email"]::placeholder,
+#signup_container input[type="password"]::placeholder {
+    color: #666;
+}
+
+#signup_container input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #757575;
     color: white;
-    font-weight: 600;
-    background-color: #711c91;
-    transition: background-color 0.3s ease;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
-    text-transform: uppercase;
+    transition: background-color 0.3s;
 }
 
-#submit_button:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+#signup_container input[type="submit"]:hover {
+    background-color: #546E7A;
 }
 
-/* Responsive Styles */
-@media screen and (max-width: 600px) {
+@media (max-width: 768px) {
     #signup_container {
-        max-width: 90%;
-        padding: 15px;
+        padding: 20px;
+        max-width: 80%;
     }
-    
-    form {
-        width: 90%;
-    }
-    
+
     #signup_container h1 {
         font-size: 24px;
-        margin-bottom: 20px;
     }
-}
 
-@media screen and (max-width: 400px) {
-    #signup_container {
-        max-width: 95%;
-        padding: 12px;
-    }
-    
-    form {
-        width: 95%;
-    }
-    
-    #username_input,
-    #email_input,
-    #password_input {
-        height: 40px;
-        margin-bottom: 15px;
-    }
-    
-    #signup_container h1 {
-        font-size: 22px;
-        margin-bottom: 16px;
-    }
-    
-    label {
+    #signup_container input[type="text"],
+    #signup_container input[type="email"],
+    #signup_container input[type="password"] {
         font-size: 14px;
     }
-    
-    #submit_button {
-        height: 40px;
-        font-size: 15px;
-    }
-}
 
-@media screen and (max-height: 600px) {
-    #signup_container {
-        padding: 12px;
-    }
-    
-    #signup_container h1 {
-        margin-bottom: 15px;
-    }
-    
-    #username_input,
-    #email_input,
-    #password_input {
-        margin-bottom: 12px;
-    }
-}
-
-/* For very small screens */
-@media screen and (max-width: 320px) {
-    #signup_container {
-        padding: 10px;
-    }
-    
-    #signup_container h1 {
-        font-size: 20px;
-        margin-bottom: 14px;
-    }
-    
-    #username_input,
-    #email_input,
-    #password_input {
-        height: 36px;
-        font-size: 14px;
-    }
-    
-    #submit_button {
-        height: 36px;
+    #signup_container input[type="submit"] {
         font-size: 14px;
     }
 }
