@@ -17,7 +17,7 @@
     <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
     <input type="radio" id="theme-forest" name="theme" class="theme-radio">
     <input type="radio" id="theme-dark" name="theme" class="theme-radio" checked>
-    
+
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -60,6 +60,13 @@
             <div class="post-sections">
                 <div class="post-section filter-section">
                     <form method="GET" action="/filter">
+                        <!-- Error Popout for filter form -->
+<!--temporaly message: to test the error popout, you can deleat `hidden` and then select the checkbox in the front end to see the pop-out-->
+                        <input type="checkbox" id="error-filter" class="error-toggle" {{if .FilterError}}checked{{end}} hidden>
+                        <div class="error-popout">
+                            <label for="error-filter" class="error-close">✖</label>
+                                <p class="error-message">{{.FilterError}}</p>
+                        </div>
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
@@ -68,20 +75,20 @@
                                     <span>Technology</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="sports">
+                                    <input type="checkbox" name="category-filter[]" value="gaming">
                                     <span>Gaming</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="general">
-                                    <span>General Discussion</span>
+                                    <input type="checkbox" name="category-filter[]" value="science">
+                                    <span>Science</span>
                                 </label>
                                 <label class="category-tag">
                                     <input type="checkbox" name="category-filter[]" value="art">
                                     <span>Art & Creativity</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="health">
-                                    <span>Lifestyle & Health</span>
+                                    <input type="checkbox" name="category-filter[]" value="general">
+                                    <span>General Discussion</span>
                                 </label>
                             </div>
                         </div>
@@ -103,11 +110,16 @@
 
                 <div class="post-section create-section">
                     <form method="POST" action="/create-post">
+                        <!-- Error Popout for post creation -->
+                        <input type="checkbox" id="error-create-post" class="error-toggle" {{if .PostError}}checked{{end}} hidden>
+                        <div class="error-popout">
+                            <label for="error-create-post" class="error-close">✖</label>
+                                <p class="error-message">{{.PostError}}</p>
+                        </div>
+                        <!-- <input type="text" name="title" placeholder="Title..." required maxlength="50"> -->
+                        <textarea name="content" placeholder="Write your post..." required maxlength="500"></textarea>
 
-                        <input type="text" placeholder="Title..." required maxlength="50">
-                        <textarea placeholder="Write your post..." required maxlength="500"></textarea>
-
-                        <h4 style="color: #f0f0f0;">Select Categories:</h4>
+                        <h4>Select Categories:</h4>
                         <div class="category-options">
                             <label class="category-tag">
                                 <input type="checkbox" name="categories[]" value="tech">
@@ -118,12 +130,12 @@
                                 <span>Gaming</span>
                             </label>
                             <label class="category-tag">
-                                <input type="checkbox" name="categories[]" value="art">
-                                <span>Art & Design</span>
-                            </label>
-                            <label class="category-tag">
                                 <input type="checkbox" name="categories[]" value="science">
                                 <span>Science</span>
+                            </label>
+                            <label class="category-tag">
+                                <input type="checkbox" name="categories[]" value="art">
+                                <span>Art & Creativity</span>
                             </label>
                             <label class="category-tag">
                                 <input type="checkbox" name="categories[]" value="general">

@@ -62,6 +62,12 @@ body {
   background-color: transparent; /* Removed background-image to let <main> dominate */
 }
 
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 main {
   background-image: var(--bg-gradient);
   background-attachment: fixed;
@@ -69,6 +75,7 @@ main {
   min-height: 100vh; /* Ensures full viewport height */
   height: auto; /*Allows growth with content*/
   margin-top: -7px;
+  flex: 1; /* Expand to fill available space */
 }
 
 * {
@@ -291,12 +298,7 @@ button[type="submit"]:hover {
   gap: 10px;
 }
 
-.form h4 {
-  font-size: 1rem;
-  color: #f0f0f0;
-}
-
-.filter-options h4 {
+h4 {
   font-size: 1rem;
   color: #f0f0f0;
 }
@@ -567,3 +569,60 @@ textarea:focus {
     font-size: 0.8rem;
   }
 }
+/* Error popout */
+.error-popout {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #e94560;
+    color: #f0f0f0;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 12px rgba(0, 0, 0, 0.23);
+    max-width: 300px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    pointer-events: none; /*so it doesn't interfere with anything when hidden*/
+}
+
+.error-toggle:checked ~ .error-popout {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.error-message {
+    margin: 0 10px 0 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    overflow-wrap:break-word;
+}
+
+.error-close {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: black;
+    transition: color 0.3s ease;
+}
+
+.error-close:hover {
+    color: #f0f0f0;
+    transform: scale(1.2);
+}
+
+/* Ensure popout is contained within form on smaller screens */
+@media (max-width: 768px) {
+    .error-popout {
+        position: relative;
+        top: 5px;
+        left :1.5px;
+        max-width: 100%;
+        overflow-wrap:break-word;
+    }
+}
+
