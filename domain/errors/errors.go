@@ -9,8 +9,14 @@ var (
 )
 
 var (
-	ErrCommentNotFound  = errors.New("comment not found")
-	ErrPostNotFound     = errors.New("post not found")
-	ErrUserNotFound     = errors.New("user not found")
-	ErrInvalidComment   = errors.New("invalid comment")
+	ErrCommentNotFound = errors.New("comment not found")
+	ErrPostNotFound    = errors.New("post not found")
+	ErrUserNotFound    = errors.New("user not found")
+	ErrInvalidComment  = errors.New("invalid comment")
+)
+
+var (
+	ErrReactionNotFound    = errors.New("reaction not found")
+	ErrReactionExists      = errors.New("reaction already exists")
+	ErrInvalidReactionType = errors.New("invalid reaction type")
 )
