@@ -76,7 +76,7 @@ func (s *Server) setupRoutes() {
 
 	// Auth routes
 	s.router.HandleFunc("/login", s.authController.HandleLogin)
-	s.router.HandleFunc("/register", s.authController.HandleRegister)
+	s.router.HandleFunc("/signup", s.authController.HandleRegister)
 	s.router.HandleFunc("/logout", s.authController.HandleLogout)
 	s.router.HandleFunc("/refresh-session", s.authController.HandleRefreshSession)
 

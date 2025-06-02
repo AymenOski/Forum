@@ -3,6 +3,7 @@ package controller
 import (
 	"html/template"
 	"net/http"
+
 	"forum/domain/entity"
 	"forum/usecase"
 )
@@ -19,33 +20,62 @@ func NewAuthController(authService *usecase.AuthService, templates *template.Tem
 	}
 }
 
-func (c *AuthController) GetAuthService() *usecase.AuthService {
-	return c.authService
-}
-
-func (c *AuthController) ShowLogin(w http.ResponseWriter, r *http.Request) {
-	err := c.templates.ExecuteTemplate(w, "login.html", nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) {
+	// If the method is GET that means loading the html page
+	if r.Method == http.MethodGet {
+		c.renderTemplate(w, "register.html", nil)
+		return
 	}
+
+	if r.Method != http.MethodPost {
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+
+	// if the method is POST that means the user is creating an account
+	name := r.FormValue("username")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	user, err := c.authService.Register(name, email, password)
+	if err != nil {
+		// Showing the error page temporarily
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
+		})
+		return
+	}
+
+	_ = user // User created successfully
+
+	// Redirect to login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		c.renderTemplate(w, "login.html", nil)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
+	email := r.FormValue("username_input")
+	password := r.FormValue("password_input")
+	println("email: ",email,"pass: ",password)
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		// Render login page with error
-		data := map[string]interface{}{
-			"Error": err.Error(),
-		}
-		c.templates.ExecuteTemplate(w, "login.html", data)
+		// Showing the error page temporarily
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
+		})
 		return
 	}
 
@@ -56,46 +86,13 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   86400, // 24 hours
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   false,
 	})
 
-	_ = user // You can use user data if needed
+	_ = user
 
 	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func (c *AuthController) ShowRegister(w http.ResponseWriter, r *http.Request) {
-	err := c.templates.ExecuteTemplate(w, "register.html", nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	name := r.FormValue("name")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	user, err := c.authService.Register(name, email, password)
-	if err != nil {
-		// Render register page with error
-		data := map[string]interface{}{
-			"Error": err.Error(),
-		}
-		c.templates.ExecuteTemplate(w, "register.html", data)
-		return
-	}
-
-	_ = user // User created successfully
-
-	// Redirect to login page with success message
-	http.Redirect(w, r, "/login?registered=true", http.StatusSeeOther)
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
