@@ -81,7 +81,7 @@ func (s *Server) setupRoutes() {
 	s.router.HandleFunc("/refresh-session", s.authController.HandleRefreshSession)
 
 	// Protected routes
-	s.router.Handle("/", s.authMiddleware.OptionalAuth(http.HandlerFunc(s.handleHome)))
+	s.router.Handle("/layout", s.authMiddleware.OptionalAuth(http.HandlerFunc(s.handleHome)))
 	s.router.Handle("/profile", s.authMiddleware.RequireAuth(http.HandlerFunc(s.handleProfile)))
 	s.router.Handle("/create-post", s.authMiddleware.RequireAuth(http.HandlerFunc(s.handleCreatePost)))
 
@@ -105,7 +105,7 @@ func (s *Server) SetPort(port string) {
 
 // Handler functions
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/layout" {
 		http.NotFound(w, r)
 		return
 	}
@@ -118,7 +118,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		"Title":           "Forum Home",
 	}
 
-	err := s.templates.ExecuteTemplate(w, "home.html", data)
+	err := s.templates.ExecuteTemplate(w, "layout.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

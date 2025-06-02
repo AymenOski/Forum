@@ -92,7 +92,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	_ = user
 
 	// Redirect to home page
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/layout", http.StatusSeeOther)
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
