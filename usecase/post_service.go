@@ -18,16 +18,16 @@ type PostService struct {
 	postReactionRepo  repository.PostReactionRepository
 }
 
-func NewPostService(postRepo repository.PostRepository, userRepo repository.UserRepository,
-	categoryRepo repository.CategoryRepository, postCategoryRepo repository.PostAggregateRepository,
-	postReactionRepo repository.PostReactionRepository,
+func NewPostService(postRepo *repository.PostRepository, userRepo *repository.UserRepository,
+	categoryRepo *repository.CategoryRepository, postCategoryRepo *repository.PostAggregateRepository,
+	postReactionRepo *repository.PostReactionRepository,
 ) *PostService {
 	return &PostService{
-		postRepo:          postRepo,
-		userRepo:          userRepo,
-		categoryRepo:      categoryRepo,
-		postAggregateRepo: postCategoryRepo,
-		postReactionRepo:  postReactionRepo,
+		postRepo:          *postRepo,
+		userRepo:          *userRepo,
+		categoryRepo:      *categoryRepo,
+		postAggregateRepo: *postCategoryRepo,
+		postReactionRepo:  *postReactionRepo,
 	}
 }
 
@@ -63,17 +63,9 @@ func (ps *PostService) CreatePost(userID *uuid.UUID, content string, categoryIDs
 		Content:   content,
 		CreatedAt: time.Now(),
 	}
-	err = ps.postRepo.Create(post)
-	if err != nil {
-		return nil, err
-	}
-	// Associate the categories to the post
+	// Create and associate the categories to the post
 	err = ps.postAggregateRepo.CreatePostWithCategories(post, categoryIDs)
 	if err != nil {
-		err := ps.postRepo.Delete(post.ID)
-		if err != nil {
-			return nil, err
-		}
 		return nil, err
 	}
 	return post, nil
@@ -124,4 +116,12 @@ func (ps *PostService) ReactToPost(postID *uuid.UUID, userID *uuid.UUID, reactio
 		return nil, err
 	}
 	return commentReaction, nil
+}
+
+func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
+	posts, err := pc.postAggregateRepo.GetFeedForUser()
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }

@@ -75,6 +75,7 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 	if !isValidEmail(email) {
 		return "", nil, errors.New("this is the correct email address format : example@domain.com")
 	}
+
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
@@ -87,31 +88,24 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 		return "", nil, errors.New("incorrect password")
 	}
 
-	session, err := s.sessionRepo.GetByUserID(user.ID)
-	var token string
+	s.sessionRepo.DeleteAllUserSessions(user.ID)
+
+	token, err := s.generateSessionToken()
 	if err != nil {
-		// Generate session token
-		token, err = s.generateSessionToken()
-		if err != nil {
-			return "", nil, err
-		}
-
-		expiry := time.Now().Add(24 * time.Hour)
-
-		// Create session using your repository method
-		session := &entity.UserSession{
-			UserID:       user.ID,
-			SessionToken: token,
-			ExpiresAt:    expiry,
-			CreatedAt:    time.Now(),
-		}
-		err = s.sessionRepo.Create(session)
-		if err != nil {
-			return "", nil, err
-		}
+		return "", nil, err
 	}
-	// update the token
-	s.sessionRepo.Update(session)
+
+	session := &entity.UserSession{
+		UserID:       user.ID,
+		SessionToken: token,
+		ExpiresAt:    time.Now().Add(24 * time.Hour),
+		CreatedAt:    time.Now(),
+	}
+
+	err = s.sessionRepo.Create(session)
+	if err != nil {
+		return "", nil, err
+	}
 
 	return token, user, nil
 }

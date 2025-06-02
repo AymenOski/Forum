@@ -82,7 +82,7 @@ func (r *SQLitePostCategoryRepository) GetCategoriesByPostID(postID uuid.UUID) (
 }
 
 func (r *SQLitePostCategoryRepository) GetPostsByCategoryID(categoryID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.title, p.content, p.user_id, p.created_at 
+	query := `SELECT p.id, p.content, p.user_id, p.created_at 
 			  FROM posts p 
 			  INNER JOIN post_categories pc ON p.id = pc.post_id 
 			  WHERE pc.category_id = ? 
@@ -100,7 +100,7 @@ func (r *SQLitePostCategoryRepository) GetPostsByCategoryID(categoryID uuid.UUID
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

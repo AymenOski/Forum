@@ -23,23 +23,23 @@ func (r *SQLitePostRepository) Create(post *entity.Post) error {
 	post.ID = uuid.New()
 	post.CreatedAt = time.Now()
 
-	query := `INSERT INTO posts (id, title, content, user_id, created_at)
+	query := `INSERT INTO posts (id, content, user_id, created_at)
 			  VALUES (?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, post.ID.String(), post.Title, post.Content,
+	_, err := r.db.Exec(query, post.ID.String(), post.Content,
 		post.UserID.String(), post.CreatedAt)
 	return err
 }
 
 func (r *SQLitePostRepository) GetByID(postID uuid.UUID) (*entity.Post, error) {
-	query := `SELECT id, title, content, user_id, created_at FROM posts WHERE id = ?`
+	query := `SELECT id, content, user_id, created_at FROM posts WHERE id = ?`
 
 	row := r.db.QueryRow(query, postID.String())
 
 	post := &entity.Post{}
 	var idStr, userIDStr string
 
-	err := row.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+	err := row.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (r *SQLitePostRepository) GetByID(postID uuid.UUID) (*entity.Post, error) {
 }
 
 func (r *SQLitePostRepository) GetAll() ([]*entity.Post, error) {
-	query := `SELECT id, title, content, user_id, created_at FROM posts ORDER BY created_at DESC`
+	query := `SELECT id, content, user_id, created_at FROM posts ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -72,7 +72,7 @@ func (r *SQLitePostRepository) GetAll() ([]*entity.Post, error) {
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (r *SQLitePostRepository) GetAll() ([]*entity.Post, error) {
 }
 
 func (r *SQLitePostRepository) GetByUserID(userID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT id, title, content, user_id, created_at 
+	query := `SELECT id, content, user_id, created_at 
 			  FROM posts WHERE user_id = ? ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(query, userID.String())
@@ -109,7 +109,7 @@ func (r *SQLitePostRepository) GetByUserID(userID uuid.UUID) ([]*entity.Post, er
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func (r *SQLitePostRepository) GetByUserID(userID uuid.UUID) ([]*entity.Post, er
 }
 
 func (r *SQLitePostRepository) GetWithPagination(limit, offset int) ([]*entity.Post, error) {
-	query := `SELECT id, title, content, user_id, created_at 
+	query := `SELECT id, content, user_id, created_at 
 			  FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?`
 
 	rows, err := r.db.Query(query, limit, offset)
@@ -146,7 +146,7 @@ func (r *SQLitePostRepository) GetWithPagination(limit, offset int) ([]*entity.P
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +168,7 @@ func (r *SQLitePostRepository) GetWithPagination(limit, offset int) ([]*entity.P
 }
 
 func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.title, p.content, p.user_id, p.created_at 
+	query := `SELECT p.id, p.content, p.user_id, p.created_at 
 			  FROM posts p 
 			  INNER JOIN post_categories pc ON p.id = pc.post_id 
 			  WHERE pc.category_id = ? 
@@ -186,7 +186,7 @@ func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Po
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +208,7 @@ func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Po
 }
 
 func (r *SQLitePostRepository) GetByCategoryWithPagination(categoryID uuid.UUID, limit, offset int) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.title, p.content, p.user_id, p.created_at 
+	query := `SELECT p.id, p.content, p.user_id, p.created_at 
 			  FROM posts p 
 			  INNER JOIN post_categories pc ON p.id = pc.post_id 
 			  WHERE pc.category_id = ? 
@@ -226,7 +226,7 @@ func (r *SQLitePostRepository) GetByCategoryWithPagination(categoryID uuid.UUID,
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +248,7 @@ func (r *SQLitePostRepository) GetByCategoryWithPagination(categoryID uuid.UUID,
 }
 
 func (r *SQLitePostRepository) GetMostLiked(limit int) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.title, p.content, p.user_id, p.created_at 
+	query := `SELECT p.id, p.content, p.user_id, p.created_at 
 			  FROM posts p 
 			  LEFT JOIN (
 				  SELECT post_id, COUNT(*) as like_count 
@@ -271,7 +271,7 @@ func (r *SQLitePostRepository) GetMostLiked(limit int) ([]*entity.Post, error) {
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -293,7 +293,7 @@ func (r *SQLitePostRepository) GetMostLiked(limit int) ([]*entity.Post, error) {
 }
 
 func (r *SQLitePostRepository) GetRecent(limit int) ([]*entity.Post, error) {
-	query := `SELECT id, title, content, user_id, created_at 
+	query := `SELECT id, content, user_id, created_at 
 			  FROM posts ORDER BY created_at DESC LIMIT ?`
 
 	rows, err := r.db.Query(query, limit)
@@ -308,7 +308,7 @@ func (r *SQLitePostRepository) GetRecent(limit int) ([]*entity.Post, error) {
 		post := &entity.Post{}
 		var idStr, userIDStr string
 
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -330,9 +330,9 @@ func (r *SQLitePostRepository) GetRecent(limit int) ([]*entity.Post, error) {
 }
 
 func (r *SQLitePostRepository) Update(post *entity.Post) error {
-	query := `UPDATE posts SET title = ?, content = ? WHERE id = ?`
+	query := `UPDATE posts SET content = ? WHERE id = ?`
 
-	_, err := r.db.Exec(query, post.Title, post.Content, post.ID.String())
+	_, err := r.db.Exec(query, post.Content, post.ID.String())
 	return err
 }
 
@@ -341,46 +341,6 @@ func (r *SQLitePostRepository) Delete(postID uuid.UUID) error {
 
 	_, err := r.db.Exec(query, postID.String())
 	return err
-}
-
-func (r *SQLitePostRepository) Search(query string) ([]*entity.Post, error) {
-	searchQuery := `SELECT id, title, content, user_id, created_at 
-					FROM posts 
-					WHERE title LIKE ? OR content LIKE ? 
-					ORDER BY created_at DESC`
-
-	searchTerm := "%" + query + "%"
-	rows, err := r.db.Query(searchQuery, searchTerm, searchTerm)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []*entity.Post
-
-	for rows.Next() {
-		post := &entity.Post{}
-		var idStr, userIDStr string
-
-		err := rows.Scan(&idStr, &post.Title, &post.Content, &userIDStr, &post.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-
-		post.ID, err = uuid.Parse(idStr)
-		if err != nil {
-			return nil, err
-		}
-
-		post.UserID, err = uuid.Parse(userIDStr)
-		if err != nil {
-			return nil, err
-		}
-
-		posts = append(posts, post)
-	}
-
-	return posts, nil
 }
 
 func (r *SQLitePostRepository) GetWithDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {

@@ -2,12 +2,13 @@ package server
 
 import (
 	"database/sql"
-	infra_repository "forum/infrastructure/repository"
-	"forum/interface/controller"
-	"forum/usecase"
 	"html/template"
 	"log"
 	"net/http"
+
+	infra_repository "forum/infrastructure/repository"
+	"forum/interface/controller"
+	"forum/usecase"
 )
 
 var tmpl1 *template.Template
@@ -30,19 +31,23 @@ func MyServer(db *sql.DB) *http.Server {
 	user_infra_repo := infra_repository.NewSQLiteUserRepository(db)
 	session_infra_repo := infra_repository.NewSQLiteUserSessionRepository(db)
 	post_infra_repo := infra_repository.NewSQLitePostRepository(db)
+	postCategory_infra_repo := infra_repository.NewSQLitePostCategoryRepository(db)
 	category_infra_repo := infra_repository.NewSQLiteCategoryRepository(db)
 	post_reaction_infra_repo := infra_repository.NewSQLitePostReactionRepository(db)
-	post_category_infra_repo := infra_repository.NewSQLitePostAggregateRepository(db)
+	post_category_infra_repo := infra_repository.NewSQLitePostAggregateRepository(db, &post_infra_repo, &postCategory_infra_repo,
+		&user_infra_repo, &post_reaction_infra_repo)
 	comment_infra_repo := infra_repository.NewSQLiteCommentRepository(db)
 	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
 
 	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)
-	post_usecase := usecase.NewPostService(post_infra_repo, user_infra_repo, category_infra_repo, post_category_infra_repo, post_reaction_infra_repo)
-	auth_controller := controller.NewAuthController(auth_usecase, tmpl1)
-	post_controller := controller.NewPostController(post_usecase)
+	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo, &post_reaction_infra_repo)
+	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, comment_reaction_infra_repo)
+	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
+	post_controller := controller.NewPostController(post_usecase, comment_usecase, tmpl1)
 
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
 
 	server := &http.Server{

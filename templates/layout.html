@@ -12,7 +12,6 @@
 <body>
 
     <!-- NavBar section -->
-    <!-- Hidden radio inputs for each theme -->
     <input type="radio" id="theme-pink" name="theme" class="theme-radio">
     <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
     <input type="radio" id="theme-forest" name="theme" class="theme-radio">
@@ -26,7 +25,7 @@
         <nav class="nav-links">
             <div class="auth-buttons">
                 <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a href="/signup">Register</a>
             </div>
             <div class="themes">
 
@@ -42,7 +41,7 @@
 
     <main>
 
-        <!-- Feltering and Posting section -->
+        <!-- Filtering and Posting section -->
 
         <div class="post-toggle-wrapper">
 
@@ -61,11 +60,11 @@
                 <div class="post-section filter-section">
                     <form method="GET" action="/filter">
                         <!-- Error Popout for filter form -->
-<!--temporaly message: to test the error popout, you can deleat `hidden` and then select the checkbox in the front end to see the pop-out-->
-                        <input type="checkbox" id="error-filter" class="error-toggle" {{if .FilterError}}checked{{end}} hidden>
+                        <input type="checkbox" id="error-filter" class="error-toggle" {{if .FilterError}}checked{{end}}
+                            hidden>
                         <div class="error-popout">
                             <label for="error-filter" class="error-close">✖</label>
-                                <p class="error-message">{{.FilterError}}</p>
+                            <p class="error-message">{{.FilterError}}</p>
                         </div>
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
@@ -109,14 +108,14 @@
                 </div>
 
                 <div class="post-section create-section">
-                    <form method="POST" action="/create-post">
+                    <form method="POST" action="/post/create">
                         <!-- Error Popout for post creation -->
-                        <input type="checkbox" id="error-create-post" class="error-toggle" {{if .PostError}}checked{{end}} hidden>
+                        <input type="checkbox" id="error-create-post" class="error-toggle" {{if
+                            .PostError}}checked{{end}} hidden>
                         <div class="error-popout">
                             <label for="error-create-post" class="error-close">✖</label>
-                                <p class="error-message">{{.PostError}}</p>
+                            <p class="error-message">{{.PostError}}</p>
                         </div>
-                        <!-- <input type="text" name="title" placeholder="Title..." required maxlength="50"> -->
                         <textarea name="content" placeholder="Write your post..." required maxlength="500"></textarea>
 
                         <h4>Select Categories:</h4>
@@ -139,7 +138,7 @@
                             </label>
                             <label class="category-tag">
                                 <input type="checkbox" name="categories[]" value="general">
-                                <span>General Discussion</span>
+                                <span>General</span>
                             </label>
                         </div>
                         <button type="submit">Post</button>
@@ -153,23 +152,27 @@
         <section class="posts-container">
             <h2 class="posts-title">Published Posts</h2>
 
-            {{if .}}
-            {{range .}}
+            {{if .Posts}}
+            {{range .Posts}}
             <article class="forum-post">
-                <div class="post-author">
-                    <span class="post-author">Posted by {{.Authorname}}</span>
+                <div class="post-header">
+                    <span class="post-author">Posted by {{.Author.UserName}}</span>
+                    <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
                 </div>
                 <div class="post-content">{{.Content}}</div>
 
                 <div class="post-footer">
                     <div class="post-categories">
-                        <span class="category-badge">General</span>
+                        {{range .Categories}}
+                        <span class="category-badge">{{.Name}}</span>
+                        {{end}}
                     </div>
                     <div class="post-stats">
-                        <span class="likes">👍 {{.LikesCount}}</span>
-                        <span class="dislikes">👎 {{.DislikesCount}}</span>
-                        <span class="comments">💬 3 comments</span>
+                        <span class="likes">👍 {{.LikeCount}}</span>
+                        <span class="dislikes">👎 {{.DislikeCount}}</span>
+                        <span class="comments">💬 {{len .Comments}} comments</span>
                     </div>
+                    <a href="/post/{{.ID}}" class="view-post">View Post</a>
                 </div>
             </article>
             {{end}}

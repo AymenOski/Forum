@@ -10,12 +10,14 @@ import (
 
 type AuthController struct {
 	authService *usecase.AuthService
+	postService *usecase.PostService
 	templates   *template.Template
 }
 
-func NewAuthController(authService *usecase.AuthService, templates *template.Template) *AuthController {
+func NewAuthController(authService *usecase.AuthService, postService *usecase.PostService, templates *template.Template) *AuthController {
 	return &AuthController{
 		authService: authService,
+		postService: postService,
 		templates:   templates,
 	}
 }
@@ -86,7 +88,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   86400, // 24 hours
 		HttpOnly: true,
-		Secure:   false,
 	})
 
 	_ = user
