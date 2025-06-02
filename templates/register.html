@@ -10,6 +10,11 @@
     <div id="signup_container">
         <h1>Sign up</h1>
         <form action="/auth/register" method="POST">
+            <input type="checkbox" id="error-create-post" class="error-toggle" {{if .registerError}}checked{{end}} hidden>
+            <div class="error-popout">
+                <label for="error-create-post" class="error-close">✖</label>
+                <p class="error-message">{{.registerError}}</p>
+            </div>
             <label for="username_input">username</label>
                 <input type="text" id="username_input" name="username" required placeholder="Enter your username">
             

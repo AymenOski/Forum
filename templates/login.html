@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/login.css">
@@ -11,16 +12,21 @@
     <div class="login_container">
         <h1>Login</h1>
         <form action="/auth/me" method="POST">
+            <input type="checkbox" id="error-create-post" class="error-toggle" {{if .loginError}}checked{{end}} hidden>
+            <div class="error-popout">
+                <label for="error-create-post" class="error-close">✖</label>
+                <p class="error-message">{{.loginError}}</p>
+            </div>
             <label for="username_input">Username / Email</label>
-                <input type="text" id="username_input" placeholder="Enter your username or email"><br>
-            
+            <input type="text" id="username_input" placeholder="Enter your username or email"><br>
+
             <label for="password_input">Password</label>
-                <input type="password" id="password_input" placeholder="Enter your password"><br>
+            <input type="password" id="password_input" placeholder="Enter your password"><br>
             <div class="new_account_div">
                 <b>don't have an account?</b>
                 <a href="/auth/register">create here!</a>
             </div>
-        <input type="submit" class="login_button" value="Sign In">
+            <input type="submit" class="login_button" value="Sign In">
         </form>
     </div>
 </body>
