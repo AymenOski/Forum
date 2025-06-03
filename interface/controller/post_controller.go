@@ -1,39 +1,39 @@
 package controller
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
-	"forum/domain/entity"
 	"forum/usecase"
 
 	"github.com/google/uuid"
 )
 
 type PostController struct {
-	postService    *usecase.PostService
-	commentService *usecase.CommentService
-	templates      *template.Template
+	postService     *usecase.PostService
+	commentService  *usecase.CommentService
+	categoryService *usecase.CategoryService
+	templates       *template.Template
 }
 
-func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, templates *template.Template) *PostController {
+func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, categoryService *usecase.CategoryService, templates *template.Template) *PostController {
 	return &PostController{
-		postService:    postService,
-		commentService: commentService,
-		templates:      templates,
+		postService:     postService,
+		commentService:  commentService,
+		categoryService: categoryService,
+		templates:       templates,
 	}
 }
 
-func (c *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value("user").(*entity.User)
-	if !ok || user == nil {
+func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
+	token, err := r.Cookie("session_token")
+	if err != nil || token == nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
 	if r.Method != http.MethodPost {
-		c.ShowErrorPage(w, ErrorMessage{
+		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      "Method not allowed",
 		})
@@ -41,27 +41,33 @@ func (c *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	content := r.FormValue("content")
-	categoryIDs := r.Form["categories"]
+	categories := r.Form["categories"]
 
 	if content == "" {
-		c.ShowErrorPage(w, ErrorMessage{
+		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusBadRequest,
 			Error:      "Title and content are required",
 		})
 		return
 	}
 
-	var categories []*uuid.UUID
-	for _, catID := range categoryIDs {
-		id, err := uuid.Parse(catID)
-		if err == nil {
-			categories = append(categories, &id)
+	// verify if the categories exist
+	categoriesIDs := make([]*uuid.UUID, 0, len(categories))
+	for _, cat := range categories {
+		c, err := pc.categoryService.GetCategoryByName(cat)
+		if err != nil {
+			pc.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusBadRequest,
+				Error:      "Invalid category: " + cat,
+			})
+			return
 		}
+		categoriesIDs = append(categoriesIDs, &c.ID)
 	}
 
-	_, err := c.postService.CreatePost(&user.ID, content, categories)
+	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
 	if err != nil {
-		c.ShowErrorPage(w, ErrorMessage{
+		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      err.Error(),
 		})

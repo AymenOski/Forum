@@ -47,7 +47,7 @@ func (r *SQLitePostCategoryRepository) DeleteByCategoryID(categoryID uuid.UUID) 
 }
 
 func (r *SQLitePostCategoryRepository) GetCategoriesByPostID(postID uuid.UUID) ([]*entity.Category, error) {
-	query := `SELECT c.id, c.name, c.description, c.created_at 
+	query := `SELECT c.id, c.name, c.created_at 
 			  FROM categories c 
 			  INNER JOIN post_categories pc ON c.id = pc.category_id 
 			  WHERE pc.post_id = ? 
@@ -65,7 +65,7 @@ func (r *SQLitePostCategoryRepository) GetCategoriesByPostID(postID uuid.UUID) (
 		category := &entity.Category{}
 		var idStr string
 
-		err := rows.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
+		err := rows.Scan(&idStr, &category.Name, &category.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

@@ -3,6 +3,9 @@ package database
 import (
 	"database/sql"
 	"log"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 func RunMigrations(db *sql.DB) {
@@ -42,7 +45,6 @@ func createPostsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS posts (
 		id CHAR(36) NOT NULL,
-		title TEXT NOT NULL,
 		content TEXT NOT NULL,
 		user_id CHAR(36) NOT NULL,
 		created_at DATETIME NOT NULL,
@@ -76,11 +78,11 @@ func createCommentsTable(db *sql.DB) {
 }
 
 func createCategoriesTable(db *sql.DB) {
+	// Create the table
 	query := `
 	CREATE TABLE IF NOT EXISTS categories (
 		id CHAR(36) NOT NULL,
-		name TEXT NOT NULL,
-		description TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE,
 		created_at DATETIME NOT NULL,
 		PRIMARY KEY(id)
 	);
@@ -88,6 +90,28 @@ func createCategoriesTable(db *sql.DB) {
 	_, err := db.Exec(query)
 	if err != nil {
 		log.Fatal("Failed to create categories table:", err)
+	}
+
+	defaultCategories := []struct {
+		ID   string
+		Name string
+	}{
+		{uuid.New().String(), "general"},
+		{uuid.New().String(), "technology"},
+		{uuid.New().String(), "gaming"},
+		{uuid.New().String(), "science"},
+		{uuid.New().String(), "art & creativity"},
+	}
+
+	for _, cat := range defaultCategories {
+		insertQuery := `
+		INSERT OR IGNORE INTO categories (id, name, created_at)
+		VALUES (?, ?, ?);
+		`
+		_, err := db.Exec(insertQuery, cat.ID, cat.Name, time.Now())
+		if err != nil {
+			log.Printf("Warning: Failed to insert category %s: %v", cat.Name, err)
+		}
 	}
 }
 

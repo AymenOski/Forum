@@ -16,11 +16,12 @@ type PostService struct {
 	categoryRepo      repository.CategoryRepository
 	postAggregateRepo repository.PostAggregateRepository
 	postReactionRepo  repository.PostReactionRepository
+	sessionRepo       repository.UserSessionRepository
 }
 
 func NewPostService(postRepo *repository.PostRepository, userRepo *repository.UserRepository,
 	categoryRepo *repository.CategoryRepository, postCategoryRepo *repository.PostAggregateRepository,
-	postReactionRepo *repository.PostReactionRepository,
+	postReactionRepo *repository.PostReactionRepository, sessionRepo *repository.UserSessionRepository,
 ) *PostService {
 	return &PostService{
 		postRepo:          *postRepo,
@@ -28,25 +29,40 @@ func NewPostService(postRepo *repository.PostRepository, userRepo *repository.Us
 		categoryRepo:      *categoryRepo,
 		postAggregateRepo: *postCategoryRepo,
 		postReactionRepo:  *postReactionRepo,
+		sessionRepo:       *sessionRepo,
 	}
 }
 
-func (ps *PostService) CreatePost(userID *uuid.UUID, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
-	user, err := ps.userRepo.GetByID(*userID)
+func (ps *PostService) CreatePost(token string, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
+	// Get session and user from token
+	session, err := ps.sessionRepo.GetByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(session.ExpiresAt) {
+		return nil, errors.New("session expired")
+	}
+
+	user, err := ps.userRepo.GetByID(session.UserID)
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
 		return nil, errors.New("user not found")
 	}
+
+	// Validate content
 	if content == "" {
-		return nil, errors.New("post content cannot be emtpy")
-	}
-	if len(categoryIDs) <= 0 {
-		return nil, errors.New("you have to select one category at least")
+		return nil, errors.New("post content cannot be empty")
 	}
 	if len(content) > 5000 {
-		return nil, errors.New("post content too long (max: 5000 character)")
+		return nil, errors.New("post content too long (max: 5000 characters)")
+	}
+
+	// Validate categories
+	if len(categoryIDs) <= 0 {
+		return nil, errors.New("you have to select one category at least")
 	}
 
 	for _, categoryID := range categoryIDs {
@@ -58,16 +74,19 @@ func (ps *PostService) CreatePost(userID *uuid.UUID, content string, categoryIDs
 			return nil, errors.New("one or more categories does not exist")
 		}
 	}
+
 	post := &entity.Post{
-		UserID:    *userID,
+		UserID:    user.ID,
 		Content:   content,
 		CreatedAt: time.Now(),
 	}
+
 	// Create and associate the categories to the post
 	err = ps.postAggregateRepo.CreatePostWithCategories(post, categoryIDs)
 	if err != nil {
 		return nil, err
 	}
+
 	return post, nil
 }
 

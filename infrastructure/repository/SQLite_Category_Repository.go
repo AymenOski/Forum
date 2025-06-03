@@ -25,10 +25,10 @@ func (r *SQLiteCategoryRepository) Create(category *entity.Category) error {
 	category.ID = uuid.New()
 	category.CreatedAt = time.Now()
 
-	query := `INSERT INTO categories (id, name, description, created_at)
+	query := `INSERT INTO categories (id, name, created_at)
 			  VALUES (?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, category.ID.String(), category.Name, category.Description, category.CreatedAt)
+	_, err := r.db.Exec(query, category.ID.String(), category.Name, category.CreatedAt)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return custom_errors.ErrCategoryExists
@@ -39,14 +39,14 @@ func (r *SQLiteCategoryRepository) Create(category *entity.Category) error {
 }
 
 func (r *SQLiteCategoryRepository) GetByID(categoryID uuid.UUID) (*entity.Category, error) {
-	query := `SELECT id, name, description, created_at FROM categories WHERE id = ?`
+	query := `SELECT id, name, created_at FROM categories WHERE id = ?`
 
 	row := r.db.QueryRow(query, categoryID.String())
 
 	category := &entity.Category{}
 	var idStr string
 
-	err := row.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
+	err := row.Scan(&idStr, &category.Name, &category.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, custom_errors.ErrCategoryNotFound
@@ -63,14 +63,14 @@ func (r *SQLiteCategoryRepository) GetByID(categoryID uuid.UUID) (*entity.Catego
 }
 
 func (r *SQLiteCategoryRepository) GetByName(name string) (*entity.Category, error) {
-	query := `SELECT id, name, description, created_at FROM categories WHERE name = ?`
+	query := `SELECT id, name, created_at FROM categories WHERE name = ?`
 
 	row := r.db.QueryRow(query, name)
 
 	category := &entity.Category{}
 	var idStr string
 
-	err := row.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
+	err := row.Scan(&idStr, &category.Name, &category.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, custom_errors.ErrCategoryNotFound
@@ -87,7 +87,7 @@ func (r *SQLiteCategoryRepository) GetByName(name string) (*entity.Category, err
 }
 
 func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
-	query := `SELECT id, name, description, created_at FROM categories ORDER BY name ASC`
+	query := `SELECT id, name, created_at FROM categories ORDER BY name ASC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -101,7 +101,7 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 		category := &entity.Category{}
 		var idStr string
 
-		err := rows.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt)
+		err := rows.Scan(&idStr, &category.Name, &category.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}
@@ -118,9 +118,9 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 }
 
 func (r *SQLiteCategoryRepository) Update(category *entity.Category) error {
-	query := `UPDATE categories SET name = ?, description = ? WHERE id = ?`
+	query := `UPDATE categories SET name = ? WHERE id = ?`
 
-	result, err := r.db.Exec(query, category.Name, category.Description, category.ID.String())
+	result, err := r.db.Exec(query, category.Name, category.ID.String())
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return custom_errors.ErrCategoryExists
@@ -173,10 +173,10 @@ func (r *SQLiteCategoryRepository) CheckNameExists(name string) (bool, error) {
 }
 
 func (r *SQLiteCategoryRepository) GetWithPostCount() ([]*entity.Category, error) {
-	query := `SELECT c.id, c.name, c.description, c.created_at, COUNT(pc.post_id) as post_count
+	query := `SELECT c.id, c.name, c.created_at, COUNT(pc.post_id) as post_count
 			  FROM categories c 
 			  LEFT JOIN post_categories pc ON c.id = pc.category_id 
-			  GROUP BY c.id, c.name, c.description, c.created_at 
+			  GROUP BY c.id, c.name, c.created_at 
 			  ORDER BY c.name ASC`
 
 	rows, err := r.db.Query(query)
@@ -192,7 +192,7 @@ func (r *SQLiteCategoryRepository) GetWithPostCount() ([]*entity.Category, error
 		var idStr string
 		var postCount int
 
-		err := rows.Scan(&idStr, &category.Name, &category.Description, &category.CreatedAt, &postCount)
+		err := rows.Scan(&idStr, &category.Name, &category.CreatedAt, &postCount)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 		}

@@ -59,7 +59,6 @@ func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Po
 	}
 	defer tx.Rollback()
 
-	// Create post
 	err = r.postRepo.Create(post)
 	if err != nil {
 		return err

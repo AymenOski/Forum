@@ -24,7 +24,7 @@ func (r *SQLitePostRepository) Create(post *entity.Post) error {
 	post.CreatedAt = time.Now()
 
 	query := `INSERT INTO posts (id, content, user_id, created_at)
-			  VALUES (?, ?, ?, ?, ?)`
+			  VALUES (?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query, post.ID.String(), post.Content,
 		post.UserID.String(), post.CreatedAt)

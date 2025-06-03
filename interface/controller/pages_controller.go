@@ -30,7 +30,16 @@ func (c *AuthController) ShowLoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
-	c.renderTemplate(w, "layout.html", nil)
+	posts, err := c.postService.GetPosts()
+	if err != nil {
+		// Showing the error page temporarily
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
+		})
+		return
+	}
+	c.renderTemplate(w, "layout.html", posts)
 }
 
 func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
