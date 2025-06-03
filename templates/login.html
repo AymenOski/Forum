@@ -11,7 +11,8 @@
 <body>
     <div class="login_container">
         <h1>Login</h1>
-        <form action="/auth/me" method="POST">
+            <form action="/login" method="POST">
+
             <input type="checkbox" id="error-create-post" class="error-toggle" {{if .loginError}}checked{{end}} hidden>
             <div class="error-popout">
                 <label for="error-create-post" class="error-close">✖</label>
@@ -24,7 +25,8 @@
             <input type="password" id="password_input" name="loginPassword" placeholder="Enter your password"><br>
             <div class="new_account_div">
                 <b>don't have an account?</b>
-                <a href="/auth/register">create here!</a>
+                <a href="/signup">create here!</a>
+
             </div>
             <input type="submit" class="login_button" value="Sign In">
         </form>
