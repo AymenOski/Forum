@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type Comment struct {
+type PostReaction struct {
 	ID        uuid.UUID `json:"id" db:"id"`
-	Content   string    `json:"content" db:"content"`
 	UserID    uuid.UUID `json:"user_id" db:"user_id"`
 	PostID    uuid.UUID `json:"post_id" db:"post_id"`
-	CreatedAt time.Time `json:"createdat" db:"createdat"` // Note: schema shows 'createdat' not 'created_at'
+	Reaction  bool      `json:"reaction" db:"reaction"` // true for like, false for dislike
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }

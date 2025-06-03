@@ -15,20 +15,24 @@ import (
 )
 
 type AuthService struct {
-	userRepo repository.UserRepository
+	userRepo    repository.UserRepository
+	sessionRepo repository.UserSessionRepository
 }
 
-func NewAuthService(userRepo repository.UserRepository) *AuthService {
-	return &AuthService{userRepo: userRepo}
+func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.UserSessionRepository) *AuthService {
+	return &AuthService{
+		userRepo:    userRepo,
+		sessionRepo: sessionRepo,
+	}
 }
 
-func (s *AuthService) Register(name, email, password string) (*entity.User, error) {
+func (s *AuthService) Signup(name, email, password string) (*entity.User, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(email) {
 		return nil, errors.New("this is the correct email address format : example@domain.com")
 	}
 	// Check if user already exists
 	// if there is no error when getting anemail that means the user already exists
-	email = strings.ToLower(strings.TrimSpace(email))
 	_, err := s.userRepo.GetByEmail(email)
 	if err == nil {
 		return nil, errors.New("user already exists")
@@ -43,7 +47,7 @@ func (s *AuthService) Register(name, email, password string) (*entity.User, erro
 	}
 
 	password = strings.TrimSpace(password)
-	if len(password) < 4 || len(password) > 64 {
+	if len(password) < 6 || len(password) > 64 {
 		return nil, errors.New("password should be between 4 and 64 characters")
 	}
 
@@ -53,7 +57,7 @@ func (s *AuthService) Register(name, email, password string) (*entity.User, erro
 	}
 
 	user := &entity.User{
-		Name:         name,
+		UserName:     name,
 		Email:        email,
 		PasswordHash: string(hashedPassword),
 		CreatedAt:    time.Now(),
@@ -67,9 +71,11 @@ func (s *AuthService) Register(name, email, password string) (*entity.User, erro
 }
 
 func (s *AuthService) Login(email, password string) (string, *entity.User, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(email) {
 		return "", nil, errors.New("this is the correct email address format : example@domain.com")
 	}
+
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
@@ -82,16 +88,21 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 		return "", nil, errors.New("incorrect password")
 	}
 
-	// Generate session token
+	s.sessionRepo.DeleteAllUserSessions(user.ID)
+
 	token, err := s.generateSessionToken()
 	if err != nil {
 		return "", nil, err
 	}
 
-	expiry := time.Now().Add(24 * time.Hour)
+	session := &entity.UserSession{
+		UserID:       user.ID,
+		SessionToken: token,
+		ExpiresAt:    time.Now().Add(24 * time.Hour),
+		CreatedAt:    time.Now(),
+	}
 
-	// Create session using your repository method
-	err = s.userRepo.CreateSession(&user.UserID, token, expiry)
+	err = s.sessionRepo.Create(session)
 	if err != nil {
 		return "", nil, err
 	}
@@ -100,11 +111,18 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 }
 
 func (s *AuthService) Logout(userID uuid.UUID) error {
-	return s.userRepo.ClearSession(&userID)
+	return s.sessionRepo.DeleteAllUserSessions(userID)
 }
 
-func (s *AuthService) ValidateSession(token string) (*entity.User, error) {
-	return s.userRepo.GetBySessionToken(token)
+func (s *AuthService) ValidateSession(token string) (*entity.UserSession, error) {
+	session, err := s.sessionRepo.GetByToken(token)
+	if err != nil {
+		return nil, err
+	}
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("session expired")
+	}
+	return session, nil
 }
 
 func (s *AuthService) generateSessionToken() (string, error) {

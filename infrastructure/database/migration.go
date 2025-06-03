@@ -10,7 +10,6 @@ func RunMigrations(db *sql.DB) {
 	if err != nil {
 		log.Fatal("Failed to enable foreign key constraints:", err)
 	}
-
 	createUsersTable(db)
 	createPostsTable(db)
 	createCommentsTable(db)
