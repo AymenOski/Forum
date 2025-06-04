@@ -59,13 +59,7 @@
             <div class="post-sections">
                 <div class="post-section filter-section">
                     <form method="GET" action="/filter">
-                        <!-- Error Popout for filter form -->
-                        <input type="checkbox" id="error-filter" class="error-toggle" {{if .FilterError}}checked{{end}}
-                            hidden>
-                        <div class="error-popout">
-                            <label for="error-filter" class="error-close">✖</label>
-                            <p class="error-message">{{.FilterError}}</p>
-                        </div>
+                        
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
@@ -109,13 +103,7 @@
 
                 <div class="post-section create-section">
                     <form method="POST" action="/post/create">
-                        <!-- Error Popout for post creation -->
-                        <input type="checkbox" id="error-create-post" class="error-toggle" {{if
-                            .PostError}}checked{{end}} hidden>
-                        <div class="error-popout">
-                            <label for="error-create-post" class="error-close">✖</label>
-                            <p class="error-message">{{.PostError}}</p>
-                        </div>
+                        
                         <textarea name="content" placeholder="Write your post..." required maxlength="500"></textarea>
 
                         <h4>Select Categories:</h4>
@@ -152,8 +140,8 @@
         <section class="posts-container">
             <h2 class="posts-title">Published Posts</h2>
 
-            {{if .Posts}}
-            {{range .Posts}}
+            {{if .}}
+            {{range .}}
             <article class="forum-post">
                 <div class="post-header">
                     <span class="post-author">Posted by {{.Author.UserName}}</span>
@@ -172,7 +160,6 @@
                         <span class="dislikes">👎 {{.DislikeCount}}</span>
                         <span class="comments">💬 {{len .Comments}} comments</span>
                     </div>
-                    <a href="/post/{{.ID}}" class="view-post">View Post</a>
                 </div>
             </article>
             {{end}}

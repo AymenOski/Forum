@@ -14,10 +14,7 @@ func (c *AuthController) renderTemplate(w http.ResponseWriter, template string, 
 	w.Header().Set("Content-type", "text/html")
 	err := c.templates.ExecuteTemplate(w, template, data)
 	if err != nil {
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusInternalServerError,
-			Error:      fmt.Sprintf("Error loading %s", template),
-		})
+		http.Error(w, fmt.Sprintf("Error loading %s: %v", template, err), http.StatusInternalServerError)
 	}
 }
 
@@ -34,7 +31,7 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Showing the error page temporarily
 		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
+			StatusCode: http.StatusInternalServerError,
 			Error:      err.Error(),
 		})
 		return

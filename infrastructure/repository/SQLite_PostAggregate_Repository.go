@@ -2,6 +2,7 @@ package infra_repository
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"forum/domain/entity"
@@ -35,22 +36,6 @@ func NewSQLitePostAggregateRepository(
 	}
 }
 
-func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDetails, error) {
-	posts, err := r.postRepo.GetAll()
-	if err != nil {
-		return nil, err
-	}
-	postWithDetails := make([]*entity.PostWithDetails, 0, len(posts))
-	for _, post := range posts {
-		p, err := r.GetPostWithAllDetails(post.ID)
-		if err != nil {
-			return nil, err
-		}
-		postWithDetails = append(postWithDetails, p)
-	}
-	return postWithDetails, nil
-}
-
 // CreatePostWithCategories creates a post and associates it with categories
 func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Post, categoryIDs []*uuid.UUID) error {
 	tx, err := r.db.Begin()
@@ -79,6 +64,22 @@ func (r *SQLitePostAggregateRepository) CreatePostWithCategories(post *entity.Po
 	return tx.Commit()
 }
 
+func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDetails, error) {
+	posts, err := r.postRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	postWithDetails := make([]*entity.PostWithDetails, 0, len(posts))
+	for _, post := range posts {
+		p, err := r.GetPostWithAllDetails(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		postWithDetails = append(postWithDetails, p)
+	}
+	return postWithDetails, nil
+}
+
 // GetPostWithAllDetails retrieves a post with author, categories, and reaction counts
 func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
 	post, err := r.postRepo.GetByID(postID)
@@ -98,6 +99,7 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 
 	likes, dislikes, err := r.reactionRepo.GetReactionCountsByPostID(postID)
 	if err != nil {
+		fmt.Println("reaction count")
 		return nil, err
 	}
 

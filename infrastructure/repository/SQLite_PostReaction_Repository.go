@@ -2,9 +2,11 @@ package infra_repository
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"forum/domain/entity"
+	custom_errors "forum/domain/errors"
 	"forum/domain/repository"
 
 	"github.com/google/uuid"
@@ -217,12 +219,15 @@ func (r *SQLitePostReactionRepository) GetDislikeCountByPostID(postID uuid.UUID)
 
 func (r *SQLitePostReactionRepository) GetReactionCountsByPostID(postID uuid.UUID) (likes int, dislikes int, err error) {
 	query := `SELECT 
-				SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as likes,
-				SUM(CASE WHEN reaction = 0 THEN 1 ELSE 0 END) as dislikes
+				COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) as likes,
+				COALESCE(SUM(CASE WHEN reaction = 0 THEN 1 ELSE 0 END), 0) as dislikes
 			  FROM post_reaction WHERE post_id = ?`
 
 	err = r.db.QueryRow(query, postID.String()).Scan(&likes, &dislikes)
-	return likes, dislikes, err
+	if err != nil {
+		return 0, 0, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
+	}
+	return likes, dislikes, nil
 }
 
 func (r *SQLitePostReactionRepository) HasUserReacted(userID, postID uuid.UUID) (bool, *bool, error) {
