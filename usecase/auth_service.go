@@ -31,8 +31,7 @@ func (s *AuthService) Signup(name, email, password string) (*entity.User, error)
 	if !isValidEmail(email) {
 		return nil, errors.New("this is the correct email address format : example@domain.com")
 	}
-	// Check if user already exists
-	// if there is no error when getting anemail that means the user already exists
+
 	_, err := s.userRepo.GetByEmail(email)
 	if err == nil {
 		return nil, errors.New("user already exists")
@@ -76,13 +75,11 @@ func (s *AuthService) Login(email, password string) (string, *entity.User, error
 		return "", nil, errors.New("this is the correct email address format : example@domain.com")
 	}
 
-	// Get user by email
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
 		return "", nil, errors.New("invalid credentials")
 	}
 
-	// Check password
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return "", nil, errors.New("incorrect password")
