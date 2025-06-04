@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/register.css">
@@ -10,15 +11,21 @@
     <div id="signup_container">
         <h1>Sign up</h1>
         <form action="/signup" method="POST">
+            <input type="checkbox" id="error-create-post" class="error-toggle" {{if .registerError}}checked{{end}}
+                hidden>
+            <div class="error-popout">
+                <label for="error-create-post" class="error-close">✖</label>
+                <p class="error-message">{{.registerError}}</p>
+            </div>
             <label for="username_input">username</label>
-                <input type="text" id="username_input" name="username" required placeholder="Enter your username"><br>
-            
+            <input type="text" id="username_input" name="username" required placeholder="Enter your username">
+
             <label for="email_input">email</label>
-                <input type="email" id="email_input" name="email" required placeholder="Enter your email address"><br>
-                
+            <input type="email" id="email_input" name="email" required placeholder="Enter your email address">
+
             <label for="password_input">password</label>
-                <input type="password" id="password_input" name="password" required placeholder="Create a secure password"><br><br>
-            
+            <input type="password" id="password_input" name="password" required placeholder="Create a secure password">
+
             <input type="submit" id="submit_button" value="Sign Up">
         </form>
     </div>
