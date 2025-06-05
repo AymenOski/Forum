@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	custom_errors "forum/domain/errors"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -64,12 +65,20 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 		}
 		categoriesIDs = append(categoriesIDs, &c.ID)
 	}
-
+	posts, err := pc.postService.GetPosts()
+	if err != nil {
+		pc.renderTemplate(w, "layout.html", map[string]interface{}{
+			"posts":      posts,
+			"form_error": custom_errors.ErrPostNotFound,
+		})
+		return
+	}
 	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
 	if err != nil {
-		pc.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
+		pc.renderTemplate(w, "layout.html", map[string]interface{}{
+			"form_error": err.Error(),
+			"Content":    content,
+			"posts":      posts,
 		})
 		return
 	}

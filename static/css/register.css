@@ -67,6 +67,21 @@ body {
     background-color: #546E7A;
 }
 
+#signup_container .have_account_div {
+    margin: 15px 0;
+    color: #666;
+}
+
+#signup_container .have_account_div a {
+    color: #1976D2;
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+#signup_container .have_account_div a:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 768px) {
     #signup_container {
         padding: 20px;
@@ -101,15 +116,33 @@ body {
     max-width: 300px;
     z-index: 1000;
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
     pointer-events: none; /*so it doesn't interfere with anything when hidden*/
 }
 
 .error-toggle:checked ~ .error-popout {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     pointer-events: auto;
+    animation: popout-bounce 0.5s ease-out forwards;
+}
+
+@keyframes popout-bounce {
+    0% {
+        transform: translateY(-10px) scale(0.95);
+        opacity: 0;
+        border: 2px solid transparent;
+    }
+    50% {
+        transform: translateY(5px) scale(1.05);
+        opacity: 0.7;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        border: 2px solid transparent;
+    }
 }
 
 .error-message {
@@ -138,9 +171,14 @@ body {
     .error-popout {
         position: relative;
         top: 5px;
+        margin-bottom: -40px;
         left :1.5px;
         max-width: 100%;
         overflow-wrap:break-word;
     }
 }
 
+.back-to-home {
+    margin-top: 20px;
+    text-align: center;
+}

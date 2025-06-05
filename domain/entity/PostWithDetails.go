@@ -8,3 +8,4 @@ type PostWithDetails struct {
 	LikeCount    int         `json:"like_count"`
 	DislikeCount int         `json:"dislike_count"`
 }
+

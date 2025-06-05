@@ -420,8 +420,9 @@ textarea:focus {
 }
 
 .post-author {
-  color: var(--navlink-color); /* Updated to use theme-specific color */
-  font-size: 0.9rem;
+  color: var(--navlink-hover); /* Updated to use theme-specific color */
+  font-size: 1rem;
+  font-weight: 700;
   margin-bottom: 15px;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Added shadow for readability */
 }
@@ -457,10 +458,17 @@ textarea:focus {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Added shadow for readability */
 }
 
+.post-date {
+    color: #000000;
+    font-size: 0.9rem;
+    font-weight: 300; 
+    transition: color 0.3s ease;
+}
+
 .post-stats {
   display: flex;
   gap: 15px;
-  color: var(--navlink-color); /* Updated to use theme-specific color */
+  color: #f1f8e9; /* Updated to use theme-specific color */
   font-size: 0.9rem;
   flex-wrap: wrap; /* Added to prevent overflow on small screens */
 }
@@ -582,15 +590,33 @@ textarea:focus {
     max-width: 300px;
     z-index: 1000;
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
     pointer-events: none; /*so it doesn't interfere with anything when hidden*/
 }
 
 .error-toggle:checked ~ .error-popout {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     pointer-events: auto;
+    animation: popout-bounce 0.5s ease-out forwards;
+}
+
+@keyframes popout-bounce {
+    0% {
+        transform: translateY(-10px) scale(0.95);
+        opacity: 0;
+        border: 2px solid transparent;
+    }
+    50% {
+        transform: translateY(5px) scale(1.05);
+        opacity: 0.7;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        border: 2px solid transparent;
+    }
 }
 
 .error-message {
@@ -618,6 +644,7 @@ textarea:focus {
 /* Ensure popout is contained within form on smaller screens */
 @media (max-width: 768px) {
     .error-popout {
+        margin-bottom: -40px;
         position: relative;
         top: 5px;
         left :1.5px;

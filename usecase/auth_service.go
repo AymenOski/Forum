@@ -29,7 +29,7 @@ func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.U
 func (s *AuthService) Signup(name, email, password string) (*entity.User, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(email) {
-		return nil, errors.New("this is the correct email address format : example@domain.com")
+		return nil, errors.New("invalid email format. Make sure it follows the pattern: name@domain.com")
 	}
 
 	_, err := s.userRepo.GetByEmail(email)
@@ -72,7 +72,7 @@ func (s *AuthService) Signup(name, email, password string) (*entity.User, error)
 func (s *AuthService) Login(email, password string) (string, *entity.User, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(email) {
-		return "", nil, errors.New("this is the correct email address format : example@domain.com")
+		return "", nil, errors.New("invalid email format. Make sure it follows the pattern: name@domain.com")
 	}
 
 	user, err := s.userRepo.GetByEmail(email)

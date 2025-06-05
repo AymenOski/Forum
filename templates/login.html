@@ -11,23 +11,31 @@
 <body>
     <div class="login_container">
         <h1>Login</h1>
-            <form action="/login" method="POST">
+        <form action="/login" method="POST">
 
             <input type="checkbox" id="error-create-post" class="error-toggle" {{if .loginError}}checked{{end}} hidden>
             <div class="error-popout">
-                <label for="error-create-post" class="error-close">✖</label>
+                <label for="error-create-post" class="error-close">x</label>
+                <div class="error-icon">
+                </div>
                 <p class="error-message">{{.loginError}}</p>
             </div>
 
-            <label for="username_input">Username</label>
-            <input type="text" id="username_input" name="email" placeholder="Enter your username or email"><br>
+            <label for="username_input">Email</label>
+
+            <input type="text" id="username_input" name="email" placeholder="Enter your username or email" {{if
+                .loginError}} value={{.email}} {{end}}>
+
 
             <label for="password_input">Password</label>
-            <input type="password" id="password_input" name="password" placeholder="Enter your password"><br>
+
+            <input type="password" id="password_input" name="password" placeholder="Enter your password">
+
             <div class="new_account_div">
                 <b>don't have an account?</b>
                 <a href="/signup">create here!</a>
-
+                <br>
+                <a href="/" class="back-to-home" aria-label="Return to home page">Back to Home Page</a>
             </div>
             <input type="submit" class="login_button" value="Sign In">
         </form>

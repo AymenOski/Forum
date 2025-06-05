@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	custom_errors "forum/domain/errors"
 	"net/http"
 )
 
@@ -29,14 +30,16 @@ func (c *AuthController) ShowLoginPage(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 	posts, err := c.postService.GetPosts()
 	if err != nil {
-		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
+		c.renderTemplate(w, "layout.html", map[string]interface{}{
+			"posts":      posts,
+			"form_error": custom_errors.ErrPostNotFound,
 		})
 		return
 	}
-	c.renderTemplate(w, "layout.html", posts)
+	c.renderTemplate(w, "layout.html", map[string]interface{}{
+		"posts":      posts,
+		"form_error": nil,
+	})
 }
 
 func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {

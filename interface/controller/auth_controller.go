@@ -44,10 +44,10 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
-		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
+		c.renderTemplate(w, "register.html", map[string]interface{}{
+			"registerError": err.Error(),
+			"username":      name,
+			"email":         email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
 		})
 		return
 	}
@@ -73,10 +73,9 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
+		c.renderTemplate(w, "login.html", map[string]interface{}{
+			"loginError": err.Error(),
+			"email":      email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
 		})
 		return
 	}
@@ -92,6 +91,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
+	
 	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
