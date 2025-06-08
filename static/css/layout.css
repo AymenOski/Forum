@@ -69,6 +69,7 @@ html {
 }
 
 main {
+  position: relative;
   background-image: var(--bg-gradient);
   background-attachment: fixed;
   background-size: cover;
@@ -631,7 +632,7 @@ textarea:focus {
     top: 4px;
     right: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: black;
     transition: color 0.3s ease;
 }
@@ -644,7 +645,6 @@ textarea:focus {
 /* Ensure popout is contained within form on smaller screens */
 @media (max-width: 768px) {
     .error-popout {
-        margin-bottom: -40px;
         position: relative;
         top: 5px;
         left :1.5px;

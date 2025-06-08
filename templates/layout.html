@@ -55,17 +55,17 @@
                 <label for="show-create">➕ Make a Post</label>
             </div>
 
+            {{if .form_error}}
+            <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
+            <div class="error-popout">
+                <label for="error-create-post" class="error-close">x</label>
+                <p class="error-message">{{.form_error}}</p>
+            </div>
+            {{end}}
 
             <div class="post-sections">
                 <div class="post-section filter-section">
                     <form method="GET" action="/filter">
-                        {{if .form_error}}
-                        <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
-                        <div class="error-popout">
-                            <label for="error-create-post" class="error-close">x</label>
-                            <p class="error-message">{{.form_error}}</p>
-                        </div>
-                        {{end}}
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
@@ -110,13 +110,13 @@
                 <div class="post-section create-section">
                     <form method="POST" action="/post/create">
                         <!-- Error Popout for post creation -->
-                        {{if .form_error}}
+                        <!-- {{if .form_error}}
                         <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
                         <div class="error-popout">
                             <label for="error-create-post" class="error-close">x</label>
                             <p class="error-message">{{.form_error}}</p>
                         </div>
-                        {{end}}
+                        {{end}} -->
                         {{if .form_error}}
                         <textarea name="content" placeholder="Write your post..." required
                             maxlength="500">{{.Post.Content}}</textarea>
