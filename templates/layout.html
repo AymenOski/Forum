@@ -24,8 +24,12 @@
         </div>
         <nav class="nav-links">
             <div class="auth-buttons">
+                {{if .isAuthenticated}}
+                <a href="/logout">Logout</a>
+                {{else}}
                 <a href="/login">Login</a>
                 <a href="/signup">Register</a>
+                {{end}}
             </div>
             <div class="themes">
 
@@ -54,6 +58,11 @@
                 <label for="show-filter">🔍 Filter Posts</label>
                 <label for="show-create">➕ Make a Post</label>
             </div>
+            <div class="Welcome-msg">
+            {{if .isAuthenticated}}
+                <p>👋Welcome, {{.username}} </p>
+            {{end}}
+            </div>  
 
             {{if .form_error}}
             <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>

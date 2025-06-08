@@ -52,6 +52,7 @@ func MyServer(db *sql.DB) *http.Server {
 
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
 

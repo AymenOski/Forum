@@ -28,17 +28,30 @@ func (c *AuthController) ShowLoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
+
 	posts, err := c.postService.GetPosts()
 	if err != nil {
 		c.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":      posts,
-			"form_error": custom_errors.ErrPostNotFound,
+			"posts":           posts,
+			"form_error":      custom_errors.ErrPostNotFound,
+			"username":        nil,
+			"isAuthenticated": nil,
 		})
 		return
 	}
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
-		"posts":      posts,
-		"form_error": nil,
+		"posts":           posts,
+		"form_error":      nil,
+		// jsut a test ,need to integrate session and session.UserName
+		"username":        "userNamessssssssssssssssssssssssssssss",
+		"isAuthenticated": true,
+		// "username": func() any {
+		// 	if isAuthenticated {
+		// 		return user.UserName
+		// 	}
+		// 	return nil
+		// }(),
+		// "isAuthenticated": isAuthenticated,
 	})
 }
 

@@ -27,8 +27,14 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 
 func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
-	if err != nil || token == nil {
+	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	} else if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Unexpected error while reading cookie",
+		})
 		return
 	}
 
@@ -46,16 +52,20 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	posts, err := pc.postService.GetPosts()
 	if err != nil {
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":      posts,
-			"form_error": usecase.ErrPostNotFound,
+			"posts":           posts,
+			"form_error":      usecase.ErrPostNotFound,
+			"username":        nil,
+			"isAuthenticated": nil,
 		})
 		return
 	}
 
 	if content == "" {
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":      posts,
-			"form_error": usecase.ErrEmptyPostContent,
+			"posts":           posts,
+			"form_error":      usecase.ErrEmptyPostContent,
+			"username":        nil,
+			"isAuthenticated": nil,
 		})
 		return
 	}
@@ -66,8 +76,10 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 		c, err := pc.categoryService.GetCategoryByName(cat)
 		if err != nil {
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
-				"posts":      posts,
-				"form_error": usecase.ErrCategoryNotFound,
+				"posts":           posts,
+				"form_error":      usecase.ErrCategoryNotFound,
+				"username":        nil,
+				"isAuthenticated": nil,
 			})
 			return
 		}
@@ -77,9 +89,11 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
 	if err != nil {
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"form_error": err.Error(),
-			"Content":    content,
-			"posts":      posts,
+			"form_error":      err.Error(),
+			"Content":         content,
+			"posts":           posts,
+			"username":        nil,
+			"isAuthenticated": nil,
 		})
 		return
 	}
