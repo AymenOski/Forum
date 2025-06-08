@@ -64,7 +64,10 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
 		return
 	}
 
@@ -91,7 +94,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
-	
 	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

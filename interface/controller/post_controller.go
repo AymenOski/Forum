@@ -65,9 +65,9 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	for _, cat := range categories {
 		c, err := pc.categoryService.GetCategoryByName(cat)
 		if err != nil {
-			pc.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusBadRequest,
-				Error:      "Invalid category: " + cat,
+			pc.renderTemplate(w, "layout.html", map[string]interface{}{
+				"posts":      posts,
+				"form_error": usecase.ErrCategoryNotFound,
 			})
 			return
 		}
