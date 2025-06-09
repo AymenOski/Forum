@@ -31,7 +31,7 @@ func NewCommentService(userRepo repository.UserRepository, commentRepo repositor
 
 func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, content string) (*entity.Comment, error) {
 	content = strings.TrimSpace(content)
-	if len(content) > 250 {
+	if len(content) > 249 {
 		return nil, errors.New("comment length excceds 250 characters")
 	} else if content == "" {
 		return nil, errors.New("comment should have at least 1 character")

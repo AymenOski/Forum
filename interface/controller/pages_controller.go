@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"forum/domain/entity"
 	custom_errors "forum/domain/errors"
 	"net/http"
 )
@@ -31,27 +32,20 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := c.postService.GetPosts()
 	if err != nil {
+		posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of nil
 		c.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      custom_errors.ErrPostNotFound,
-			"username":        nil,
-			"isAuthenticated": nil,
+			"username":        "userNamessssssssssssssssssssssssssssss",
+			"isAuthenticated": true,
 		})
 		return
 	}
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
-		"posts":           posts,
-		"form_error":      nil,
-		// jsut a test ,need to integrate session and session.UserName
+		"posts": posts,
+		// just a hardcode ,need to integrate session and session.UserName so we can add next the next fields
 		"username":        "userNamessssssssssssssssssssssssssssss",
 		"isAuthenticated": true,
-		// "username": func() any {
-		// 	if isAuthenticated {
-		// 		return user.UserName
-		// 	}
-		// 	return nil
-		// }(),
-		// "isAuthenticated": isAuthenticated,
 	})
 }
 

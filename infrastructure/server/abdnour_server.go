@@ -49,11 +49,13 @@ func MyServer(db *sql.DB) *http.Server {
 	// Controller / Interface layer
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1)
+	comment_controller := controller.NewCommentController(comment_usecase, post_usecase, &user_infra_repo, tmpl1)
 
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
 	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
+	mux.HandleFunc("/comment/create", comment_controller.HandleCreateComment)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
 
 	server := &http.Server{
