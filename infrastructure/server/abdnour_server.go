@@ -39,6 +39,8 @@ func MyServer(db *sql.DB) *http.Server {
 		&user_infra_repo, &post_reaction_infra_repo)
 	comment_infra_repo := infra_repository.NewSQLiteCommentRepository(db)
 	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
+	// Middleware
+	
 
 	// Usecase layer
 	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)

@@ -16,7 +16,9 @@ type PostController struct {
 	templates       *template.Template
 }
 
-func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, categoryService *usecase.CategoryService, templates *template.Template) *PostController {
+func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
+	categoryService *usecase.CategoryService, templates *template.Template,
+) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
