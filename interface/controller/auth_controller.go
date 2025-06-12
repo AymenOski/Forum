@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -21,6 +22,7 @@ func NewAuthController(authService *usecase.AuthService, postService *usecase.Po
 		templates:   templates,
 	}
 }
+
 
 func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// If the method is GET that means loading the html page
@@ -96,9 +98,19 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
-	c.ShowMainPage(w, r)
+
+
+func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
+	if (r.URL.Path == "/" && r.Method == http.MethodGet){
+		c.ShowMainPage(w, r)
+	}else{
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusNotFound,
+			Error:      "Page Not Found.",
+		})
+	}
 }
+
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	// Get user from context (set by auth middleware)
@@ -118,4 +130,27 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+
+func (c *AuthController) StaticFileServer(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println(r.URL.Path)
+	switch r.URL.Path {
+
+		case  "/static/css/*.css", "/static/images/background.jpg":
+				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+		
+		case  "/static/", "/static/css/", "/static/images/":
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusForbidden,
+				Error:      "StatusForbidden",
+				})	
+		
+		default :
+			c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "Page Not Found.",
+				})
+	}
 }
