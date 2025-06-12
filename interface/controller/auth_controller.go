@@ -136,6 +136,7 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) StaticFileServer(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(r.URL.Path)
+	// http.ServeFile(w, r, "/static/images/background.jpg")
 	switch r.URL.Path {
 
 		case  "/static/css/*.css", "/static/images/background.jpg":
