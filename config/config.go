@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 )
-
+//sssdsdasdsadsadsds
 // Config holds application configuration
 type Config struct {
 	DatabasePath  string
