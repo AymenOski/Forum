@@ -1,0 +1,66 @@
+package server
+
+import (
+	"database/sql"
+	"html/template"
+	"log"
+	"net/http"
+
+	infra_repository "forum/infrastructure/repository"
+	"forum/interface/controller"
+	"forum/usecase"
+)
+
+var tmpl1 *template.Template
+
+func init() {
+	var err error
+	tmpl1, err = template.ParseGlob("./templates/*.html")
+	if err != nil {
+		log.Printf("Warning: Failed to initialize templates: %v", err)
+	}
+}
+
+func MyServer(db *sql.DB) *http.Server {
+	mux := http.NewServeMux()
+
+	// Static files
+	fileServer := http.FileServer(http.Dir("./static"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+
+	// Entity layer
+	user_infra_repo := infra_repository.NewSQLiteUserRepository(db)
+	session_infra_repo := infra_repository.NewSQLiteUserSessionRepository(db)
+	post_infra_repo := infra_repository.NewSQLitePostRepository(db)
+	postCategory_infra_repo := infra_repository.NewSQLitePostCategoryRepository(db)
+	category_infra_repo := infra_repository.NewSQLiteCategoryRepository(db)
+	post_reaction_infra_repo := infra_repository.NewSQLitePostReactionRepository(db)
+	post_category_infra_repo := infra_repository.NewSQLitePostAggregateRepository(db, &post_infra_repo, &postCategory_infra_repo,
+		&user_infra_repo, &post_reaction_infra_repo)
+	comment_infra_repo := infra_repository.NewSQLiteCommentRepository(db)
+	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
+	// Middleware
+	
+
+	// Usecase layer
+	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)
+	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo, &post_reaction_infra_repo, &session_infra_repo)
+	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, comment_reaction_infra_repo)
+	category_usecase := usecase.NewCategoryService(category_infra_repo, postCategory_infra_repo, session_infra_repo, user_infra_repo)
+
+	// Controller / Interface layer
+	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
+	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1)
+
+	mux.HandleFunc("/signup", auth_controller.HandleSignup)
+	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/logout", auth_controller.HandleLogout)
+	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
+	mux.HandleFunc("/", auth_controller.HandleMainPage)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+	return server
+}
