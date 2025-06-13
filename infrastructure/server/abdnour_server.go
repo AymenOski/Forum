@@ -54,6 +54,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
+	mux.HandleFunc("/posts/filter", postController.HandleFilteredPosts)
 
 	server := &http.Server{
 		Addr:    ":8080",

@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"forum/domain/entity"
 	custom_errors "forum/domain/errors"
 	"forum/usecase"
 
@@ -105,4 +106,40 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
+}
+
+func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
+	// get query parameters
+	query := r.URL.Query()
+	filter := entity.PostFilter{}
+
+	if cat := query.Get("category"); cat != "" {
+		id, err := uuid.Parse(cat)
+		if err == nil {
+			filter.CategoryID = &id
+		}
+	}
+
+	if author := query.Get("author"); author != "" {
+		id, err := uuid.Parse(author)
+		if err == nil {
+			filter.AuthorID = &id
+		}
+	}
+
+	//  call service layer
+	posts, err := pc.postService.GetFilteredPosts(filter)
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error fetching filtered posts",
+		})
+		return
+	}
+
+	// render the posts page
+	pc.renderTemplate(w, "layout.html", map[string]interface{}{
+		"posts":  posts,
+		"filter": filter, // optional, if you want to display current filter
+	})
 }
