@@ -40,14 +40,24 @@ func (s *AuthService) Signup(name, email, password string) (*entity.User, error)
 	if len(name) < 3 || len(name) > 9 {
 		return nil, errors.New("name should be between 3 and 9 characters")
 	}
+
 	name = strings.TrimSpace(name)
 	if !isValidName(name) {
 		return nil, errors.New("name should contain only letters and numbers")
 	}
 
+	// Check if username already exists
+	userNameExists, err := s.userRepo.CheckUserNameExists(name)
+	if err != nil {
+		return nil, err
+	}
+	if userNameExists {
+		return nil, errors.New("username already exists")
+	}
+
 	password = strings.TrimSpace(password)
 	if len(password) < 6 || len(password) > 64 {
-		return nil, errors.New("password should be between 4 and 64 characters")
+		return nil, errors.New("password should be between 6 and 64 characters")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -59,13 +69,14 @@ func (s *AuthService) Signup(name, email, password string) (*entity.User, error)
 		UserName:     name,
 		Email:        email,
 		PasswordHash: string(hashedPassword),
-		CreatedAt:    time.Now(),
+		// Note: ID and CreatedAt will be set in the repository Create method
 	}
 
 	err = s.userRepo.Create(user)
 	if err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
 
@@ -114,11 +125,15 @@ func (s *AuthService) Logout(userID uuid.UUID) error {
 func (s *AuthService) ValidateSession(token string) (*entity.UserSession, error) {
 	session, err := s.sessionRepo.GetByToken(token)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("invalid session")
 	}
+
 	if session.ExpiresAt.Before(time.Now()) {
+		// Delete expired session
+		s.sessionRepo.Delete(session.ID)
 		return nil, errors.New("session expired")
 	}
+
 	return session, nil
 }
 

@@ -5,12 +5,15 @@ import (
 	"log"
 
 	"forum/config"
-		"forum/infrastructure/database"
+	"forum/infrastructure/database"
 	"forum/infrastructure/server"
 )
 
 func main() {
+	// Load configuration
 	cfg := config.Load()
+
+	// Setup database
 	db := database.SetingUpDB(cfg.DatabasePath)
 	defer db.Close()
 
