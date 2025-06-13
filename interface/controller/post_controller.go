@@ -3,6 +3,7 @@ package controller
 import (
 	"html/template"
 	"net/http"
+	"time"
 
 	"forum/domain/entity"
 	custom_errors "forum/domain/errors"
@@ -16,6 +17,7 @@ type PostController struct {
 	commentService  *usecase.CommentService
 	categoryService *usecase.CategoryService
 	templates       *template.Template
+	authservice     *usecase.AuthService
 }
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, categoryService *usecase.CategoryService, templates *template.Template) *PostController {
@@ -24,6 +26,7 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 		commentService:  commentService,
 		categoryService: categoryService,
 		templates:       templates,
+		authservice:     &usecase.AuthService{},
 	}
 }
 
@@ -103,31 +106,69 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 	w.WriteHeader(data.StatusCode)
 
 	err := c.templates.ExecuteTemplate(w, "error.html", data)
+
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
 }
 
+func (pc *PostController) GetCurrentUserID(r *http.Request) (uuid.UUID, bool) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		return uuid.UUID{}, false
+	}
+
+	session, err := pc.authService.sessionRepo.GetByToken(cookie.Value)
+	if err != nil || session.ExpiresAt.Before(time.Now()) {
+		return uuid.UUID{}, false
+	}
+
+	return session.UserID, true
+}
+
 func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
-	// get query parameters
 	query := r.URL.Query()
 	filter := entity.PostFilter{}
 
-	if cat := query.Get("category"); cat != "" {
-		id, err := uuid.Parse(cat)
-		if err == nil {
-			filter.CategoryID = &id
+	// ✅ Category filter (multi-select)
+	if categories := query["category-filter[]"]; len(categories) > 0 {
+		for _, cat := range categories {
+			id, err := uuid.Parse(cat)
+			if err == nil {
+				filter.CategoryIDs = append(filter.CategoryIDs, id)
+			}
 		}
 	}
 
-	if author := query.Get("author"); author != "" {
-		id, err := uuid.Parse(author)
-		if err == nil {
-			filter.AuthorID = &id
+	// ✅ "My Posts" filter
+	if query.Get("myPosts") == "on" {
+		userID, ok := pc.GetCurrentUserID(r)
+		if !ok {
+			pc.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusUnauthorized,
+				Error:      "You must be logged in to view your posts.",
+			})
+			return
 		}
+		filter.MyPosts = true
+		filter.AuthorID = &userID
 	}
 
-	//  call service layer
+	// ✅ "Liked Posts" filter
+	if query.Get("likedPosts") == "on" {
+		userID, ok := pc.GetCurrentUserID(r)
+		if !ok {
+			pc.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusUnauthorized,
+				Error:      "You must be logged in to view liked posts.",
+			})
+			return
+		}
+		filter.LikedPosts = true
+		filter.AuthorID = &userID // you may need it for the query later
+	}
+
+	// 🚀 Fetch posts
 	posts, err := pc.postService.GetFilteredPosts(filter)
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -137,9 +178,9 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// render the posts page
+	// 🎯 Render
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":  posts,
-		"filter": filter, // optional, if you want to display current filter
+		"filter": filter,
 	})
 }

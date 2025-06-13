@@ -148,3 +148,4 @@ func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
 func (s *PostService) GetFilteredPosts(filter entity.PostFilter) ([]*entity.Post, error) {
 	return s.postRepo.GetFiltered(filter)
 }
+

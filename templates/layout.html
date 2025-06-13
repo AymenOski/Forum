@@ -58,7 +58,7 @@
 
             <div class="post-sections">
                 <div class="post-section filter-section">
-                    <form method="GET" action="/filter">
+                    <form method="GET" action="/posts/filter">
                         {{if .form_error}}
                         <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
                         <div class="error-popout">
@@ -69,10 +69,12 @@
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
-                                <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="tech">
-                                    <span>Technology</span>
-                                </label>
+                                {{range .categories}}
+                            <label class="category-tag">
+                            <input type="checkbox" name="category" value="{{.ID}}">
+                            <span>{{.Name}}</span>
+                            </label>
+                            {{end}}    
                                 <label class="category-tag">
                                     <input type="checkbox" name="category-filter[]" value="gaming">
                                     <span>Gaming</span>

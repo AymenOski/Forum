@@ -57,7 +57,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/posts/filter", post_controller.HandleFilteredPosts)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8083",
 		Handler: mux,
 	}
 	return server
