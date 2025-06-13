@@ -14,5 +14,5 @@ type PostRepository interface {
 	Update(post *entity.Post) error
 	Delete(postID uuid.UUID) error
 	GetWithDetails(postID uuid.UUID) (*entity.PostWithDetails, error)
-	GetFiltered(filter PostFilter) ([]*entity.Post, error)
+	GetFiltered(filter entity.PostFilter) ([]*entity.Post, error)
 }

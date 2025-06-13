@@ -371,3 +371,71 @@ func (r *SQLitePostRepository) GetAllWithDetails() ([]*entity.PostWithDetails, e
 
 	return postsWithDetails, nil
 }
+
+func joinConditions(conds []string, sep string) string {
+	result := ""
+	for i, cond := range conds {
+		if i > 0 {
+			result += " " + sep + " "
+		}
+		result += cond
+	}
+	return result
+}
+
+func (r *SQLitePostRepository) GetFiltered(filter entity.PostFilter) ([]*entity.Post, error) {
+	query := `
+		SELECT DISTINCT p.id, p.content, p.user_id, p.created_at
+		FROM posts p
+		LEFT JOIN post_categories pc ON p.id = pc.post_id
+	`
+
+	conditions := []string{}
+	args := []interface{}{}
+
+	if filter.CategoryID != nil {
+		conditions = append(conditions, "pc.category_id = ?")
+		args = append(args, filter.CategoryID.String())
+	}
+
+	if filter.AuthorID != nil {
+		conditions = append(conditions, "p.user_id = ?")
+		args = append(args, filter.AuthorID.String())
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + joinConditions(conditions, " AND ")
+	}
+
+	query += " ORDER BY p.created_at DESC"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*entity.Post
+	for rows.Next() {
+		post := &entity.Post{}
+		var idStr, userIDStr string
+
+		if err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt); err != nil {
+			return nil, err
+		}
+
+		post.ID, err = uuid.Parse(idStr)
+		if err != nil {
+			return nil, err
+		}
+
+		post.UserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
