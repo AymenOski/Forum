@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -135,11 +134,9 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 func (c *AuthController) StaticFileServer(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println(r.URL.Path)
-	// http.ServeFile(w, r, "/static/images/background.jpg")
 	switch r.URL.Path {
 
-		case  "/static/css/*.css", "/static/images/background.jpg":
+		case  "/static/css/layout.css", "/static/css/login.css","/static/css/posts.css","/static/css/register.css", "/static/images/background.jpg":
 				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
 		
 		case  "/static/", "/static/css/", "/static/images/":
