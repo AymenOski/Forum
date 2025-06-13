@@ -10,17 +10,19 @@ import (
 
 type AuthController struct {
 	authService *usecase.AuthService
+	postService *usecase.PostService
 	templates   *template.Template
 }
 
-func NewAuthController(authService *usecase.AuthService, templates *template.Template) *AuthController {
+func NewAuthController(authService *usecase.AuthService, postService *usecase.PostService, templates *template.Template) *AuthController {
 	return &AuthController{
 		authService: authService,
+		postService: postService,
 		templates:   templates,
 	}
 }
 
-func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// If the method is GET that means loading the html page
 	if r.Method == http.MethodGet {
 		c.renderTemplate(w, "register.html", nil)
@@ -40,12 +42,12 @@ func (c *AuthController) HandleRegister(w http.ResponseWriter, r *http.Request) 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, err := c.authService.Register(name, email, password)
+	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
-		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
+		c.renderTemplate(w, "register.html", map[string]interface{}{
+			"registerError": err.Error(),
+			"username":      name,
+			"email":         email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
 		})
 		return
 	}
@@ -62,19 +64,21 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
 		return
 	}
 
-	email := r.FormValue("username_input")
-	password := r.FormValue("password_input")
-	println("email: ",email,"pass: ",password)
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
+		c.renderTemplate(w, "login.html", map[string]interface{}{
+			"loginError": err.Error(),
+			"email":      email,
 		})
 		return
 	}
@@ -86,28 +90,24 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   86400, // 24 hours
 		HttpOnly: true,
-		Secure:   false,
 	})
 
 	_ = user
 
 	// Redirect to home page
-	http.Redirect(w, r, "/layout", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
+	c.ShowMainPage(w, r)
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// Get session token from cookie
-	cookie, err := r.Cookie("session_token")
-	if err == nil && cookie.Value != "" {
-		// Use the LogoutByToken method to invalidate the specific session
-		c.authService.LogoutByToken(cookie.Value)
+	// Get user from context (set by auth middleware)
+	user, ok := r.Context().Value("user").(*entity.User)
+	if ok {
+		c.authService.Logout(user.ID)
 	}
-
-	// Alternative: Get user from context and logout all sessions
-	// user, ok := r.Context().Value("user").(*entity.User)
-	// if ok {
-	// 	c.authService.Logout(user.ID)
-	// }
 
 	// Clear session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -120,52 +120,4 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-// New method to handle session refresh
-func (c *AuthController) HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		http.Error(w, "No session found", http.StatusUnauthorized)
-		return
-	}
-
-	newToken, err := c.authService.RefreshSession(cookie.Value)
-	if err != nil {
-		// Clear invalid cookie and redirect to login
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-		})
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Update cookie with new token (if different)
-	if newToken != cookie.Value {
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    newToken,
-			Path:     "/",
-			MaxAge:   86400,
-			HttpOnly: true,
-			Secure:   false,
-		})
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Session refreshed"))
-}
-
-// New method to validate session (can be used by middleware)
-func (c *AuthController) ValidateSessionToken(token string) (*entity.UserSession, error) {
-	return c.authService.ValidateSession(token)
-}
-
-// New method to cleanup expired sessions (can be called periodically)
-func (c *AuthController) CleanupExpiredSessions() error {
-	return c.authService.CleanupExpiredSessions()
 }

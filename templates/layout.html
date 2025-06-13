@@ -136,35 +136,8 @@
             </div>
         </div>
 
-        <!-- Published Posts Section -->
-
-        <section class="posts-container">
-            <h2 class="posts-title">Published Posts</h2>
-
-            {{if .}}
-            {{range .}}
-            <article class="forum-post">
-                <div class="post-author">
-                    <span class="post-author">Posted by {{.Authorname}}</span>
-                </div>
-                <div class="post-content">{{.Content}}</div>
-
-                <div class="post-footer">
-                    <div class="post-categories">
-                        <span class="category-badge">General</span>
-                    </div>
-                    <div class="post-stats">
-                        <span class="likes">👍 {{.LikesCount}}</span>
-                        <span class="dislikes">👎 {{.DislikesCount}}</span>
-                        <span class="comments">💬 3 comments</span>
-                    </div>
-                </div>
-            </article>
-            {{end}}
-            {{else}}
-            <p>No posts available.</p>
-            {{end}}
-        </section>
+         <!-- This is where the posts template will be inserted -->
+        {{ template "posts" . }}
     </main>
 </body>
 
