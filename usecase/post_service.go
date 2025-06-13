@@ -94,8 +94,13 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 // Same reaction twice = remove (toggle), different reaction = update.
 // Returns the reaction entity on all operations (including delete for UI feedback).
 // Parameters: postID, userID, reaction (true=like, false=dislike)
-func (ps *PostService) ReactToPost(postID *uuid.UUID, userID *uuid.UUID, reaction bool) (*entity.PostReaction, error) {
-	_, err := ps.userRepo.GetByID(*userID)
+func (ps *PostService) ReactToPost(postID *uuid.UUID, token string, reaction bool) (*entity.PostReaction, error) {
+	session, err := ps.sessionRepo.GetByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ps.userRepo.GetByID(session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +110,7 @@ func (ps *PostService) ReactToPost(postID *uuid.UUID, userID *uuid.UUID, reactio
 		return nil, err
 	}
 
-	pr, err := ps.postReactionRepo.GetByUserAndPost(*userID, *postID)
+	pr, err := ps.postReactionRepo.GetByUserAndPost(session.UserID, *postID)
 	if err == nil {
 		if pr.Reaction == reaction {
 			err := ps.postReactionRepo.Delete(pr.ID)
@@ -123,18 +128,18 @@ func (ps *PostService) ReactToPost(postID *uuid.UUID, userID *uuid.UUID, reactio
 			return pr, nil
 		}
 	}
-	commentReaction := &entity.PostReaction{
-		UserID:    *userID,
+	PostReaction := &entity.PostReaction{
+		UserID:    session.UserID,
 		PostID:    *postID,
 		Reaction:  reaction,
 		CreatedAt: time.Now(),
 	}
 
-	ps.postReactionRepo.Create(commentReaction)
+	ps.postReactionRepo.Create(PostReaction)
 	if err != nil {
 		return nil, err
 	}
-	return commentReaction, nil
+	return PostReaction, nil
 }
 
 func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {

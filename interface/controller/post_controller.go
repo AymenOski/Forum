@@ -147,12 +147,12 @@ func (pc *PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reque
 		})
 		return
 	}
-
-	id := strings.Split(r.URL.Query().Get("id"), "/")
-
+	
+	id:=strings.Split(r.URL.Query().Get("id"), "/")
+	
 	ID, err := uuid.Parse(id[0])
 	if err != nil {
-		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
+		fmt.Printf("Failed to parse this ID %v to UUID: %v\n",id, err)
 		return
 	}
 	like := true

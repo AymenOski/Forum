@@ -168,10 +168,10 @@ func (r *SQLitePostRepository) GetWithPagination(limit, offset int) ([]*entity.P
 }
 
 func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.content, p.user_id, p.created_at 
-			  FROM posts p 
-			  INNER JOIN post_categories pc ON p.id = pc.post_id 
-			  WHERE pc.category_id = ? 
+	query := `SELECT p.id, p.content, p.user_id, p.created_at
+			  FROM posts p
+			  INNER JOIN post_categories pc ON p.id = pc.post_id
+			  WHERE pc.category_id = ?
 			  ORDER BY p.created_at DESC`
 
 	rows, err := r.db.Query(query, categoryID.String())
@@ -206,6 +206,60 @@ func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Po
 
 	return posts, nil
 }
+
+// func (r *SQLitePostRepository) GetByCategory(categoryIDs []*uuid.UUID) ([]*entity.Post, error) {
+// 	if len(categoryIDs) == 0 {
+// 		return []*entity.Post{}, nil
+// 	}
+
+// 	// Build the placeholders and args
+// 	var placeholders []string
+// 	var args []interface{}
+// 	for _, id := range categoryIDs {
+// 		placeholders = append(placeholders, "?")
+// 		args = append(args, id.String())
+// 	}
+
+// 	// Base query
+// 	query := `
+// 		SELECT DISTINCT p.id, p.content, p.user_id, p.created_at
+// 		FROM posts p
+// 		INNER JOIN post_categories pc ON p.id = pc.post_id
+// 		WHERE pc.category_id IN (` + strings.Join(placeholders, ", ") + `)
+// 		ORDER BY p.created_at DESC`
+
+// 	rows, err := r.db.Query(query, args...)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var posts []*entity.Post
+
+// 	for rows.Next() {
+// 		post := &entity.Post{}
+// 		var idStr, userIDStr string
+
+// 		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		post.ID, err = uuid.Parse(idStr)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		post.UserID, err = uuid.Parse(userIDStr)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		posts = append(posts, post)
+// 	}
+
+// 	return posts, nil
+// }
 
 func (r *SQLitePostRepository) GetByCategoryWithPagination(categoryID uuid.UUID, limit, offset int) ([]*entity.Post, error) {
 	query := `SELECT p.id, p.content, p.user_id, p.created_at 
