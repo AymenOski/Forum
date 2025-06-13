@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"forum/usecase"
 
@@ -122,4 +124,40 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
+}
+
+func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
+	token, err := r.Cookie("session_token")
+	if err == http.ErrNoCookie {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	} else if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Unexpected error while reading cookie",
+		})
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+
+	id := strings.Split(r.URL.Query().Get("id"), "/")
+
+	ID, err := uuid.Parse(id[0])
+	if err != nil {
+		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
+		return
+	}
+	like := true
+	if id[1] == "0" {
+		like = false
+	}
+	pc.postService.ReactToPost(ID, token.Value, like)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
