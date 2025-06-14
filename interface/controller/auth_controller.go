@@ -3,6 +3,7 @@ package controller
 import (
 	"html/template"
 	"net/http"
+	"strings"
 
 	"forum/domain/entity"
 	"forum/usecase"
@@ -21,7 +22,6 @@ func NewAuthController(authService *usecase.AuthService, postService *usecase.Po
 		templates:   templates,
 	}
 }
-
 
 func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// If the method is GET that means loading the html page
@@ -97,19 +97,34 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-
-
 func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
-	if (r.URL.Path == "/" && r.Method == http.MethodGet){
+	
+	if r.URL.Path == "/" && r.Method == http.MethodGet {
 		c.ShowMainPage(w, r)
-	}else{
+	}else if strings.HasPrefix(r.URL.Path, "/static/") {
+		switch r.URL.Path {
+			case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "/static/images/background.jpg":
+				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+
+			case "/static/", "/static/css/", "/static/images/":
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "StatusForbidden",
+				})
+
+			default:
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "Page Not Found.",
+				})
+	}
+	}else {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusNotFound,
 			Error:      "Page Not Found.",
 		})
 	}
 }
-
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	// Get user from context (set by auth middleware)
@@ -129,26 +144,4 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-
-func (c *AuthController) StaticFileServer(w http.ResponseWriter, r *http.Request) {
-
-	switch r.URL.Path {
-
-		case  "/static/css/layout.css", "/static/css/login.css","/static/css/posts.css","/static/css/register.css", "/static/images/background.jpg":
-				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
-		
-		case  "/static/", "/static/css/", "/static/images/":
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusForbidden,
-				Error:      "StatusForbidden",
-				})	
-		
-		default :
-			c.ShowErrorPage(w, ErrorMessage{
-					StatusCode: http.StatusForbidden,
-					Error:      "Page Not Found.",
-				})
-	}
 }

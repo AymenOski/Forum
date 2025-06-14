@@ -8,6 +8,7 @@ import (
 
 	infra_repository "forum/infrastructure/repository"
 	"forum/interface/controller"
+	"forum/interface/middleware"
 	"forum/usecase"
 )
 
@@ -41,18 +42,17 @@ func MyServer(db *sql.DB) *http.Server {
 	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, comment_reaction_infra_repo)
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 	post_controller := controller.NewPostController(post_usecase, comment_usecase, tmpl1)
+	auth_middleware := middleware.NewAuthMiddleware(auth_usecase)
 
-	// Static files
-	
-	mux.HandleFunc("/static/", auth_controller.StaticFileServer)
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
-	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
+	mux.HandleFunc("/post/create", auth_middleware.VerifiedAuth(post_controller.HandleCreatePost))
 	mux.HandleFunc("/", auth_controller.HandleGlobal)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: middleware.LoggerMiddleware(mux),
 	}
+
 	return server
 }

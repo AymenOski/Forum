@@ -24,7 +24,7 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 	}
 }
 
-func (c *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
+func (c *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request)  {
 	user, ok := r.Context().Value("user").(*entity.User)
 	if !ok || user == nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
