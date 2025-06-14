@@ -3,8 +3,8 @@ package controller
 import (
 	"html/template"
 	"net/http"
+	"strings"
 
-	"forum/domain/entity"
 	"forum/usecase"
 )
 
@@ -47,7 +47,7 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		c.renderTemplate(w, "register.html", map[string]interface{}{
 			"registerError": err.Error(),
 			"username":      name,
-			"email":         email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
+			"email":         email,
 		})
 		return
 	}
@@ -81,7 +81,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -96,8 +95,32 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/layout", http.StatusSeeOther)
 }
 
-func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
-	c.ShowMainPage(w, r)
+func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" && r.Method == http.MethodGet {
+		c.ShowMainPage(w, r)
+	} else if strings.HasPrefix(r.URL.Path, "/static/") {
+		switch r.URL.Path {
+		case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "/static/images/background.jpg":
+			http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+
+		case "/static/", "/static/css/", "/static/images/":
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusForbidden,
+				Error:      "StatusForbidden",
+			})
+
+		default:
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusForbidden,
+				Error:      "Page Not Found.",
+			})
+		}
+	} else {
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusNotFound,
+			Error:      "Page Not Found.",
+		})
+	}
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +142,4 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-// New method to validate session (can be used by middleware)
-func (c *AuthController) ValidateSessionToken(token string) (*entity.UserSession, error) {
-	return c.authService.ValidateSession(token)
 }

@@ -33,7 +33,9 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 }
 
 func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("session_token")
+	var username string
+	var isAuthenticated bool
+	cookie, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -55,14 +57,17 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	content := r.FormValue("content")
 	categories := r.Form["categories"]
-
+	// flag-1: next field is temperoraly until we have a proper middleware
+	user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
+	if err == nil && user != nil {
+		username = user.UserName
+		isAuthenticated = true
+	}
 	posts, err := pc.postService.GetPosts()
 	if err != nil {
-		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
-			"form_error":      usecase.ErrPostNotFound,
-			"username":        nil,
-			"isAuthenticated": nil,
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
 		})
 		return
 	}
@@ -71,8 +76,8 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      usecase.ErrEmptyPostContent,
-			"username":        nil,
-			"isAuthenticated": nil,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}
@@ -85,22 +90,22 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
 				"posts":           posts,
 				"form_error":      usecase.ErrCategoryNotFound,
-				"username":        nil,
-				"isAuthenticated": nil,
+				"username":        username,
+				"isAuthenticated": isAuthenticated,
 			})
 			return
 		}
 		categoriesIDs = append(categoriesIDs, &c.ID)
 	}
 
-	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
+	_, err = pc.postService.CreatePost(cookie.Value, content, categoriesIDs)
 	if err != nil {
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"form_error":      err.Error(),
 			"Content":         content,
 			"posts":           posts,
-			"username":        nil,
-			"isAuthenticated": nil,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}
