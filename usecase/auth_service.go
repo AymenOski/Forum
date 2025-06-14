@@ -154,6 +154,8 @@ func (s *AuthService) GetUserFromSessionToken(token string) (*entity.User, error
 
 	return user, nil
 }
+	return user, nil
+}
 
 func (s *AuthService) generateSessionToken() (string, error) {
 	bytes := make([]byte, 32)
