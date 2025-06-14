@@ -82,8 +82,6 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Hardcoded userID for testing (replace with proper auth logic later)
-	// Example UUID - replace with a valid user ID from the session
 	hardcodedUserID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
 	userID := hardcodedUserID
 
@@ -92,11 +90,11 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	if err != nil {
 		posts, err := cc.postService.GetPosts()
 		if err != nil {
-			posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of nil
+			posts = []*entity.PostWithDetails{}
 		}
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts": posts,
-			// "form_error":      err.Error(),
+			"posts":           posts,
+			"form_error":      err.Error(),
 			"username":        username,
 			"isAuthenticated": isAuthenticated,
 		})

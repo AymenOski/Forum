@@ -143,6 +143,10 @@ func (s *AuthService) GetUserFromSessionToken(token string) (*entity.User, error
 		return nil, err
 	}
 
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("session expired")
+	}
+
 	user, err := s.userRepo.GetByID(session.UserID)
 	if err != nil {
 		return nil, err

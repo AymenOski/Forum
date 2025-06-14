@@ -40,6 +40,7 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 			isAuthenticated = true
 		}
 	}
+
 	posts, err := c.postService.GetPosts()
 	if err != nil {
 		posts = []*entity.PostWithDetails{}
