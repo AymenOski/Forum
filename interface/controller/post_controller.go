@@ -220,8 +220,8 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 
 	// Render HTML page with posts
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
-		"posts":              filteredPosts,
-		"categories":         categories,
+		"posts": filteredPosts,
+		// "categories":         categories,
 		"selectedCategories": selectedMap,
 	})
 }

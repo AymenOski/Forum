@@ -447,3 +447,9 @@ func (r *SQLitePostRepository) GetFiltered(filter entity.PostFilter) ([]*entity.
 
 	return posts, nil
 }
+
+
+func (r *SQLitePostRepository)GetbyuserId(Userid uuid.UUID)([]*entity.PostWithDetails){
+	//logic
+	return nil
+}
