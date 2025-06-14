@@ -122,23 +122,23 @@ func (s *AuthService) ValidateSession(token string) (*entity.UserSession, error)
 	return session, nil
 }
 
-// func (s *AuthService) ValidateSessionAndGetUserBySession(token string) (*entity.User, error) {
-// 	session, err := s.sessionRepo.GetByToken(token)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (s *AuthService) GetUserFromSessionToken(token string) (*entity.User, error) {
+	session, err := s.sessionRepo.GetByToken(token)
+	if err != nil {
+		return nil, err
+	}
 
-// 	if session.ExpiresAt.Before(time.Now()) {
-// 		return nil, errors.New("session expired")
-// 	}
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("session expired")
+	}
 
-// 	user, err := s.userRepo.GetByID(session.UserID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	user, err := s.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return user, nil
-// }
+	return user, nil
+}
 
 func (s *AuthService) generateSessionToken() (string, error) {
 	bytes := make([]byte, 32)
