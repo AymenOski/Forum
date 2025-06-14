@@ -112,10 +112,10 @@ func (cc *CommentController) renderTemplate(w http.ResponseWriter, template stri
 	}
 }
 
-func (cc *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+func (c *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(data.StatusCode)
-	err := cc.templates.ExecuteTemplate(w, "error.html", data)
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}

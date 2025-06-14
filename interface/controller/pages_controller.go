@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 )
 
@@ -60,11 +59,12 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
-	TmplStatus, _ := template.ParseFiles("templates/error.html")
-	if TmplStatus == nil {	http.Error(w, fmt.Sprintf("%d - %s",data.StatusCode, data.Error), data.StatusCode); return }
-	
-	w.WriteHeader(data.StatusCode)
-	TmplStatus.Execute(w, data)
 
+func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(data.StatusCode)
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	if err != nil {
+		http.Error(w, data.Error, data.StatusCode)
+	}
 }

@@ -1,9 +1,10 @@
-body {
+   body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
   font-family: "montserrat", sans-serif;
-  background: linear-gradient(25deg, #c91818 0%, #ffe8e8 70%, #e76740 100%)
+  background: linear-gradient(25deg, #c91818 0%, #ffe8e8 70%, #e76740 100%);
+  overflow: hidden;
 }
 .container {
   width: 100%;
@@ -14,16 +15,14 @@ body {
 }
 
 .container h1 {
-  font-size: 170px;
-  /* display: flex; */
-  /* justify-content: start; */
+  font-size: 120px;
   margin: 0;
-  letter-spacing: 20px;
-  background: url(./images/background.jpg) center no-repeat; /* clip and addapte the image to the text `h1` */
-  background-clip: text;
+  letter-spacing: 20px; 
+  background: linear-gradient(3deg, #450A40  40% ,#D34160 1% , #450A40 60% ,  #2d0047 1%);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0.8;
   color: transparent;
   -webkit-background-clip: text; /* Safari fallback */
-  /* background-color: #333; Fallback if image fails */
 }
 
 .container a {

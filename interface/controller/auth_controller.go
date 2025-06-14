@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"forum/domain/entity"
 	"forum/usecase"
 )
 
@@ -44,10 +45,10 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
-		c.renderTemplate(w, "register.html", map[string]interface{}{
-			"registerError": err.Error(),
-			"username":      name,
-			"email":         email,
+		// Showing the error page temporarily
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
 		})
 		return
 	}
@@ -64,23 +65,23 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodPost {
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      "Method not allowed",
-		})
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		c.renderTemplate(w, "login.html", map[string]interface{}{
-			"loginError": err.Error(),
-			"email":      email,
+		// Showing the error page temporarily
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
 		})
 		return
 	}
+
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -92,30 +93,31 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
-	http.Redirect(w, r, "/layout", http.StatusSeeOther)
+	// Redirect to home page
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" && r.Method == http.MethodGet {
 		c.ShowMainPage(w, r)
-	} else if strings.HasPrefix(r.URL.Path, "/static/") {
+	}else if strings.HasPrefix(r.URL.Path, "/static/") {
 		switch r.URL.Path {
-		case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "/static/images/background.jpg":
-			http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+			case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "static/css/error.css":
+				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
 
-		case "/static/", "/static/css/", "/static/images/":
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusForbidden,
-				Error:      "StatusForbidden",
-			})
+			case "/static/", "/static/css/", "/static/images/":
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "StatusForbidden",
+				})
 
-		default:
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusForbidden,
-				Error:      "Page Not Found.",
-			})
-		}
-	} else {
+			default:
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "Page Not Found",
+				})
+	}
+	}else {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusNotFound,
 			Error:      "Page Not Found.",
@@ -124,12 +126,11 @@ func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// Get session token from cookie
-	// cookie, err := r.Cookie("session_token")
-	// if err == nil && cookie.Value != "" {
-	// 	// Use the LogoutByToken method to invalidate the specific session
-	// 	c.authService.Logout(cookie.Value)
-	// }
+	// Get user from context (set by auth middleware)
+	user, ok := r.Context().Value("user").(*entity.User)
+	if ok {
+		c.authService.Logout(user.ID)
+	}
 
 	// Clear session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -143,3 +144,5 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+

@@ -121,15 +121,7 @@ func (c *PostController) renderTemplate(w http.ResponseWriter, template string, 
 	}
 }
 
-func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(data.StatusCode)
 
-	err := c.templates.ExecuteTemplate(w, "error.html", data)
-	if err != nil {
-		http.Error(w, data.Error, data.StatusCode)
-	}
-}
 
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
@@ -152,7 +144,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 		})
 		return
 	}
-
+	
 	id := strings.Split(r.URL.Query().Get("id"), "/")
 
 	ID, err := uuid.Parse(id[0])
@@ -167,3 +159,17 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	pc.postService.ReactToPost(ID, token.Value, like)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+
+
+func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(data.StatusCode)
+
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	if err != nil {
+		http.Error(w, data.Error, data.StatusCode)
+	}
+}
+
+
