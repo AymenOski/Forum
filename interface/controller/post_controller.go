@@ -162,5 +162,3 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	pc.postService.ReactToPost(ID, token.Value, like)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
-
-
