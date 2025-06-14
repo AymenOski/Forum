@@ -12,26 +12,29 @@ import (
 )
 
 type CommentService struct {
-	userRepo            repository.UserRepository
-	commentRepo         repository.CommentRepository
-	postRepo            repository.PostRepository
+	userRepo    repository.UserRepository
+	commentRepo repository.CommentRepository
+	postRepo    repository.PostRepository
+	// next field is temperoraly until we have a proper middleware
+	sessionRepo         repository.UserSessionRepository
 	commentReactionRepo repository.CommentReactionRepository
 }
 
 func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
-	postRepo repository.PostRepository, commentReactionRepo repository.CommentReactionRepository,
+	postRepo repository.PostRepository, sessionRepo repository.UserSessionRepository, commentReactionRepo repository.CommentReactionRepository,
 ) *CommentService {
 	return &CommentService{
 		userRepo:            userRepo,
 		commentRepo:         commentRepo,
 		postRepo:            postRepo,
+		sessionRepo:         sessionRepo,
 		commentReactionRepo: commentReactionRepo,
 	}
 }
 
 func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, content string) (*entity.Comment, error) {
 	content = strings.TrimSpace(content)
-	if len(content) > 250 {
+	if len(content) > 249 {
 		return nil, errors.New("comment length excceds 250 characters")
 	} else if content == "" {
 		return nil, errors.New("comment should have at least 1 character")
@@ -47,10 +50,9 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, co
 	}
 
 	comment := &entity.Comment{
-		Content:   content,
-		UserID:    *userID,
-		PostID:    *postID,
-		CreatedAt: time.Now(),
+		Content: content,
+		UserID:  *userID,
+		PostID:  *postID,
 	}
 
 	err = cs.commentRepo.Create(comment)
@@ -99,4 +101,19 @@ func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID
 		return nil, err
 	}
 	return commentReaction, nil
+}
+
+// temperoraly until we have a proper middleware
+func (s *CommentService) GetUserFromSessionToken(token string) (*entity.User, error) {
+	session, err := s.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
+	}
+
+	user, err := s.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

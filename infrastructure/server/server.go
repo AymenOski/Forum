@@ -35,9 +35,9 @@ func MyServer(db *sql.DB) *http.Server {
 	postCategory_infra_repo := infra_repository.NewSQLitePostCategoryRepository(db)
 	category_infra_repo := infra_repository.NewSQLiteCategoryRepository(db)
 	post_reaction_infra_repo := infra_repository.NewSQLitePostReactionRepository(db)
-	post_category_infra_repo := infra_repository.NewSQLitePostAggregateRepository(db, &post_infra_repo, &postCategory_infra_repo,
-		&user_infra_repo, &post_reaction_infra_repo)
 	comment_infra_repo := infra_repository.NewSQLiteCommentRepository(db)
+	post_category_infra_repo := infra_repository.NewSQLitePostAggregateRepository(db, &post_infra_repo, &postCategory_infra_repo,
+		&user_infra_repo, &post_reaction_infra_repo, &comment_infra_repo)
 	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
 	// Middleware
 
@@ -46,7 +46,7 @@ func MyServer(db *sql.DB) *http.Server {
 	rate_limiter := usecase.NewPostRateLimiter()
 	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo,
 		&post_reaction_infra_repo, &session_infra_repo, rate_limiter)
-	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, comment_reaction_infra_repo)
+	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, session_infra_repo, comment_reaction_infra_repo)
 	category_usecase := usecase.NewCategoryService(category_infra_repo, postCategory_infra_repo, session_infra_repo, user_infra_repo)
 
 	// Controller / Interface layer

@@ -32,7 +32,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		// Validate session
 		session, err := m.authService.ValidateSession(cookie.Value)
-		if err != nil {
+		if err != nil || session == nil {
 			// Clear invalid cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     "session_token",
@@ -112,7 +112,7 @@ func (m *AuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
 
 		// Validate session
 		session, err := m.authService.ValidateSession(cookie.Value)
-		if err != nil {
+		if err != nil || session == nil {
 			// Invalid session, clear cookie and proceed without user
 			http.SetCookie(w, &http.Cookie{
 				Name:     "session_token",

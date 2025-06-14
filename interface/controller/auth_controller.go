@@ -47,7 +47,7 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		c.renderTemplate(w, "register.html", map[string]interface{}{
 			"registerError": err.Error(),
 			"username":      name,
-			"email":         email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
+			"email":         email,
 		})
 		return
 	}
@@ -81,7 +81,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",

@@ -3,8 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-
-	"forum/domain/entity"
 )
 
 type ErrorMessage struct {
@@ -43,8 +41,13 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := c.postService.GetPosts()
 	if err != nil {
-		posts = []*entity.PostWithDetails{}
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
+		})
+		return
 	}
+
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":           posts,
 		"username":        username,

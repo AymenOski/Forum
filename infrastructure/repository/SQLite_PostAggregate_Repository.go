@@ -18,6 +18,7 @@ type SQLitePostAggregateRepository struct {
 	postCategoryRepo repository.PostCategoryRepository
 	userRepo         repository.UserRepository
 	reactionRepo     repository.PostReactionRepository
+	commentRepo      repository.CommentRepository
 }
 
 func NewSQLitePostAggregateRepository(
@@ -26,6 +27,7 @@ func NewSQLitePostAggregateRepository(
 	postCategoryRepo *repository.PostCategoryRepository,
 	userRepo *repository.UserRepository,
 	reactionRepo *repository.PostReactionRepository,
+	commentRepo *repository.CommentRepository,
 ) repository.PostAggregateRepository {
 	return &SQLitePostAggregateRepository{
 		db:               db,
@@ -33,6 +35,7 @@ func NewSQLitePostAggregateRepository(
 		postCategoryRepo: *postCategoryRepo,
 		userRepo:         *userRepo,
 		reactionRepo:     *reactionRepo,
+		commentRepo:      *commentRepo,
 	}
 }
 
@@ -80,7 +83,7 @@ func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDeta
 	return postWithDetails, nil
 }
 
-// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts
+// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts , and comments!!
 func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
 	post, err := r.postRepo.GetByID(postID)
 	if err != nil {
@@ -103,12 +106,22 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 		return nil, err
 	}
 
+	comments, err := r.commentRepo.GetByPostID(postID)
+	if err != nil {
+		return nil, err
+	}
+	commentsValue := make([]entity.Comment, len(comments))
+	for i, c := range comments {
+		commentsValue[i] = *c
+	}
+
 	return &entity.PostWithDetails{
 		Post:         *post,
 		Author:       *author,
 		Categories:   categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,
+		Comments:     commentsValue,
 	}, nil
 }
 

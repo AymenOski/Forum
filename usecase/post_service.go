@@ -65,9 +65,9 @@ func (r *PostRateLimiter) CanUserPost(userID uuid.UUID) bool {
 }
 
 func (ps *PostService) CreatePost(token string, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
-	// Get session and user from token
+	// flag-1: next field is temperoraly until we have a proper middleware
 	session, err := ps.sessionRepo.GetByToken(token)
-	if err != nil {
+	if err != nil || session == nil {
 		return nil, err
 	}
 
@@ -132,7 +132,7 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 // Parameters: postID, userID, reaction (true=like, false=dislike)
 func (ps PostService) ReactToPost(postID uuid.UUID, token string, reaction bool) (*entity.PostReaction, error) {
 	session, err := ps.sessionRepo.GetByToken(token)
-	if err != nil {
+	if err != nil || session == nil {
 		return nil, err
 	}
 
@@ -184,4 +184,18 @@ func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
 		return nil, err
 	}
 	return posts, nil
+}
+
+func (pc *PostService) GetUserFromSessionToken(token string) (*entity.User, error) {
+	session, err := pc.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
+	}
+
+	user, err := pc.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
