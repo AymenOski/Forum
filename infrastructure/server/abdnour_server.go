@@ -39,6 +39,7 @@ func MyServer(db *sql.DB) *http.Server {
 		&user_infra_repo, &post_reaction_infra_repo)
 	comment_infra_repo := infra_repository.NewSQLiteCommentRepository(db)
 	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
+	// Middleware
 
 	// Usecase layer
 	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)
@@ -52,10 +53,12 @@ func MyServer(db *sql.DB) *http.Server {
 
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
-	http.HandleFunc("/", post_controller.ShowPostsPage)
-	mux.HandleFunc("/posts/filter", post_controller.HandleFilteredPosts)
+	mux.HandleFunc("/filter", post_controller.HandleFilteredPosts)
+
+	// mux.HandleFunc("/posts/filter", post_controller.HandleFilteredPosts)
 
 	server := &http.Server{
 		Addr:    ":8083",

@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SQLiteUserSessionRepository implements UserSessionRepository interface
 type SQLiteUserSessionRepository struct {
 	db *sql.DB
 }
@@ -45,7 +44,7 @@ func (r *SQLiteUserSessionRepository) GetByToken(token string) (*entity.UserSess
 	err := row.Scan(&idStr, &userIDStr, &session.SessionToken, &session.ExpiresAt, &session.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.New("session not found")
+			return nil, errors.New("you need to login")
 		}
 		return nil, fmt.Errorf("failed to scan session: %v", err)
 	}
@@ -109,20 +108,6 @@ func (r *SQLiteUserSessionRepository) Delete(sessionID uuid.UUID) error {
 	query := `DELETE FROM user_sessions WHERE id = ?`
 
 	_, err := r.db.Exec(query, sessionID.String())
-	return err
-}
-
-func (r *SQLiteUserSessionRepository) DeleteByToken(token string) error {
-	query := `DELETE FROM user_sessions WHERE session_token = ?`
-
-	_, err := r.db.Exec(query, token)
-	return err
-}
-
-func (r *SQLiteUserSessionRepository) DeleteExpiredSessions() error {
-	query := `DELETE FROM user_sessions WHERE expires_at < ?`
-
-	_, err := r.db.Exec(query, time.Now())
 	return err
 }
 

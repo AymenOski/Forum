@@ -12,7 +12,5 @@ type UserSessionRepository interface {
 	GetByUserID(userID uuid.UUID) (*entity.UserSession, error)
 	Update(session *entity.UserSession) error
 	Delete(sessionID uuid.UUID) error
-	DeleteByToken(token string) error
-	DeleteExpiredSessions() error
 	DeleteAllUserSessions(userID uuid.UUID) error
 }

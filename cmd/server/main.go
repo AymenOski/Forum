@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
+	// Load configuration
 	cfg := config.Load()
+
+	// Setup database
 	db := database.SetingUpDB(cfg.DatabasePath)
 	defer db.Close()
 

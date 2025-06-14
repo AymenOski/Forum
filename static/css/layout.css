@@ -69,6 +69,7 @@ html {
 }
 
 main {
+  position: relative;
   background-image: var(--bg-gradient);
   background-attachment: fixed;
   background-size: cover;
@@ -631,7 +632,7 @@ textarea:focus {
     top: 4px;
     right: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: black;
     transition: color 0.3s ease;
 }
@@ -641,15 +642,17 @@ textarea:focus {
     transform: scale(1.2);
 }
 
-/* Ensure popout is contained within form on smaller screens */
-@media (max-width: 768px) {
-    .error-popout {
-        margin-bottom: -40px;
-        position: relative;
-        top: 5px;
-        left :1.5px;
-        max-width: 100%;
-        overflow-wrap:break-word;
-    }
+.Welcome-msg {
+  display: flex; /* Changed to flex for better width control */
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 6px;
+  max-width: 250px;
+  margin: 0;
+  padding: 5px 10px; /* Added padding for separation */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px; /* Subtle rounding for a polished look */
 }
-
