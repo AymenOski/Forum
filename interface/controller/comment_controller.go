@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"forum/domain/entity"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -67,12 +66,17 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
+	posts, err := cc.postService.GetPosts()
+	if err != nil {
+		cc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
+		})
+		return
+	}
+
 	content := r.FormValue("content")
 	if content == "" {
-		posts, err := cc.postService.GetPosts()
-		if err != nil {
-			posts = []*entity.PostWithDetails{}
-		}
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      "Comment cannot be empty",
@@ -82,16 +86,9 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
-	hardcodedUserID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-	userID := hardcodedUserID
-
 	// Create comment using the service
-	_, err = cc.commentService.CreateComment(&postID, &userID, content)
+	_, err = cc.commentService.CreateComment(&postID, &user.ID, content)
 	if err != nil {
-		posts, err := cc.postService.GetPosts()
-		if err != nil {
-			posts = []*entity.PostWithDetails{}
-		}
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      err.Error(),
@@ -101,7 +98,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/?succed=true", http.StatusSeeOther)
 }
 
 func (cc *CommentController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {

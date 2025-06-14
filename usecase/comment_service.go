@@ -12,9 +12,9 @@ import (
 )
 
 type CommentService struct {
-	userRepo            repository.UserRepository
-	commentRepo         repository.CommentRepository
-	postRepo            repository.PostRepository
+	userRepo    repository.UserRepository
+	commentRepo repository.CommentRepository
+	postRepo    repository.PostRepository
 	// next field is temperoraly until we have a proper middleware
 	sessionRepo         repository.UserSessionRepository
 	commentReactionRepo repository.CommentReactionRepository
@@ -50,10 +50,9 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, co
 	}
 
 	comment := &entity.Comment{
-		Content:   content,
-		UserID:    *userID,
-		PostID:    *postID,
-		CreatedAt: time.Now(),
+		Content: content,
+		UserID:  *userID,
+		PostID:  *postID,
 	}
 
 	err = cs.commentRepo.Create(comment)
@@ -107,7 +106,7 @@ func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID
 // temperoraly until we have a proper middleware
 func (s *CommentService) GetUserFromSessionToken(token string) (*entity.User, error) {
 	session, err := s.sessionRepo.GetByToken(token)
-	if err != nil {
+	if err != nil || session == nil {
 		return nil, err
 	}
 

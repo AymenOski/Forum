@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"forum/domain/entity"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -63,12 +62,9 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	}
 	posts, err := pc.postService.GetPosts()
 	if err != nil {
-		posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of error page
-		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
-			"form_error":      usecase.ErrPostNotFound,
-			"username":        username,
-			"isAuthenticated": isAuthenticated,
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
 		})
 		return
 	}
@@ -171,5 +167,3 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	pc.postService.ReactToPost(ID, token.Value, like)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
-
-
