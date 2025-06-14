@@ -78,11 +78,10 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		c.renderTemplate(w, "login.html", map[string]interface{}{
 			"loginError": err.Error(),
-			"email":      email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
+			"email":      email,
 		})
 		return
 	}
-
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",

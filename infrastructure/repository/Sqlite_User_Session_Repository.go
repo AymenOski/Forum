@@ -24,7 +24,6 @@ func NewSQLiteUserSessionRepository(db *sql.DB) repository.UserSessionRepository
 func (r *SQLiteUserSessionRepository) Create(session *entity.UserSession) error {
 	session.ID = uuid.New()
 	session.CreatedAt = time.Now()
-
 	query := `INSERT INTO user_sessions (id, user_id, session_token, expires_at, created_at)
 			  VALUES (?, ?, ?, ?, ?)`
 
