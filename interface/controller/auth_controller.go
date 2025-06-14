@@ -71,9 +71,8 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("username_input")
-	password := r.FormValue("password_input")
-	println("email: ",email,"pass: ",password)
+	email := r.FormValue("email")
+	password := r.FormValue("password")
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		c.renderTemplate(w, "login.html", map[string]interface{}{
@@ -94,7 +93,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
-	// Redirect to home page
 	http.Redirect(w, r, "/layout", http.StatusSeeOther)
 }
 
@@ -103,7 +101,7 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// // Get session token from cookie
+	// Get session token from cookie
 	// cookie, err := r.Cookie("session_token")
 	// if err == nil && cookie.Value != "" {
 	// 	// Use the LogoutByToken method to invalidate the specific session
