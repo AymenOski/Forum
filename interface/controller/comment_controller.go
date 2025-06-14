@@ -5,31 +5,31 @@ import (
 	"net/http"
 
 	"forum/domain/entity"
-	"forum/domain/repository"
 	"forum/usecase"
 
 	"github.com/google/uuid"
 )
 
 type CommentController struct {
+	// flag-1: next field is temperoraly until we have a proper middleware
 	commentService *usecase.CommentService
-	postService    *usecase.PostService       // To fetch posts for template context
-	userRepo       *repository.UserRepository // To fetch user by ID or session
+	postService    *usecase.PostService
 	templates      *template.Template
 }
 
-func NewCommentController(commentService *usecase.CommentService, postService *usecase.PostService, userRepo *repository.UserRepository, templates *template.Template) *CommentController {
+func NewCommentController(commentService *usecase.CommentService, postService *usecase.PostService, templates *template.Template) *CommentController {
 	return &CommentController{
 		commentService: commentService,
 		postService:    postService,
-		userRepo:       userRepo,
 		templates:      templates,
 	}
 }
 
 func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.Request) {
+	var username string
+	var isAuthenticated bool
 	// Check session token for authentication
-	_, err := r.Cookie("session_token")
+	cookie, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -39,6 +39,12 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 			Error:      "Unexpected error while reading cookie",
 		})
 		return
+	}
+	// flag-1: next field is temperoraly until we have a proper middleware
+	user, err := cc.commentService.GetUserFromSessionToken(cookie.Value)
+	if err == nil && user != nil {
+		username = user.UserName
+		isAuthenticated = true
 	}
 
 	// Validate HTTP method
@@ -65,26 +71,16 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	if content == "" {
 		posts, err := cc.postService.GetPosts()
 		if err != nil {
-			posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of nil
+			posts = []*entity.PostWithDetails{}
 		}
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      "Comment cannot be empty",
-			"username":        "userNamessssssssssssssssssssssssssssss",
-			"isAuthenticated": true,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}
-
-	// Get authenticated user from context
-	// userID, ok := r.Context().Value("currentUserID").(uuid.UUID)
-	// if !ok {
-	// 	cc.ShowErrorPage(w, ErrorMessage{
-	// 		StatusCode: http.StatusUnauthorized,
-	// 		Error:      "Invalid session",
-	// 	})
-	// 	return
-	// }
 
 	// Hardcoded userID for testing (replace with proper auth logic later)
 	// Example UUID - replace with a valid user ID from the session
@@ -99,17 +95,10 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 			posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of nil
 		}
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
+			"posts": posts,
 			// "form_error":      err.Error(),
-			"username":        "userNamessssssssssssssssssssssssssssss",
-			"isAuthenticated": true,
-			// "username": func() any {
-			// 	if isAuthenticated {
-			// 		return user.UserName
-			// 	}
-			// 	return nil
-			// }(),
-			// "isAuthenticated": isAuthenticated,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}

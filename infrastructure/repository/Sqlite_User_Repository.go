@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SQLiteUserRepository implements UserRepository interface
 type SQLiteUserRepository struct {
 	db *sql.DB
 }
@@ -91,51 +90,6 @@ func (r *SQLiteUserRepository) GetByUserName(userName string) (*entity.User, err
 	}
 	
 	return user, nil
-}
-
-func (r *SQLiteUserRepository) GetAll() ([]*entity.User, error) {
-	query := `SELECT id, user_name, email, password_hash, created_at FROM user ORDER BY created_at DESC`
-	
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	
-	var users []*entity.User
-	
-	for rows.Next() {
-		user := &entity.User{}
-		var idStr string
-		
-		err := rows.Scan(&idStr, &user.UserName, &user.Email, &user.PasswordHash, &user.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		
-		user.ID, err = uuid.Parse(idStr)
-		if err != nil {
-			return nil, err
-		}
-		
-		users = append(users, user)
-	}
-	
-	return users, nil
-}
-
-func (r *SQLiteUserRepository) Update(user *entity.User) error {
-	query := `UPDATE user SET user_name = ?, email = ?, password_hash = ? WHERE id = ?`
-	
-	_, err := r.db.Exec(query, user.UserName, user.Email, user.PasswordHash, user.ID.String())
-	return err
-}
-
-func (r *SQLiteUserRepository) Delete(userID uuid.UUID) error {
-	query := `DELETE FROM user WHERE id = ?`
-	
-	_, err := r.db.Exec(query, userID.String())
-	return err
 }
 
 func (r *SQLiteUserRepository) CheckEmailExists(email string) (bool, error) {

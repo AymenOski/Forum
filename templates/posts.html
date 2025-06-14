@@ -1,166 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
+{{ define "posts" }}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Posts</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
+<section class="posts-container">
+    <h2 class="posts-title">All Posts</h2>
 
-        .post {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .author {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .post-id {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .post-content {
-            line-height: 1.6;
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-        }
-
-        .post-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .engagement {
-            display: flex;
-            gap: 15px;
-        }
-
-        .likes,
-        .dislikes {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .likes {
-            color: #28a745;
-        }
-
-        .dislikes {
-            color: #dc3545;
-        }
-
-        .categories {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .category {
-            background: #007bff;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-        }
-
-        .comments-section {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-
-        .comments-header {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .comment {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            border-left: 3px solid #007bff;
-        }
-
-        .comment-author {
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 5px;
-        }
-
-        .comment-content {
-            line-height: 1.4;
-        }
-
-        .no-posts {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 40px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>All Posts</h1>
-
-    {{if .}}
-    {{range .}}
-    <div class="post">
+    {{if .posts}}
+    {{range .posts}}
+    <article class="forum-post" data-post-id="{{.ID}}">
         <div class="post-header">
-            <span class="author">{{.Authorname}}</span>
-            <span class="post-id">Post #{{.PostID}}</span>
+            <span class="post-author">Posted by {{.Author.UserName}}</span>
+            <span class="post-id">Post #{{.ID}}</span>
+            <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
         </div>
 
         <div class="post-content">{{.Content}}</div>
 
-        <div class="post-meta">
-            <div class="engagement">
-                <div class="likes">
-                    <span>👍</span>
-                    <span>{{.LikesCount}}</span>
-                </div>
-                <div class="dislikes">
-                    <span>👎</span>
-                    <span>{{.DislikesCount}}</span>
-                </div>
+        <div class="post-footer">
+            <div class="post-categories">
+                {{range .Categories}}
+                <span class="category-badge">{{.Name}}</span>
+                {{end}}
+            </div>
+            <div class="post-stats">
+                <!-- Like Button -->
+                <form method="POST" action="/likeposts/?id={{.ID}}/1" class="reaction-form">
+                    <button type="submit" class="reaction-btn like-btn">
+                        <span>👍</span>
+                        <span class="count">{{.LikeCount}}</span>
+                    </button>
+                </form>
+
+                <!-- Dislike Button -->
+                <form method="POST" action="/likeposts/?id={{.ID}}/0" class="reaction-form">
+                    <button type="submit" class="reaction-btn dislike-btn">
+                        <span>👎</span>
+                        <span class="count">{{.DislikeCount}}</span>
+                    </button>
+                </form>
+
+                <!-- Comments Toggle -->
+                <!-- <form method="GET" action="/posts/{{.ID}}#comments" class="reaction-form"> -->
+                    <button type="submit" class="reaction-btn comments-btn">
+                        <span>💬</span>
+                        <span class="count">{{len .Comments}}</span>
+                    </button>
+                <!-- </form> -->
             </div>
         </div>
 
         {{if .Comments}}
-        <div class="comments-section">
+        <div class="comments-section" id="comments">
             <div class="comments-header">
                 Comments ({{len .Comments}})
             </div>
@@ -172,11 +60,10 @@
             {{end}}
         </div>
         {{end}}
-    </div>
+    </article>
     {{end}}
     {{else}}
-    <div class="no-posts">No posts available</div>
+    <p>No posts available.</p>
     {{end}}
-</body>
-
-</html>
+</section>
+{{end}}

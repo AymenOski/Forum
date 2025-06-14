@@ -14,6 +14,6 @@ type UserRepository interface {
 //	GetAll() ([]*entity.User, error)
 //	Update(user *entity.User) error
 //	Delete(userID uuid.UUID) error
-//	CheckEmailExists(email string) (bool, error)
-//	CheckUserNameExists(userName string) (bool, error)
+	CheckEmailExists(email string) (bool, error)
+	CheckUserNameExists(userName string) (bool, error)
 }

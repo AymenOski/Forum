@@ -72,17 +72,15 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := r.FormValue("email")
-	password := r.FormValue("password")
-
+	password := r.FormValue("password_input")
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		c.renderTemplate(w, "login.html", map[string]interface{}{
 			"loginError": err.Error(),
-			"email":      email, // roll-back values when re-rendering so that the user doesn't have to re-enter it
+			"email":      email,
 		})
 		return
 	}
-
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -95,7 +93,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	_ = user
 
 	// Redirect to home page
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/layout", http.StatusSeeOther)
 }
 
 func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
@@ -103,11 +101,18 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// Get user from context (set by auth middleware)
-	user, ok := r.Context().Value("user").(*entity.User)
-	if ok {
-		c.authService.Logout(user.ID)
-	}
+	// Get session token from cookie
+	// cookie, err := r.Cookie("session_token")
+	// if err == nil && cookie.Value != "" {
+	// 	// Use the LogoutByToken method to invalidate the specific session
+	// 	c.authService.Logout(cookie.Value)
+	// }
+
+	// Alternative: Get user from context and logout all sessions
+	// user, ok := r.Context().Value("user").(*entity.User)
+	// if ok {
+	// 	c.authService.Logout(user.ID)
+	// }
 
 	// Clear session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -120,4 +125,9 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// New method to validate session (can be used by middleware)
+func (c *AuthController) ValidateSessionToken(token string) (*entity.UserSession, error) {
+	return c.authService.ValidateSession(token)
 }

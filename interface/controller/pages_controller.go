@@ -2,9 +2,9 @@ package controller
 
 import (
 	"fmt"
-	"forum/domain/entity"
-	custom_errors "forum/domain/errors"
 	"net/http"
+
+	"forum/domain/entity"
 )
 
 type ErrorMessage struct {
@@ -29,23 +29,25 @@ func (c *AuthController) ShowLoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
+	var username string
+	var isAuthenticated bool
 
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		user, err := c.authService.GetUserFromSessionToken(cookie.Value)
+		if err == nil && user != nil {
+			username = user.UserName
+			isAuthenticated = true
+		}
+	}
 	posts, err := c.postService.GetPosts()
 	if err != nil {
-		posts = []*entity.PostWithDetails{} // Fallback to empty slice instead of nil
-		c.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
-			"form_error":      custom_errors.ErrPostNotFound,
-			"username":        "userNamessssssssssssssssssssssssssssss",
-			"isAuthenticated": true,
-		})
-		return
+		posts = []*entity.PostWithDetails{}
 	}
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
-		"posts": posts,
-		// just a hardcode ,need to integrate session and session.UserName so we can add next the next fields
-		"username":        "userNamessssssssssssssssssssssssssssss",
-		"isAuthenticated": true,
+		"posts":           posts,
+		"username":        username,
+		"isAuthenticated": isAuthenticated,
 	})
 }
 
