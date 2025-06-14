@@ -21,4 +21,6 @@ func main() {
 	if err := server.MyServer(db).ListenAndServe(); err != nil {
 		log.Fatalf("500 - Internal Server Error: %v", err)
 	}
+
+	// hehehehehehe
 }

@@ -112,6 +112,7 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 		}
 
 		categories = append(categories, category)
+		
 	}
 
 	return categories, nil

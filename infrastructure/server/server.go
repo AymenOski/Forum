@@ -61,14 +61,15 @@ func MyServer(db *sql.DB) *http.Server {
 	category_usecase := usecase.NewCategoryService(category_infra_repo, postCategory_infra_repo, session_infra_repo, user_infra_repo)
 
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
-
-	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1)
+	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1, auth_usecase)
 
 	auth_middleware := middleware.NewAuthMiddleware(auth_usecase)
 
 	mux.HandleFunc("/signup", auth_controller.HandleSignup)
 	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", auth_middleware.VerifiedAuth(post_controller.HandleCreatePost))
+	mux.HandleFunc("/filter", post_controller.HandleFilteredPosts)
 	mux.HandleFunc("/", auth_controller.HandleGlobal)
 
 	server := &http.Server{

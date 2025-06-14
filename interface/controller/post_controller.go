@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"forum/domain/entity"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -16,16 +17,18 @@ type PostController struct {
 	commentService  *usecase.CommentService
 	categoryService *usecase.CategoryService
 	templates       *template.Template
+	authservice     *usecase.AuthService
 }
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
-	categoryService *usecase.CategoryService, templates *template.Template,
+	categoryService *usecase.CategoryService, templates *template.Template, authservice *usecase.AuthService,
 ) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
 		categoryService: categoryService,
 		templates:       templates,
+		authservice:     authservice,
 	}
 }
 
@@ -54,12 +57,6 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	content := r.FormValue("content")
 	categories := r.Form["categories"]
-	// flag-1: next field is temperoraly until we have a proper middleware
-	user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
-	if err == nil && user != nil {
-		username = user.UserName
-		isAuthenticated = true
-	}
 	posts, err := pc.postService.GetPosts()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -123,7 +120,6 @@ func (c *PostController) renderTemplate(w http.ResponseWriter, template string, 
 
 func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(data.StatusCode)
 
 	err := c.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
@@ -166,4 +162,62 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	}
 	pc.postService.ReactToPost(ID, token.Value, like)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+
+	selectedCategoryNames := r.URL.Query()["category-filter"]
+
+	categories, err := pc.categoryService.GetAllCategories()
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Could not fetch categories",
+		})
+		return
+	}
+
+	// Convert selected category names to UUIDs
+	var selectedIDs []uuid.UUID
+	selectedMap := make(map[string]bool) // for keeping checkboxes checked
+
+	for _, selected := range selectedCategoryNames {
+		for _, cat := range categories {
+			if cat.Name == selected {
+				selectedIDs = append(selectedIDs, cat.ID)
+				selectedMap[selected] = true
+			}
+		}
+	}
+
+	// Fetch posts with full details
+	seen := make(map[uuid.UUID]bool)
+	var filteredPosts []*entity.PostWithDetails
+
+	for _, catID := range selectedIDs {
+		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
+		if err != nil {
+			continue
+		}
+
+		for _, post := range posts {
+			if !seen[post.ID] {
+				filteredPosts = append(filteredPosts, post)
+				seen[post.ID] = true
+			}
+		}
+	}
+
+	pc.renderTemplate(w, "layout.html", map[string]interface{}{
+		"posts":              filteredPosts,
+		"categories":         categories,
+		"selectedCategories": selectedMap,
+	})
 }
