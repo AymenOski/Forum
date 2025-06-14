@@ -18,6 +18,7 @@ type SQLitePostAggregateRepository struct {
 	postCategoryRepo repository.PostCategoryRepository
 	userRepo         repository.UserRepository
 	reactionRepo     repository.PostReactionRepository
+	commentRepo      repository.CommentRepository
 }
 
 func NewSQLitePostAggregateRepository(
@@ -26,6 +27,7 @@ func NewSQLitePostAggregateRepository(
 	postCategoryRepo *repository.PostCategoryRepository,
 	userRepo *repository.UserRepository,
 	reactionRepo *repository.PostReactionRepository,
+	commentRepo *repository.CommentRepository,
 ) repository.PostAggregateRepository {
 	return &SQLitePostAggregateRepository{
 		db:               db,
@@ -33,6 +35,7 @@ func NewSQLitePostAggregateRepository(
 		postCategoryRepo: *postCategoryRepo,
 		userRepo:         *userRepo,
 		reactionRepo:     *reactionRepo,
+		commentRepo:      *commentRepo,
 	}
 }
 
@@ -103,9 +106,16 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 		return nil, err
 	}
 
+	comments, err := r.commentRepo.GetByPostIDWithDetails(postID)
+	if err != nil {
+		fmt.Println("comments error")
+		return nil, err
+	}
+
 	return &entity.PostWithDetails{
 		Post:         *post,
 		Author:       *author,
+		Comments:     comments,
 		Categories:   categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,

@@ -21,8 +21,11 @@
                 {{end}}
             </div>
             <div class="post-stats">
+                {{if $.isAuthenticated}}
                 <!-- Like Button -->
-                <form method="POST" action="/likeposts/?id={{.ID}}/1" class="reaction-form">
+                <form method="POST" action="/likeposts" class="reaction-form">
+                    <input type="hidden" name="postId" value="{{.ID}}">
+                    <input type="hidden" name="isLike" value="1">
                     <button type="submit" class="reaction-btn like-btn">
                         <span>👍</span>
                         <span class="count">{{.LikeCount}}</span>
@@ -30,7 +33,9 @@
                 </form>
 
                 <!-- Dislike Button -->
-                <form method="POST" action="/likeposts/?id={{.ID}}/0" class="reaction-form">
+                <form method="POST" action="/likeposts" class="reaction-form">
+                    <input type="hidden" name="postId" value="{{.ID}}">
+                    <input type="hidden" name="isLike" value="0">
                     <button type="submit" class="reaction-btn dislike-btn">
                         <span>👎</span>
                         <span class="count">{{.DislikeCount}}</span>
@@ -39,27 +44,40 @@
 
                 <!-- Comments Toggle -->
                 <!-- <form method="GET" action="/posts/{{.ID}}#comments" class="reaction-form"> -->
-                    <button type="submit" class="reaction-btn comments-btn">
-                        <span>💬</span>
-                        <span class="count">{{len .Comments}}</span>
-                    </button>
+                <button type="submit" class="reaction-btn comments-btn">
+                    <span>💬</span>
+                    <span class="count">{{len .Comments}}</span>
+                </button>
                 <!-- </form> -->
+                {{else}}
+                <span class="likes">👍 {{.LikeCount}}</span>
+                <span class="dislikes">👎 {{.DislikeCount}}</span>
+                <span class="comments">💬 {{len .Comments}} comments</span>
+                {{end}}
             </div>
         </div>
-
-        {{if .Comments}}
-        <div class="comments-section" id="comments">
-            <div class="comments-header">
-                Comments ({{len .Comments}})
-            </div>
+        <!-- Comment Form -->
+        {{if $.isAuthenticated}}
+        <div class="comment-form">
+            <form method="POST" action="/comment/create">
+                <input type="hidden" name="postId" value="{{.ID}}">
+                <textarea name="content" placeholder="Add a comment..." required maxlength="249"></textarea>
+                <button type="submit">Post Comment</button>
+            </form>
+        </div>
+        {{end}}
+        <!-- Comment List -->
+        <div class="comment-section">
             {{range .Comments}}
             <div class="comment">
-                <div class="comment-author">{{.UserName}}</div>
-                <div class="comment-content">{{.Content}}</div>
+                <span class="comment-author">Posted by {{.Author.UserName}}</span>
+                <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                <p class="comment-content">{{.Content}}</p>
+                <span class="likes">👍 {{.LikeCount}}</span>
+                <span class="dislikes">👎 {{.DislikeCount}}</span>
             </div>
             {{end}}
         </div>
-        {{end}}
     </article>
     {{end}}
     {{else}}

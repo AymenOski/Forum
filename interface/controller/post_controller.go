@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strings"
 
 	"forum/usecase"
 
@@ -105,22 +104,22 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
+func (pc *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := c.templates.ExecuteTemplate(w, template, data)
+	err := pc.templates.ExecuteTemplate(w, template, data)
 	if err != nil {
-		c.ShowErrorPage(w, ErrorMessage{
+		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Error rendering page",
 		})
 	}
 }
 
-func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+func (pc *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(data.StatusCode)
 
-	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	err := pc.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
@@ -146,16 +145,14 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 		})
 		return
 	}
-
-	id := strings.Split(r.URL.Query().Get("id"), "/")
-
-	ID, err := uuid.Parse(id[0])
+	id := r.FormValue("postId")
+	ID, err := uuid.Parse(id)
 	if err != nil {
 		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
 		return
 	}
 	like := true
-	if id[1] == "0" {
+	if r.FormValue("isLike") == "0" {
 		like = false
 	}
 	pc.postService.ReactToPost(ID, token.Value, like)

@@ -16,20 +16,33 @@ type CommentService struct {
 	commentRepo         repository.CommentRepository
 	postRepo            repository.PostRepository
 	commentReactionRepo repository.CommentReactionRepository
+	sessionRepo         repository.UserSessionRepository
 }
 
-func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
-	postRepo repository.PostRepository, commentReactionRepo repository.CommentReactionRepository,
+func NewCommentService(userRepo *repository.UserRepository, commentRepo *repository.CommentRepository,
+	postRepo *repository.PostRepository, commentReactionRepo *repository.CommentReactionRepository, sessionRepo *repository.UserSessionRepository,
 ) *CommentService {
 	return &CommentService{
-		userRepo:            userRepo,
-		commentRepo:         commentRepo,
-		postRepo:            postRepo,
-		commentReactionRepo: commentReactionRepo,
+		userRepo:            *userRepo,
+		commentRepo:         *commentRepo,
+		postRepo:            *postRepo,
+		commentReactionRepo: *commentReactionRepo,
+		sessionRepo:         *sessionRepo,
 	}
 }
 
-func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, content string) (*entity.Comment, error) {
+func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string) (*entity.Comment, error) {
+	session, err := cs.sessionRepo.GetByToken(token)
+	if err != nil {
+		return nil, err
+	}
+	user, err := cs.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
 	content = strings.TrimSpace(content)
 	if len(content) > 250 {
 		return nil, errors.New("comment length excceds 250 characters")
@@ -37,27 +50,21 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, userID *uuid.UUID, co
 		return nil, errors.New("comment should have at least 1 character")
 	}
 
-	_, err := cs.postRepo.GetByID(*postID)
+	_, err = cs.postRepo.GetByID(*postID)
 	if err != nil {
 		return nil, errors.New("post not found")
 	}
-	_, err = cs.userRepo.GetByID(*userID)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-
 	comment := &entity.Comment{
 		Content:   content,
-		UserID:    *userID,
+		UserID:    user.ID,
 		PostID:    *postID,
 		CreatedAt: time.Now(),
 	}
-
+	// fmt.Printf("comment := &entity.Comment{ %v \n",comment)
 	err = cs.commentRepo.Create(comment)
 	if err != nil {
 		return nil, err
 	}
-
 	return comment, nil
 }
 

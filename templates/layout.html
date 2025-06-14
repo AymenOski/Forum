@@ -55,8 +55,12 @@
 
 
             <div class="toggle-buttons">
+                {{if .isAuthenticated}}
                 <label for="show-filter">🔍 Filter Posts</label>
                 <label for="show-create">➕ Make a Post</label>
+                {{else}}
+                <label for="show-filter">🔍 Filter Posts</label>
+                {{end}}
             </div>
             <div class="Welcome-msg">
             {{if .isAuthenticated}}
