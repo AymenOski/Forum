@@ -71,9 +71,8 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("username_input")
-	password := r.FormValue("password_input")
-	println("email: ",email,"pass: ",password)
+	email := r.FormValue("email")
+	password := r.FormValue("password")
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		c.renderTemplate(w, "login.html", map[string]interface{}{
@@ -103,27 +102,19 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// // Get session token from cookie
-	// cookie, err := r.Cookie("session_token")
-	// if err == nil && cookie.Value != "" {
-	// 	// Use the LogoutByToken method to invalidate the specific session
-	// 	c.authService.Logout(cookie.Value)
-	// }
+	user, ok := r.Context().Value("user").(*entity.User)
+	if ok {
+		c.authService.Logout(user.ID)
+	}
 
-	// // Alternative: Get user from context and logout all sessions
-	// // user, ok := r.Context().Value("user").(*entity.User)
-	// // if ok {
-	// // 	c.authService.Logout(user.ID)
-	// // }
-
-	// // Clear session cookie
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:     "session_token",
-	// 	Value:    "",
-	// 	Path:     "/",
-	// 	MaxAge:   -1,
-	// 	HttpOnly: true,
-	// })
+	// Clear session cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
