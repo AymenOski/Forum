@@ -56,6 +56,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/likeposts", post_controller.HandleReactToPost)
+	mux.HandleFunc("/likecomment", comment_controller.HandleReactToComment)
 	mux.HandleFunc("/comment/create", comment_controller.HandleCreateComment)
 
 	

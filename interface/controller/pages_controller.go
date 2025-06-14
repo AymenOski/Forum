@@ -47,7 +47,6 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 	}
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts": posts,
-		// "comments": 		comments,
 		"username":        username,
 		"isAuthenticated": isAuthenticated,
 	})

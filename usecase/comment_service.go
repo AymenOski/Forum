@@ -71,17 +71,23 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string
 // ReactToComment - Like/dislike a comment with toggle support.
 // Same reaction twice = remove (toggle), different reaction = update.
 // Returns nil when reaction is removed, reaction entity when created/updated.
-func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID, reaction bool) (*entity.CommentReaction, error) {
-	_, err := cs.userRepo.GetByID(*userID)
+func (cs *CommentService) ReactToComment(commentID *uuid.UUID, token string, reaction bool) (*entity.CommentReaction, error) {
+	session, err := cs.sessionRepo.GetByToken(token)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return nil, err
 	}
+
+	_, err = cs.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = cs.commentRepo.GetByID(*commentID)
 	if err != nil {
 		return nil, errors.New("comment not found")
 	}
 
-	cr, err := cs.commentReactionRepo.GetByUserAndComment(*userID, *commentID)
+	cr, err := cs.commentReactionRepo.GetByUserAndComment(session.UserID, *commentID)
 	if err == nil {
 		// user reacted, should update the reaction
 		if cr.Reaction == reaction {
@@ -96,7 +102,7 @@ func (cs *CommentService) ReactToComment(commentID *uuid.UUID, userID *uuid.UUID
 	}
 	// no reaction of the user on the post, need to create a reaction
 	commentReaction := &entity.CommentReaction{
-		UserID:    *userID,
+		UserID:    session.UserID,
 		CommentID: *commentID,
 		Reaction:  reaction,
 		CreatedAt: time.Now(),

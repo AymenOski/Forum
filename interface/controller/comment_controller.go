@@ -55,7 +55,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
 		return
 	}
-	cc.commentService.CreateComment(&ID,token.Value,content)
+	cc.commentService.CreateComment(&ID, token.Value, content)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -67,4 +67,39 @@ func (cc *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMess
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
+}
+
+func (cc *CommentController) HandleReactToComment(w http.ResponseWriter, r *http.Request) {
+	token, err := r.Cookie("session_token")
+	if err == http.ErrNoCookie {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	} else if err != nil {
+		cc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Unexpected error while reading cookie",
+		})
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		cc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+	id := r.FormValue("CommentID")
+	ID, err := uuid.Parse(id)
+	if err != nil {
+		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
+		return
+	}
+	like := true
+	if r.FormValue("isLike") == "0" {
+		like = false
+	}
+	cc.commentService.ReactToComment(&ID,token.Value,like)
+	// pc.postService.ReactToPost(ID, token.Value, like)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
