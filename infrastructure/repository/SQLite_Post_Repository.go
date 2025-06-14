@@ -2,6 +2,8 @@ package infra_repository
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"forum/domain/entity"
@@ -393,15 +395,21 @@ func (r *SQLitePostRepository) GetFiltered(filter entity.PostFilter) ([]*entity.
 	conditions := []string{}
 	args := []interface{}{}
 
-	if filter.CategoryID != nil {
+	if filter.CategoryIDs != nil {
 		conditions = append(conditions, "pc.category_id = ?")
-		args = append(args, filter.CategoryID.String())
+		args = append(args, filter.CategoryIDs)
 	}
 
-	if filter.AuthorID != nil {
-		conditions = append(conditions, "p.user_id = ?")
-		args = append(args, filter.AuthorID.String())
+	if len(filter.CategoryIDs) > 0 {
+		placeholders := []string{}
+		for _, id := range filter.CategoryIDs {
+			placeholders = append(placeholders, "?")
+			args = append(args, id.String())
+		}
+		conditions = append(conditions, "pc.category_id IN ("+strings.Join(placeholders, ",")+")")
 	}
+
+	fmt.Println("Filter:", filter.CategoryIDs)
 
 	if len(conditions) > 0 {
 		query += " WHERE " + joinConditions(conditions, " AND ")

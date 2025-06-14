@@ -145,7 +145,10 @@ func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
 	return posts, nil
 }
 
+func (cs *CategoryService) GetAllCategories() ([]*entity.Category, error) {
+	return cs.categoryRepo.GetAll()
+}
+
 func (s *PostService) GetFilteredPosts(filter entity.PostFilter) ([]*entity.Post, error) {
 	return s.postRepo.GetFiltered(filter)
 }
-

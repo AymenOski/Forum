@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"forum/domain/entity"
-	custom_errors "forum/domain/errors"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -20,13 +19,13 @@ type PostController struct {
 	authservice     *usecase.AuthService
 }
 
-func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, categoryService *usecase.CategoryService, templates *template.Template) *PostController {
+func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService, categoryService *usecase.CategoryService, templates *template.Template, authservice *usecase.AuthService) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
 		categoryService: categoryService,
 		templates:       templates,
-		authservice:     &usecase.AuthService{},
+		authservice:     authservice,
 	}
 }
 
@@ -49,40 +48,48 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	categories := r.Form["categories"]
 
 	if content == "" {
-		pc.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusBadRequest,
-			Error:      "Title and content are required",
+		allCategories, _ := pc.categoryService.GetAllCategories()
+		posts, _ := pc.postService.GetPosts()
+
+		pc.renderTemplate(w, "layout.html", map[string]interface{}{
+			"form_error": "Title and content are required",
+			"Content":    content,
+			"posts":      posts,
+			"categories": allCategories,
 		})
 		return
 	}
 
-	// verify if the categories exist
+	// Verify if the categories exist
 	categoriesIDs := make([]*uuid.UUID, 0, len(categories))
 	for _, cat := range categories {
 		c, err := pc.categoryService.GetCategoryByName(cat)
 		if err != nil {
-			pc.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusBadRequest,
-				Error:      "Invalid category: " + cat,
+			allCategories, _ := pc.categoryService.GetAllCategories()
+			posts, _ := pc.postService.GetPosts()
+
+			pc.renderTemplate(w, "layout.html", map[string]interface{}{
+				"form_error": "Invalid category: " + cat,
+				"Content":    content,
+				"posts":      posts,
+				"categories": allCategories,
 			})
 			return
 		}
 		categoriesIDs = append(categoriesIDs, &c.ID)
 	}
-	posts, err := pc.postService.GetPosts()
-	if err != nil {
-		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":      posts,
-			"form_error": custom_errors.ErrPostNotFound,
-		})
-		return
-	}
+
+	// Try to create post
 	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
 	if err != nil {
+		allCategories, _ := pc.categoryService.GetAllCategories()
+		posts, _ := pc.postService.GetPosts()
+
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"form_error": err.Error(),
 			"Content":    content,
 			"posts":      posts,
+			"categories": allCategories,
 		})
 		return
 	}
@@ -111,14 +118,37 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 		http.Error(w, data.Error, data.StatusCode)
 	}
 }
+func (pc *PostController) ShowPostsPage(w http.ResponseWriter, r *http.Request) {
+	categories, err := pc.categoryService.GetAllCategories()
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error fetching categories",
+		})
+		return
+	}
 
+	posts, err := pc.postService.GetPosts()
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error fetching posts",
+		})
+		return
+	}
+
+	pc.renderTemplate(w, "layout.html", map[string]interface{}{
+		"posts":      posts,
+		"categories": categories,
+	})
+}
 func (pc *PostController) GetCurrentUserID(r *http.Request) (uuid.UUID, bool) {
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		return uuid.UUID{}, false
 	}
 
-	session, err := pc.authService.sessionRepo.GetByToken(cookie.Value)
+	session, err := pc.authservice.ValidateSession(cookie.Value)
 	if err != nil || session.ExpiresAt.Before(time.Now()) {
 		return uuid.UUID{}, false
 	}
@@ -131,7 +161,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	filter := entity.PostFilter{}
 
 	// ✅ Category filter (multi-select)
-	if categories := query["category-filter[]"]; len(categories) > 0 {
+	if categories := query["category"]; len(categories) > 0 {
 		for _, cat := range categories {
 			id, err := uuid.Parse(cat)
 			if err == nil {
@@ -165,7 +195,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 			return
 		}
 		filter.LikedPosts = true
-		filter.AuthorID = &userID // you may need it for the query later
+		filter.AuthorID = &userID
 	}
 
 	// 🚀 Fetch posts
@@ -178,9 +208,13 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// ✅ Fetch all categories for the form
+	categories, _ := pc.categoryService.GetAllCategories()
+
 	// 🎯 Render
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
-		"posts":  posts,
-		"filter": filter,
+		"posts":      posts,
+		"filter":     filter,
+		"categories": categories,
 	})
 }
