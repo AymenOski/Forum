@@ -10,13 +10,11 @@
 </head>
 
 <body>
-
     <!-- NavBar section -->
     <input type="radio" id="theme-pink" name="theme" class="theme-radio">
     <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
     <input type="radio" id="theme-forest" name="theme" class="theme-radio">
     <input type="radio" id="theme-dark" name="theme" class="theme-radio" checked>
-
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -32,7 +30,6 @@
                 {{end}}
             </div>
             <div class="themes">
-
                 <div class="theme-buttons">
                     <label for="theme-pink">🌸</label>
                     <label for="theme-aqua">🌊</label>
@@ -42,28 +39,20 @@
             </div>
         </nav>
     </header>
-
     <main>
-
         <!-- Filtering and Posting section -->
-
         <div class="post-toggle-wrapper">
-
-
             <input type="radio" name="post-toggle" id="show-filter" checked hidden>
             <input type="radio" name="post-toggle" id="show-create" hidden>
-
-
             <div class="toggle-buttons">
                 <label for="show-filter">🔍 Filter Posts</label>
                 <label for="show-create">➕ Make a Post</label>
             </div>
             <div class="Welcome-msg">
-            {{if .isAuthenticated}}
-                <p>👋Welcome, {{.username}} </p>
-            {{end}}
-            </div>  
-
+                {{if .isAuthenticated}}
+                <p>👋Welcome, {{.username}}</p>
+                {{end}}
+            </div>
             {{if .form_error}}
             <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
             <div class="error-popout">
@@ -71,7 +60,6 @@
                 <p class="error-message">{{.form_error}}</p>
             </div>
             {{end}}
-
             <div class="post-sections">
                 <div class="post-section filter-section">
                     <form method="GET" action="/filter">
@@ -79,28 +67,27 @@
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="tech">
+                                    <input type="checkbox" name="category-filter" value="technology">
                                     <span>Technology</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="gaming">
+                                    <input type="checkbox" name="category-filter" value="gaming">
                                     <span>Gaming</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="science">
+                                    <input type="checkbox" name="category-filter" value="science">
                                     <span>Science</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="art">
+                                    <input type="checkbox" name="category-filter" value="art & creativity">
                                     <span>Art & Creativity</span>
                                 </label>
                                 <label class="category-tag">
-                                    <input type="checkbox" name="category-filter[]" value="general">
-                                    <span>General Discussion</span>
+                                    <input type="checkbox" name="category-filter" value="general">
+                                    <span>General</span>
                                 </label>
                             </div>
                         </div>
-
                         <div class="filter-checkboxes">
                             <label class="filter-option">
                                 <input type="checkbox" name="myPosts">
@@ -111,28 +98,17 @@
                                 <span>Liked Posts</span>
                             </label>
                         </div>
-
                         <button type="submit">Apply Filters</button>
                     </form>
                 </div>
-
                 <div class="post-section create-section">
                     <form method="POST" action="/post/create">
-                        <!-- Error Popout for post creation -->
-                        <!-- {{if .form_error}}
-                        <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
-                        <div class="error-popout">
-                            <label for="error-create-post" class="error-close">x</label>
-                            <p class="error-message">{{.form_error}}</p>
-                        </div>
-                        {{end}} -->
                         {{if .form_error}}
                         <textarea name="content" placeholder="Write your post..." required
                             maxlength="500">{{.Post.Content}}</textarea>
                         {{else}}
                         <textarea name="content" placeholder="Write your post..." required maxlength="500"></textarea>
                         {{end}}
-
                         <h4>Select Categories:</h4>
                         <div class="category-options">
                             <label class="category-tag">
@@ -161,8 +137,55 @@
                 </div>
             </div>
         </div>
-
-        {{ template "posts" . }}
+        <!-- Published Posts Section -->
+        <section class="posts-container">
+            <h2 class="posts-title">Published Posts</h2>
+            {{if .posts}}
+            {{range .posts}}
+            <article class="forum-post">
+                <div class="post-header">
+                    <span class="post-author">Posted by {{.Author.UserName}}</span>
+                    <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                </div>
+                <div class="post-content">{{.Content}}</div>
+                <div class="post-footer">
+                    <div class="post-categories">
+                        {{range .Categories}}
+                        <span class="category-badge">{{.Name}}</span>
+                        {{end}}
+                    </div>
+                    <div class="post-stats">
+                        <span class="likes">👍 {{.LikeCount}}</span>
+                        <span class="dislikes">👎 {{.DislikeCount}}</span>
+                        <span class="comments">💬 {{len .Comments}} comments</span>
+                    </div>
+                </div>
+                <!-- Comment Form -->
+                {{if $.isAuthenticated}}
+                <div class="comment-form">
+                    <form method="POST" action="/comment/create">
+                        <input type="hidden" name="postId" value="{{.ID}}">
+                        <textarea name="content" placeholder="Add a comment..." required maxlength="249"></textarea>
+                        <button type="submit">Post Comment</button>
+                    </form>
+                </div>
+                {{end}}
+                <!-- Comment List -->
+                <div class="comment-section">
+                    {{range .Comments}}
+                    <div class="comment">
+                        <span class="comment-author">Posted by {{ $.Author}}</span>
+                        <span class="comment-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                        <p class="comment-content">{{.Content}}</p>
+                    </div>
+                    {{end}}
+                </div>
+            </article>
+            {{end}}
+            {{else}}
+            <p>No posts available.</p>
+            {{end}}
+        </section>
     </main>
 </body>
 

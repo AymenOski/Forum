@@ -11,8 +11,5 @@ type CategoryRepository interface {
 	GetByID(categoryID uuid.UUID) (*entity.Category, error)
 	GetByName(name string) (*entity.Category, error)
 	GetAll() ([]*entity.Category, error)
-	// Update(category *entity.Category) error
-	// Delete(categoryID uuid.UUID) error
 	CheckNameExists(name string) (bool, error)
-	// GetWithPostCount() ([]*entity.Category, error)
 }

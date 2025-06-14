@@ -126,10 +126,6 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 	return post, nil
 }
 
-// ReactToPost - Like/dislike a post with toggle support.
-// Same reaction twice = remove (toggle), different reaction = update.
-// Returns the reaction entity on all operations (including delete for UI feedback).
-// Parameters: postID, userID, reaction (true=like, false=dislike)
 func (ps PostService) ReactToPost(postID uuid.UUID, token string, reaction bool) (*entity.PostReaction, error) {
 	session, err := ps.sessionRepo.GetByToken(token)
 	if err != nil {
@@ -184,4 +180,22 @@ func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
 		return nil, err
 	}
 	return posts, nil
+}
+
+func (ps *PostService) GetPostsWithDetailsByCategoryID(categoryID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	posts, err := ps.postRepo.GetByCategory(categoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*entity.PostWithDetails
+	for _, post := range posts {
+		details, err := ps.postAggregateRepo.GetPostWithAllDetails(post.ID)
+		if err != nil {
+			continue
+		}
+		result = append(result, details)
+	}
+
+	return result, nil
 }
