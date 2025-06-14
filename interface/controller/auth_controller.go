@@ -108,20 +108,14 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	// 	c.authService.Logout(cookie.Value)
 	// }
 
-	// // Alternative: Get user from context and logout all sessions
-	// // user, ok := r.Context().Value("user").(*entity.User)
-	// // if ok {
-	// // 	c.authService.Logout(user.ID)
-	// // }
-
-	// // Clear session cookie
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:     "session_token",
-	// 	Value:    "",
-	// 	Path:     "/",
-	// 	MaxAge:   -1,
-	// 	HttpOnly: true,
-	// })
+	// Clear session cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)

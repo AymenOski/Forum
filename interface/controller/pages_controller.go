@@ -2,8 +2,9 @@ package controller
 
 import (
 	"fmt"
-	custom_errors "forum/domain/errors"
 	"net/http"
+
+	"forum/domain/entity"
 )
 
 type ErrorMessage struct {
@@ -28,21 +29,26 @@ func (c *AuthController) ShowLoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
+	var username string
+	var isAuthenticated bool
+
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		user, err := c.authService.GetUserFromSessionToken(cookie.Value)
+		if err == nil && user != nil {
+			username = user.UserName
+			isAuthenticated = true
+		}
+	}
+
 	posts, err := c.postService.GetPosts()
 	if err != nil {
-		c.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
-			"form_error":      custom_errors.ErrPostNotFound,
-			"username":        nil,
-			"isAuthenticated": nil,
-		})
-		return
+		posts = []*entity.PostWithDetails{}
 	}
 	c.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":           posts,
-		"form_error":      nil,
-		"username":        "userNamessssssssssssssssssssssssssssss",
-		"isAuthenticated": true,
+		"username":        username,
+		"isAuthenticated": isAuthenticated,
 	})
 }
 
