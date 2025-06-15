@@ -177,6 +177,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 			isAuthenticated = true
 		}
 	}
+	
 	if r.Method != http.MethodGet {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
