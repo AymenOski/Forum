@@ -577,7 +577,6 @@ button[type="submit"]:active {
     margin-top: 0.5rem;
 }
 
-<<<<<<< HEAD
 .error-toggle:not(:checked) + .error-popout {
     display: none;
 }
@@ -674,73 +673,4 @@ button[type="submit"]:active {
         padding: 0.4rem 0.8rem;
         min-width: 60px;
     }
-=======
-.Welcome-msg {
-<<<<<<< HEAD
-  display: flex;
-=======
-  display: flex; /* Changed to flex for better width control */
->>>>>>> 534efde3240ee14a39cc9c5136f97b1aa0a8a335
-  align-items: center;
-  font-size: 1rem;
-  font-weight: 600;
-  gap: 6px;
-  max-width: 250px;
-  margin: 0;
-<<<<<<< HEAD
-  padding: 5px 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  border-radius: 4px;
-}
-
-.comment-form {
-  margin-top: 10px;
-  padding: 10px;
-}
-
-.comment-form textarea {
-  width: 100%;
-  min-height: 50px;
-  margin-bottom: 5px;
-  background-color: #2e2e2e;
-  color: #c0c0c0;
-  border: 1px solid #444;
-  border-radius: 4px;
-}
-
-.comment-section {
-  margin-top: 10px;
-  padding: 10px;
-}
-
-.comment {
-  background-color: #2e2e2e;
-  padding: 8px;
-  margin-bottom: 5px;
-  border-radius: 4px;
-}
-
-.comment-author {
-  font-weight: 600;
-  color: #c0c0c0;
-}
-
-.comment-date {
-  font-size: 0.8rem;
-  color: #888;
-}
-
-.comment-content {
-  margin: 5px 0 0;
-  color: #c0c0c0;
-=======
-  padding: 5px 10px; /* Added padding for separation */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  border-radius: 4px; /* Subtle rounding for a polished look */
->>>>>>> 534efde3240ee14a39cc9c5136f97b1aa0a8a335
->>>>>>> d87885194f5c77ae1d7575880cd2df67c9575407
 }
