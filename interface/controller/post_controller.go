@@ -122,8 +122,6 @@ func (c *PostController) renderTemplate(w http.ResponseWriter, template string, 
 	}
 }
 
-
-
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
@@ -167,16 +165,26 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	token, err := r.Cookie("session_token")
-	isAuthenticated := err == nil
+	var userID *uuid.UUID
+	var isAuthenticated bool
+	var username string
 
-	// Get category filter
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
+		if err == nil && user != nil {
+			isAuthenticated = true
+			userID = &user.ID
+			username = user.UserName
+		}
+	}
+
+	// Get query parameters
 	selectedCategoryNames := r.URL.Query()["category-filter"]
+	myPosts := r.URL.Query().Get("myPosts") != ""
+	likedPosts := r.URL.Query().Get("likedPosts") != ""
 
-	// CHECK
-	wantMyPosts := r.URL.Query().Get("myPosts") != ""
-
-	// Get all categories
+	// Get all categories for name-to-ID conversion
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -186,7 +194,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Convert  category names to IDs
+	// Convert category names to IDs
 	var selectedIDs []uuid.UUID
 	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
@@ -194,50 +202,36 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 			if cat.Name == selected {
 				selectedIDs = append(selectedIDs, cat.ID)
 				selectedMap[selected] = true
+				break // Found the category, no need to continue inner loop
 			}
 		}
 	}
 
-	var filteredPosts []*entity.PostWithDetails
-	seen := make(map[uuid.UUID]bool)
-
-	// Filter by selected categories
-	for _, catID := range selectedIDs {
-		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
-		if err != nil {
-			continue
-		}
-		for _, post := range posts {
-			if !seen[post.ID] {
-				filteredPosts = append(filteredPosts, post)
-				seen[post.ID] = true
-			}
-		}
+	// Build filter
+	filter := &entity.PostFilter{
+		CategoryIDs: selectedIDs,
+		MyPosts:     myPosts,
+		LikedPosts:  likedPosts,
+		AuthorID:    userID,
 	}
 
-	// Filter "My Posts"
-	if wantMyPosts && isAuthenticated {
-		user, err := pc.authService.GetUserFromSessionToken(token.Value)
-		if err == nil {
-			userPosts, err := pc.postService.GetPostsByUser(user.ID)
-			if err == nil {
-				for _, post := range userPosts {
-					if !seen[post.ID] {
-						filteredPosts = append(filteredPosts, post)
-						seen[post.ID] = true
-					}
-				}
-			}
-		}
+	// Get filtered posts using the service
+	filteredPosts, err := pc.postService.GetFilteredPostsWithDetails(*filter)
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error filtering posts: " + err.Error(),
+		})
+		return
 	}
 
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":              filteredPosts,
 		"selectedCategories": selectedMap,
 		"isAuthenticated":    isAuthenticated,
+		"username":           username,
 	})
 }
-
 
 func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -248,5 +242,3 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 		http.Error(w, data.Error, data.StatusCode)
 	}
 }
-
-
