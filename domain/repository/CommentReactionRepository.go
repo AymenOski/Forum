@@ -17,6 +17,6 @@ type CommentReactionRepository interface {
 	// DeleteByUserAndComment(userID, commentID uuid.UUID) error
 	// GetLikeCountByCommentID(commentID uuid.UUID) (int, error)
 	// GetDislikeCountByCommentID(commentID uuid.UUID) (int, error)
-	// GetReactionCountsByCommentID(commentID uuid.UUID) (likes int, dislikes int, err error)
+	 GetReactionCountsByCommentID(commentID uuid.UUID) (likes int, dislikes int, err error)
 	// HasUserReacted(userID, commentID uuid.UUID) (bool, *bool, error) // exists, reaction_value, error
 }

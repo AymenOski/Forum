@@ -12,13 +12,12 @@ type ErrorMessage struct {
 }
 
 func (c *AuthController) renderTemplate(w http.ResponseWriter, TmplName string, data interface{}) {
-
 	w.Header().Set("Content-type", "text/html")
 	err := c.templates.ExecuteTemplate(w, TmplName, data)
 	if err != nil {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error: fmt.Sprintf("Internal Server Error"),
+			Error:      fmt.Sprintf("Internal Server Error"),
 		})
 	}
 }
@@ -62,9 +61,11 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 
 func (c *AuthController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	TmplStatus, _ := template.ParseFiles("templates/error.html")
-	if TmplStatus == nil {	http.Error(w, fmt.Sprintf("%d - %s",data.StatusCode, data.Error), data.StatusCode); return }
-	
+	if TmplStatus == nil {
+		http.Error(w, fmt.Sprintf("%d - %s", data.StatusCode, data.Error), data.StatusCode)
+		return
+	}
+
 	w.WriteHeader(data.StatusCode)
 	TmplStatus.Execute(w, data)
-
 }

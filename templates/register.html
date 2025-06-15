@@ -11,7 +11,8 @@
     <div id="signup_container">
         <h1>Sign up</h1>
         <form action="/signup" method="POST">
-            <input type="checkbox" id="error-create-post" class="error-toggle" {{if .registerError}}checked{{end}} hidden>
+            <input type="checkbox" id="error-create-post" class="error-toggle" {{if .registerError}}checked{{end}}
+                hidden>
             <div class="error-popout">
                 <label for="error-create-post" class="error-close">x</label>
                 <div class="error-icon">

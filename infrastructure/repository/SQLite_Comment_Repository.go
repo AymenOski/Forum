@@ -14,10 +14,20 @@ import (
 
 type SQLiteCommentRepository struct {
 	db *sql.DB
+	userRepo         repository.UserRepository
+	commentReaction	repository.CommentReactionRepository
 }
 
-func NewSQLiteCommentRepository(db *sql.DB) repository.CommentRepository {
-	return &SQLiteCommentRepository{db: db}
+func NewSQLiteCommentRepository(
+	db *sql.DB,
+	userRepo *repository.UserRepository,
+	commentReaction	*repository.CommentReactionRepository,
+	) repository.CommentRepository {
+	return &SQLiteCommentRepository{
+		db: db,
+		userRepo:  *userRepo,
+		commentReaction: *commentReaction,
+	}
 }
 
 func (r *SQLiteCommentRepository) Create(comment *entity.Comment) error {
@@ -69,7 +79,7 @@ func (r *SQLiteCommentRepository) GetByID(commentID uuid.UUID) (*entity.Comment,
 	return comment, nil
 }
 
-func (r *SQLiteCommentRepository) GetByPostID(postID uuid.UUID) ([]*entity.Comment, error) {
+func (r *SQLiteCommentRepository) GetByPostID(postID uuid.UUID) ([]entity.Comment, error) {
 	query := `SELECT id, content, user_id, post_id, createdat 
 			  FROM comments WHERE post_id = ? ORDER BY createdat ASC`
 
@@ -79,10 +89,10 @@ func (r *SQLiteCommentRepository) GetByPostID(postID uuid.UUID) ([]*entity.Comme
 	}
 	defer rows.Close()
 
-	var comments []*entity.Comment
+	var comments []entity.Comment
 
 	for rows.Next() {
-		comment := &entity.Comment{}
+		comment := entity.Comment{}
 		var idStr, userIDStr, postIDStr string
 
 		err := rows.Scan(&idStr, &comment.Content, &userIDStr, &postIDStr, &comment.CreatedAt)
@@ -268,16 +278,27 @@ func (r *SQLiteCommentRepository) GetWithDetails(commentID uuid.UUID) (*entity.C
 	}, nil
 }
 
-func (r *SQLiteCommentRepository) GetByPostIDWithDetails(postID uuid.UUID) ([]*entity.CommentWithDetails, error) {
+func (r *SQLiteCommentRepository) GetByPostIDWithDetails(postID uuid.UUID) ([]entity.CommentWithDetails, error) {
 	comments, err := r.GetByPostID(postID)
 	if err != nil {
 		return nil, err
 	}
 
-	var commentsWithDetails []*entity.CommentWithDetails
+	var commentsWithDetails []entity.CommentWithDetails
 	for _, comment := range comments {
-		commentsWithDetails = append(commentsWithDetails, &entity.CommentWithDetails{
-			Comment: *comment,
+		user,err:=r.userRepo.GetByID(comment.UserID)
+		if err != nil {
+			fmt.Printf("comment user error ")
+		}
+		likes,dislikes,err:=r.commentReaction.GetReactionCountsByCommentID(comment.ID)
+		if err != nil {
+			fmt.Printf("comment user fell error ")
+		}
+		commentsWithDetails = append(commentsWithDetails, entity.CommentWithDetails{
+			Comment: comment,
+			Author: *user,
+			LikeCount: likes,
+			DislikeCount: dislikes,
 		})
 	}
 

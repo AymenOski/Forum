@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -10,17 +11,20 @@ import (
 )
 
 type CommentController struct {
-	// flag-1: next field is temperoraly until we have a proper middleware
-	commentService *usecase.CommentService
-	postService    *usecase.PostService
-	templates      *template.Template
+	postService     *usecase.PostService
+	commentService  *usecase.CommentService
+	categoryService *usecase.CategoryService
+	templates       *template.Template
 }
 
-func NewCommentController(commentService *usecase.CommentService, postService *usecase.PostService, templates *template.Template) *CommentController {
+func NewCommentController(postService *usecase.PostService, commentService *usecase.CommentService,
+	categoryService *usecase.CategoryService, templates *template.Template,
+) *CommentController {
 	return &CommentController{
-		commentService: commentService,
-		postService:    postService,
-		templates:      templates,
+		postService:     postService,
+		commentService:  commentService,
+		categoryService: categoryService,
+		templates:       templates,
 	}
 }
 
@@ -39,14 +43,6 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		})
 		return
 	}
-	// flag-1: next field is temperoraly until we have a proper middleware
-	user, err := cc.commentService.GetUserFromSessionToken(cookie.Value)
-	if err == nil && user != nil {
-		username = user.UserName
-		isAuthenticated = true
-	}
-
-	// Validate HTTP method
 	if r.Method != http.MethodPost {
 		cc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
@@ -87,7 +83,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	}
 
 	// Create comment using the service
-	_, err = cc.commentService.CreateComment(&postID, &user.ID, content)
+	_, err = cc.commentService.CreateComment(&postID, cookie.Value, content)
 	if err != nil {
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
@@ -119,4 +115,39 @@ func (cc *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMess
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
+}
+
+func (cc *CommentController) HandleReactToComment(w http.ResponseWriter, r *http.Request) {
+	token, err := r.Cookie("session_token")
+	if err == http.ErrNoCookie {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	} else if err != nil {
+		cc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Unexpected error while reading cookie",
+		})
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		cc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+	id := r.FormValue("CommentID")
+	ID, err := uuid.Parse(id)
+	if err != nil {
+		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
+		return
+	}
+	like := true
+	if r.FormValue("isLike") == "0" {
+		like = false
+	}
+	cc.commentService.ReactToComment(&ID, token.Value, like)
+	// pc.postService.ReactToPost(ID, token.Value, like)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
