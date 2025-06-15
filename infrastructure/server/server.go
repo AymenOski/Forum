@@ -61,7 +61,7 @@ func MyServer(db *sql.DB) *http.Server {
 
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 
-	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1)
+	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase,auth_usecase, tmpl1)
 
 	comment_controller := controller.NewCommentController(post_usecase, comment_usecase, category_usecase, tmpl1)
 

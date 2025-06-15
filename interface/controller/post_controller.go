@@ -15,16 +15,18 @@ type PostController struct {
 	postService     *usecase.PostService
 	commentService  *usecase.CommentService
 	categoryService *usecase.CategoryService
+	authService     *usecase.AuthService
 	templates       *template.Template
 }
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
-	categoryService *usecase.CategoryService, templates *template.Template,
+	categoryService *usecase.CategoryService, authService *usecase.AuthService, templates *template.Template,
 ) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
 		categoryService: categoryService,
+		authService:     authService,
 		templates:       templates,
 	}
 }
@@ -164,6 +166,17 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 }
 
 func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
+	var username string
+	var isAuthenticated bool
+
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		user, err := pc.authService.GetUserFromSessionToken(cookie.Value)
+		if err == nil && user != nil {
+			username = user.UserName
+			isAuthenticated = true
+		}
+	}
 	if r.Method != http.MethodGet {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
@@ -215,8 +228,8 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	}
 
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
+		"username":           username,
+		"isAuthenticated":    isAuthenticated,
 		"posts":              filteredPosts,
-		"categories":         categories,
-		"selectedCategories": selectedMap,
 	})
 }
