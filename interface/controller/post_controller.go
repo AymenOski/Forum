@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-
+	
 	"forum/domain/entity"
 	"forum/usecase"
-
+	
 	"github.com/google/uuid"
 )
 
@@ -21,24 +21,35 @@ type PostController struct {
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
 	categoryService *usecase.CategoryService, authService *usecase.AuthService, templates *template.Template,
-) *PostController {
-	return &PostController{
-		postService:     postService,
-		commentService:  commentService,
-		categoryService: categoryService,
-		authService:     authService,
-		templates:       templates,
+	) *PostController {
+		return &PostController{
+			postService:     postService,
+			commentService:  commentService,
+			categoryService: categoryService,
+			authService:     authService,
+			templates:       templates,
+		}
 	}
-}
 
-func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
-	var username string
-	var isAuthenticated bool
-	cookie, err := r.Cookie("session_token")
-	if err == http.ErrNoCookie {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	} else if err != nil {
+	func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		err := c.templates.ExecuteTemplate(w, template, data)
+		if err != nil {
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusInternalServerError,
+				Error:      "Error rendering page",
+			})
+		}
+	}
+	
+	func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
+		var username string
+		var isAuthenticated bool
+		cookie, err := r.Cookie("session_token")
+		if err == http.ErrNoCookie {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+			} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Unexpected Error While Reading Cookie",
@@ -111,16 +122,6 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := c.templates.ExecuteTemplate(w, template, data)
-	if err != nil {
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusInternalServerError,
-			Error:      "Error rendering page",
-		})
-	}
-}
 
 
 

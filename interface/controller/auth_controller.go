@@ -119,7 +119,7 @@ func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 
 			default:
 				c.ShowErrorPage(w, ErrorMessage{
-					StatusCode: http.StatusForbidden,
+					StatusCode: http.StatusNotFound,
 					Error:      "Page Not Found",
 				})
 	}
