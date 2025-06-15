@@ -41,7 +41,7 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -82,8 +82,8 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	// verify if the categories exist
 	categoriesIDs := make([]*uuid.UUID, 0, len(categories))
-	for _, cat := range categories {
-		c, err := pc.categoryService.GetCategoryByName(cat)
+	for _, category := range categories {
+		c, err := pc.categoryService.GetCategoryByName(category)
 		if err != nil {
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
 				"posts":           posts,
@@ -122,15 +122,6 @@ func (c *PostController) renderTemplate(w http.ResponseWriter, template string, 
 	}
 }
 
-func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	err := c.templates.ExecuteTemplate(w, "error.html", data)
-	if err != nil {
-		http.Error(w, data.Error, data.StatusCode)
-	}
-}
-
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
@@ -139,7 +130,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -165,19 +156,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
-	var username string
-	var isAuthenticated bool
-
-	cookie, err := r.Cookie("session_token")
-	if err == nil {
-		user, err := pc.authService.GetUserFromSessionToken(cookie.Value)
-		if err == nil && user != nil {
-			username = user.UserName
-			isAuthenticated = true
-		}
-	}
-	
+func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {	
 	if r.Method != http.MethodGet {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
@@ -186,8 +165,31 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	selectedCategoryNames := r.URL.Query()["category-filter"]
+	var userID *uuid.UUID
+	var isAuthenticated bool
+	var username string
 
+	cookie, err := r.Cookie("session_token")
+	if err == nil {
+		user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
+		if err == nil && user != nil {
+			isAuthenticated = true
+			userID = &user.ID
+			username = user.UserName
+		}
+	}
+
+	// Get query parameters
+	selectedCategoryNames := r.URL.Query()["category-filter"]
+	Radio := r.URL.Query().Get("postFilter") 
+	var likedPosts, myPosts bool = false, false
+	if Radio == "myPosts"{
+		myPosts = true
+	} 
+	if Radio == "likedPosts"{
+		likedPosts = true
+	}
+	// Get all categories for name-to-ID conversion
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -197,40 +199,51 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Convert selected category names to UUIDs
+	// Convert category names to IDs
 	var selectedIDs []uuid.UUID
-	selectedMap := make(map[string]bool) // for keeping checkboxes checked
-
+	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
 		for _, cat := range categories {
 			if cat.Name == selected {
 				selectedIDs = append(selectedIDs, cat.ID)
 				selectedMap[selected] = true
+				break // Found the category, no need to continue inner loop
 			}
 		}
 	}
 
-	// Fetch posts with full details
-	seen := make(map[uuid.UUID]bool)
-	var filteredPosts []*entity.PostWithDetails
+	// Build filter
+	filter := &entity.PostFilter{
+		CategoryIDs: selectedIDs,
+		MyPosts:     myPosts,
+		LikedPosts:  likedPosts,
+		AuthorID:    userID,
+	}
 
-	for _, catID := range selectedIDs {
-		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
-		if err != nil {
-			continue
-		}
-
-		for _, post := range posts {
-			if !seen[post.ID] {
-				filteredPosts = append(filteredPosts, post)
-				seen[post.ID] = true
-			}
-		}
+	// Get filtered posts using the service
+	filteredPosts, err := pc.postService.GetFilteredPostsWithDetails(*filter)
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error filtering posts: " + err.Error(),
+		})
+		return
 	}
 
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
 		"username":           username,
 		"isAuthenticated":    isAuthenticated,
 		"posts":              filteredPosts,
+		"selectedCategories": selectedMap,
 	})
+}
+
+func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(data.StatusCode)
+
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	if err != nil {
+		http.Error(w, data.Error, data.StatusCode)
+	}
 }

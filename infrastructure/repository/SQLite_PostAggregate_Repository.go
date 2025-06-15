@@ -3,6 +3,7 @@ package infra_repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"forum/domain/entity"
@@ -186,4 +187,129 @@ func (r *SQLiteUserAggregateRepository) AuthenticateUser(email, password string)
 	}
 
 	return user, session, nil
+}
+
+func (r *SQLitePostAggregateRepository) GetPostsWithDetailsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	posts, err := r.postRepo.GetbyuserId(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var postsWithDetails []*entity.PostWithDetails
+	for _, post := range posts {
+		pwd, err := r.GetPostWithAllDetails(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		postsWithDetails = append(postsWithDetails, pwd)
+	}
+
+	return postsWithDetails, nil
+}
+
+func (r *SQLitePostAggregateRepository) GetFilteredPostsWithDetails(filter entity.PostFilter) ([]*entity.PostWithDetails, error) {
+	query := `
+		SELECT DISTINCT 
+			p.id, p.content, p.user_id, p.created_at,
+			u.id as author_id, u.user_name, u.email, u.created_at as user_created_at
+		FROM posts p
+		INNER JOIN user u ON p.user_id = u.id
+		LEFT JOIN post_categories pc ON p.id = pc.post_id
+	`
+
+	conditions := []string{}
+	args := []interface{}{}
+
+	// Add liked posts join if needed
+	if filter.LikedPosts && filter.AuthorID != nil {
+		query += " INNER JOIN post_reaction pr ON p.id = pr.post_id AND pr.user_id = ? AND pr.reaction = 1"
+		args = append(args, filter.AuthorID.String())
+	}
+
+	query += " WHERE 1=1"
+
+	// Filter by categories
+	if len(filter.CategoryIDs) > 0 {
+		placeholders := make([]string, len(filter.CategoryIDs))
+		for i, catID := range filter.CategoryIDs {
+			placeholders[i] = "?"
+			args = append(args, catID.String())
+		}
+		conditions = append(conditions, "pc.category_id IN ("+strings.Join(placeholders, ",")+")")
+	}
+
+	// Filter by user's own posts
+	if filter.MyPosts && filter.AuthorID != nil {
+		conditions = append(conditions, "p.user_id = ?")
+		args = append(args, filter.AuthorID.String())
+	}
+
+	// Apply conditions
+	if len(conditions) > 0 {
+		query += " AND " + strings.Join(conditions, " AND ")
+	}
+
+	query += " ORDER BY p.created_at DESC"
+
+	// Execute query
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute filter query: %w", err)
+	}
+	defer rows.Close()
+
+	// Collect unique posts
+	postMap := make(map[uuid.UUID]*entity.PostWithDetails)
+
+	for rows.Next() {
+		var postID, postUserID, authorID string
+		var post entity.Post
+		var author entity.User
+
+		err := rows.Scan(
+			&postID, &post.Content, &postUserID, &post.CreatedAt,
+			&authorID, &author.UserName, &author.Email, &author.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan post: %w", err)
+		}
+
+		post.ID, _ = uuid.Parse(postID)
+		post.UserID, _ = uuid.Parse(postUserID)
+		author.ID, _ = uuid.Parse(authorID)
+
+		// Only add if not already in map
+		if _, exists := postMap[post.ID]; !exists {
+			postMap[post.ID] = &entity.PostWithDetails{
+				Post:   post,
+				Author: author,
+			}
+		}
+	}
+
+	var results []*entity.PostWithDetails
+	for _, postDetails := range postMap {
+		// Get categories
+		categories, err := r.postCategoryRepo.GetCategoriesByPostID(postDetails.ID)
+		if err == nil {
+			postDetails.Categories = categories
+		}
+
+		// Get reaction counts
+		likes, dislikes, err := r.reactionRepo.GetReactionCountsByPostID(postDetails.ID)
+		if err == nil {
+			postDetails.LikeCount = likes
+			postDetails.DislikeCount = dislikes
+		}
+
+		// Get comments
+		comments, err := r.commentRepo.GetByPostIDWithDetails(postDetails.ID)
+		if err == nil {
+			postDetails.Comments = comments
+		}
+
+		results = append(results, postDetails)
+	}
+
+	return results, nil
 }

@@ -29,14 +29,6 @@
                 <a href="/signup">Register</a>
                 {{end}}
             </div>
-            <div class="themes">
-                <div class="theme-buttons">
-                    <label for="theme-pink">🌸</label>
-                    <label for="theme-aqua">🌊</label>
-                    <label for="theme-forest">🌲</label>
-                    <label for="theme-dark">🌙</label>
-                </div>
-            </div>
         </nav>
     </header>
     <main>
@@ -93,16 +85,18 @@
                                 </label>
                             </div>
                         </div>
+                        {{if .isAuthenticated}}
                         <div class="filter-checkboxes">
                             <label class="filter-option">
-                                <input type="checkbox" name="myPosts">
+                                <input type="radio" name="postFilter" value="myPosts">
                                 <span>My Posts</span>
                             </label>
                             <label class="filter-option">
-                                <input type="checkbox" name="likedPosts">
+                                <input type="radio" name="postFilter" value="likedPosts">
                                 <span>Liked Posts</span>
                             </label>
                         </div>
+                        {{end}}
                         <button type="submit">Apply Filters</button>
                     </form>
                 </div>
@@ -142,7 +136,6 @@
                 </div>
             </div>
         </div>
-        <!-- Published Posts Section -->
 
         {{ template "posts" . }}
     </main>
