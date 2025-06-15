@@ -95,88 +95,11 @@ func (r *SQLitePostRepository) GetAll() ([]*entity.Post, error) {
 	return posts, nil
 }
 
-func (r *SQLitePostRepository) GetByUserID(userID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT id, content, user_id, created_at 
-			  FROM posts WHERE user_id = ? ORDER BY created_at DESC`
-
-	rows, err := r.db.Query(query, userID.String())
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []*entity.Post
-
-	for rows.Next() {
-		post := &entity.Post{}
-		var idStr, userIDStr string
-
-		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-
-		post.ID, err = uuid.Parse(idStr)
-		if err != nil {
-			return nil, err
-		}
-
-		post.UserID, err = uuid.Parse(userIDStr)
-		if err != nil {
-			return nil, err
-		}
-
-		posts = append(posts, post)
-	}
-
-	return posts, nil
-}
-
 func (r *SQLitePostRepository) GetWithPagination(limit, offset int) ([]*entity.Post, error) {
 	query := `SELECT id, content, user_id, created_at 
 			  FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?`
 
 	rows, err := r.db.Query(query, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []*entity.Post
-
-	for rows.Next() {
-		post := &entity.Post{}
-		var idStr, userIDStr string
-
-		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-
-		post.ID, err = uuid.Parse(idStr)
-		if err != nil {
-			return nil, err
-		}
-
-		post.UserID, err = uuid.Parse(userIDStr)
-		if err != nil {
-			return nil, err
-		}
-
-		posts = append(posts, post)
-	}
-
-	return posts, nil
-}
-
-func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Post, error) {
-	query := `SELECT p.id, p.content, p.user_id, p.created_at 
-			  FROM posts p 
-			  INNER JOIN post_categories pc ON p.id = pc.post_id 
-			  WHERE pc.category_id = ? 
-			  ORDER BY p.created_at DESC`
-
-	rows, err := r.db.Query(query, categoryID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -448,6 +371,48 @@ func (r *SQLitePostRepository) GetFiltered(filter entity.PostFilter) ([]*entity.
 	return posts, nil
 }
 
+// Me
+
+func (r *SQLitePostRepository) GetByCategory(categoryID uuid.UUID) ([]*entity.Post, error) {
+	query := `SELECT p.id, p.content, p.user_id, p.created_at 
+			  FROM posts p 
+			  INNER JOIN post_categories pc ON p.id = pc.post_id 
+			  WHERE pc.category_id = ? 
+			  ORDER BY p.created_at DESC`
+
+	rows, err := r.db.Query(query, categoryID.String())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*entity.Post
+
+	for rows.Next() {
+		post := &entity.Post{}
+		var idStr, userIDStr string
+
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		post.ID, err = uuid.Parse(idStr)
+		if err != nil {
+			return nil, err
+		}
+
+		post.UserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+
 func (r *SQLitePostRepository) GetbyuserId(userID uuid.UUID) ([]*entity.Post, error) {
 	query := `SELECT id, content, user_id, created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC`
 
@@ -474,6 +439,38 @@ func (r *SQLitePostRepository) GetbyuserId(userID uuid.UUID) ([]*entity.Post, er
 		}
 
 		post.UserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+
+func (r *SQLitePostRepository) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	query := `SELECT post_id FROM post_reaction WHERE user_id = ? AND reaction = 1`
+	rows, err := r.db.Query(query, userID.String())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*entity.PostWithDetails
+	for rows.Next() {
+		var postIDStr string
+		if err := rows.Scan(&postIDStr); err != nil {
+			return nil, err
+		}
+
+		postID, err := uuid.Parse(postIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		// Use existing helper
+		post, err := r.GetWithDetails(postID)
 		if err != nil {
 			return nil, err
 		}

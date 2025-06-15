@@ -8,8 +8,9 @@ import (
 
 type PostAggregateRepository interface {
 	CreatePostWithCategories(post *entity.Post, categoryIDs []*uuid.UUID) error
-	GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error)
 	GetFeedForUser() ([]*entity.PostWithDetails, error)
-	// GetbyuserId(userID uuid.UUID) ([]*entity.Post, error)
+	// Me
+	GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error)
 	GetPostsWithDetailsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error)
+	GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error)
 }

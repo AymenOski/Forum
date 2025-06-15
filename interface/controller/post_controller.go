@@ -177,13 +177,12 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	token, err := r.Cookie("session_token")
 	isAuthenticated := err == nil
 
-	// Get category filter
+	// Collect filters
 	selectedCategoryNames := r.URL.Query()["category-filter"]
-
-	// CHECK
 	wantMyPosts := r.URL.Query().Get("myPosts") != ""
+	wantLikedPosts := r.URL.Query().Get("likedPosts") != ""
 
-	// Get all categories
+	// Fetch categories
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -193,7 +192,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Convert  category names to IDs
+	// Convert category names → IDs
 	var selectedIDs []uuid.UUID
 	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
@@ -208,7 +207,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	var filteredPosts []*entity.PostWithDetails
 	seen := make(map[uuid.UUID]bool)
 
-	// Filter by selected categories
+	// Filter by category
 	for _, catID := range selectedIDs {
 		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
 		if err != nil {
@@ -222,16 +221,29 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Filter "My Posts"
-	if wantMyPosts && isAuthenticated {
+	// Filter by My Posts or Liked Posts
+	if (wantMyPosts || wantLikedPosts) && isAuthenticated {
 		user, err := pc.authService.GetUserFromSessionToken(token.Value)
 		if err == nil {
-			userPosts, err := pc.postService.GetPostsByUser(user.ID)
-			if err == nil {
-				for _, post := range userPosts {
-					if !seen[post.ID] {
-						filteredPosts = append(filteredPosts, post)
-						seen[post.ID] = true
+			if wantMyPosts {
+				userPosts, err := pc.postService.GetPostsByUser(user.ID)
+				if err == nil {
+					for _, post := range userPosts {
+						if !seen[post.ID] {
+							filteredPosts = append(filteredPosts, post)
+							seen[post.ID] = true
+						}
+					}
+				}
+			}
+			if wantLikedPosts {
+				likedPosts, err := pc.postService.GetLikedPostsByUser(user.ID)
+				if err == nil {
+					for _, post := range likedPosts {
+						if !seen[post.ID] {
+							filteredPosts = append(filteredPosts, post)
+							seen[post.ID] = true
+						}
 					}
 				}
 			}
@@ -242,5 +254,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		"posts":              filteredPosts,
 		"selectedCategories": selectedMap,
 		"isAuthenticated":    isAuthenticated,
+		"wantMyPosts":        wantMyPosts,
+		"wantLikedPosts":     wantLikedPosts,
 	})
 }

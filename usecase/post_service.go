@@ -217,3 +217,7 @@ func (ps *PostService) GetPostsWithDetailsByCategoryID(categoryID uuid.UUID) ([]
 func (s *PostService) GetPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
 	return s.postAggregateRepo.GetPostsWithDetailsByUser(userID)
 }
+
+func (s *PostService) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	return s.postRepo.GetLikedPostsByUser(userID)
+}

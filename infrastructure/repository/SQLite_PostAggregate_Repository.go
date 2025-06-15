@@ -83,45 +83,6 @@ func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDeta
 	return postWithDetails, nil
 }
 
-// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts , and comments!!
-func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
-	post, err := r.postRepo.GetByID(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	author, err := r.userRepo.GetByID(post.UserID)
-	if err != nil {
-		return nil, err
-	}
-
-	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	likes, dislikes, err := r.reactionRepo.GetReactionCountsByPostID(postID)
-	if err != nil {
-		fmt.Println("reaction count")
-		return nil, err
-	}
-
-	comments, err := r.commentRepo.GetByPostIDWithDetails(postID)
-	if err != nil {
-		fmt.Println("comments error")
-		return nil, err
-	}
-
-	return &entity.PostWithDetails{
-		Post:         *post,
-		Author:       *author,
-		Comments:     comments,
-		Categories:   categories,
-		LikeCount:    likes,
-		DislikeCount: dislikes,
-	}, nil
-}
-
 // SQLiteUserAggregateRepository implements UserAggregateRepository interface
 type SQLiteUserAggregateRepository struct {
 	db          *sql.DB
@@ -188,6 +149,8 @@ func (r *SQLiteUserAggregateRepository) AuthenticateUser(email, password string)
 	return user, session, nil
 }
 
+// me
+
 func (r *SQLitePostAggregateRepository) GetPostsWithDetailsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
 	posts, err := r.postRepo.GetbyuserId(userID)
 	if err != nil {
@@ -204,4 +167,78 @@ func (r *SQLitePostAggregateRepository) GetPostsWithDetailsByUser(userID uuid.UU
 	}
 
 	return postsWithDetails, nil
+}
+
+// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts , and comments!!
+func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
+	post, err := r.postRepo.GetByID(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	author, err := r.userRepo.GetByID(post.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	categories, err := r.postCategoryRepo.GetCategoriesByPostID(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	likes, dislikes, err := r.reactionRepo.GetReactionCountsByPostID(postID)
+	if err != nil {
+		fmt.Println("reaction count")
+		return nil, err
+	}
+
+	comments, err := r.commentRepo.GetByPostIDWithDetails(postID)
+	if err != nil {
+		fmt.Println("comments error")
+		return nil, err
+	}
+
+	return &entity.PostWithDetails{
+		Post:         *post,
+		Author:       *author,
+		Comments:     comments,
+		Categories:   categories,
+		LikeCount:    likes,
+		DislikeCount: dislikes,
+	}, nil
+}
+
+func (r *SQLitePostAggregateRepository) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	query := `
+	SELECT p.id, p.title, p.content, p.created_at, p.updated_at, p.user_id
+	FROM posts p
+	JOIN post_reactions pr ON pr.post_id = p.id
+	WHERE pr.user_id = ? AND pr.reaction = 1
+	GROUP BY p.id
+	ORDER BY p.created_at DESC
+	`
+
+	rows, err := r.db.Query(query, userID.String())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*entity.PostWithDetails
+
+	for rows.Next() {
+		var post entity.Post
+		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UserID)
+		if err != nil {
+			continue
+		}
+
+		// Enrich with full details
+		postDetails, err := r.GetPostWithAllDetails(post.ID)
+		if err == nil {
+			posts = append(posts, postDetails)
+		}
+	}
+
+	return posts, nil
 }
