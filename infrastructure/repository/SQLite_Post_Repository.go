@@ -447,3 +447,39 @@ func (r *SQLitePostRepository) GetFiltered(filter entity.PostFilter) ([]*entity.
 
 	return posts, nil
 }
+
+func (r *SQLitePostRepository) GetbyuserId(userID uuid.UUID) ([]*entity.Post, error) {
+	query := `SELECT id, content, user_id, created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(query, userID.String())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*entity.Post
+
+	for rows.Next() {
+		post := &entity.Post{}
+		var idStr, userIDStr string
+
+		err := rows.Scan(&idStr, &post.Content, &userIDStr, &post.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		post.ID, err = uuid.Parse(idStr)
+		if err != nil {
+			return nil, err
+		}
+
+		post.UserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}

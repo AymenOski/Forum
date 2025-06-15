@@ -42,9 +42,8 @@ func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Validate session
-		user, err := m.authService.ValidateSession(cookie.Value)
+		session, err := m.authService.ValidateSession(cookie.Value)
 		if err != nil {
-			// Clear invalid cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     "session_token",
 				Value:    "",
@@ -57,7 +56,7 @@ func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		// Add user to request context
-		ctx := context.WithValue(r.Context(), "user", user)
+		ctx := context.WithValue(r.Context(), "session", session)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

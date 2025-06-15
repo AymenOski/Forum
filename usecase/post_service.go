@@ -213,3 +213,7 @@ func (ps *PostService) GetPostsWithDetailsByCategoryID(categoryID uuid.UUID) ([]
 
 	return result, nil
 }
+
+func (s *PostService) GetPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	return s.postAggregateRepo.GetPostsWithDetailsByUser(userID)
+}

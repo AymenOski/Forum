@@ -15,16 +15,18 @@ type PostController struct {
 	postService     *usecase.PostService
 	commentService  *usecase.CommentService
 	categoryService *usecase.CategoryService
+	authService     *usecase.AuthService
 	templates       *template.Template
 }
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
-	categoryService *usecase.CategoryService, templates *template.Template,
+	categoryService *usecase.CategoryService, authService *usecase.AuthService, templates *template.Template,
 ) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
 		categoryService: categoryService,
+		authService:     authService,
 		templates:       templates,
 	}
 }
@@ -172,8 +174,16 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	token, err := r.Cookie("session_token")
+	isAuthenticated := err == nil
+
+	// Get category filter
 	selectedCategoryNames := r.URL.Query()["category-filter"]
 
+	// CHECK
+	wantMyPosts := r.URL.Query().Get("myPosts") != ""
+
+	// Get all categories
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -183,10 +193,9 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Convert selected category names to UUIDs
+	// Convert  category names to IDs
 	var selectedIDs []uuid.UUID
-	selectedMap := make(map[string]bool) // for keeping checkboxes checked
-
+	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
 		for _, cat := range categories {
 			if cat.Name == selected {
@@ -196,16 +205,15 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Fetch posts with full details
-	seen := make(map[uuid.UUID]bool)
 	var filteredPosts []*entity.PostWithDetails
+	seen := make(map[uuid.UUID]bool)
 
+	// Filter by selected categories
 	for _, catID := range selectedIDs {
 		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
 		if err != nil {
 			continue
 		}
-
 		for _, post := range posts {
 			if !seen[post.ID] {
 				filteredPosts = append(filteredPosts, post)
@@ -214,9 +222,25 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		}
 	}
 
+	// Filter "My Posts"
+	if wantMyPosts && isAuthenticated {
+		user, err := pc.authService.GetUserFromSessionToken(token.Value)
+		if err == nil {
+			userPosts, err := pc.postService.GetPostsByUser(user.ID)
+			if err == nil {
+				for _, post := range userPosts {
+					if !seen[post.ID] {
+						filteredPosts = append(filteredPosts, post)
+						seen[post.ID] = true
+					}
+				}
+			}
+		}
+	}
+
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":              filteredPosts,
-		"categories":         categories,
 		"selectedCategories": selectedMap,
+		"isAuthenticated":    isAuthenticated,
 	})
 }

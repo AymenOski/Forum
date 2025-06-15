@@ -143,8 +143,60 @@
             </div>
         </div>
         <!-- Published Posts Section -->
+<<<<<<< HEAD
 
         {{ template "posts" . }}
+=======
+        <section class="posts-container">
+            <h2 class="posts-title">Published Posts</h2>
+            <p style="color: yellow">Debug: {{len .posts}} posts loaded</p>
+            {{if .posts}}
+            {{range .posts}}
+            <article class="forum-post">
+                <div class="post-header">
+                    <span class="post-author">Posted by {{.Author.UserName}}</span>
+                    <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                </div>
+                <div class="post-content">{{.Content}}</div>
+                <div class="post-footer">
+                    <div class="post-categories">
+                        {{range .Categories}}
+                        <span class="category-badge">{{.Name}}</span>
+                        {{end}}
+                    </div>
+                    <div class="post-stats">
+                        <span class="likes">👍 {{.LikeCount}}</span>
+                        <span class="dislikes">👎 {{.DislikeCount}}</span>
+                        <span class="comments">💬 {{len .Comments}} comments</span>
+                    </div>
+                </div>
+                <!-- Comment Form -->
+                {{if $.isAuthenticated}}
+                <div class="comment-form">
+                    <form method="POST" action="/comment/create">
+                        <input type="hidden" name="postId" value="{{.ID}}">
+                        <textarea name="content" placeholder="Add a comment..." required maxlength="249"></textarea>
+                        <button type="submit">Post Comment</button>
+                    </form>
+                </div>
+                {{end}}
+                <!-- Comment List -->
+                <div class="comment-section">
+                    {{range .Comments}}
+                    <div class="comment">
+                        <span class="comment-author">Posted by {{ $.Author}}</span>
+                        <span class="comment-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                        <p class="comment-content">{{.Content}}</p>
+                    </div>
+                    {{end}}
+                </div>
+            </article>
+            {{end}}
+            {{else}}
+            <p>No posts available.</p>
+            {{end}}
+        </section>
+>>>>>>> origin/tamine
     </main>
 </body>
 

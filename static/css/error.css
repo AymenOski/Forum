@@ -15,11 +15,6 @@ body {
 
 .container h1 {
   font-size: 170px;
-<<<<<<< HEAD
-  /* display: flex; */
-  /* justify-content: start; */
-=======
->>>>>>> 534efde3240ee14a39cc9c5136f97b1aa0a8a335
   margin: 0;
   letter-spacing: 20px;
   background: url(./images/background.jpg) center no-repeat; /* clip and addapte the image to the text `h1` */
