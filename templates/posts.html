@@ -73,7 +73,8 @@
                 <span class="comment-author">Posted by {{.Author.UserName}}</span>
                 <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
                 <p class="comment-content">{{.Content}}</p>
-                 <!-- Like Button -->
+                <!-- Like Button -->
+                {{if $.isAuthenticated}}
                 <form method="POST" action="/likecomment" class="reaction-form">
                     <input type="hidden" name="CommentID" value="{{.ID}}">
                     <input type="hidden" name="isLike" value="1">
@@ -92,6 +93,10 @@
                         <span class="count">{{.DislikeCount}}</span>
                     </button>
                 </form>
+                {{else}}
+                <span class="likes">👍 {{.LikeCount}}</span>
+                <span class="dislikes">👎 {{.DislikeCount}}</span>
+                {{end}}
 
             </div>
             {{end}}

@@ -31,15 +31,6 @@
                 <a href="/signup">Register</a>
                 {{end}}
             </div>
-            <div class="themes">
-
-                <div class="theme-buttons">
-                    <label for="theme-pink">🌸</label>
-                    <label for="theme-aqua">🌊</label>
-                    <label for="theme-forest">🌲</label>
-                    <label for="theme-dark">🌙</label>
-                </div>
-            </div>
         </nav>
     </header>
 
@@ -122,14 +113,6 @@
 
                 <div class="post-section create-section">
                     <form method="POST" action="/post/create">
-                        <!-- Error Popout for post creation -->
-                        <!-- {{if .form_error}}
-                        <input type="checkbox" id="error-create-post" class="error-toggle" checked hidden>
-                        <div class="error-popout">
-                            <label for="error-create-post" class="error-close">x</label>
-                            <p class="error-message">{{.form_error}}</p>
-                        </div>
-                        {{end}} -->
                         {{if .form_error}}
                         <textarea name="content" placeholder="Write your post..." required
                             maxlength="500">{{.Post.Content}}</textarea>
