@@ -219,5 +219,5 @@ func (s *PostService) GetPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetail
 }
 
 func (s *PostService) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
-	return s.postRepo.GetLikedPostsByUser(userID)
+	return s.postAggregateRepo.GetLikedPostsByUser(userID)
 }

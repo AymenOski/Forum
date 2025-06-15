@@ -20,5 +20,5 @@ type PostRepository interface {
 	// my posts
 	GetbyuserId(Userid uuid.UUID) ([]*entity.Post, error)
 	// liked posts
-	GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error)
+	//GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error)
 }

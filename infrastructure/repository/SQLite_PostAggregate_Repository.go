@@ -209,15 +209,7 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 }
 
 func (r *SQLitePostAggregateRepository) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
-	query := `
-	SELECT p.id, p.title, p.content, p.created_at, p.updated_at, p.user_id
-	FROM posts p
-	JOIN post_reactions pr ON pr.post_id = p.id
-	WHERE pr.user_id = ? AND pr.reaction = 1
-	GROUP BY p.id
-	ORDER BY p.created_at DESC
-	`
-
+	query := `SELECT post_id FROM post_reaction WHERE user_id = ? AND reaction = 1`
 	rows, err := r.db.Query(query, userID.String())
 	if err != nil {
 		return nil, err
@@ -225,19 +217,25 @@ func (r *SQLitePostAggregateRepository) GetLikedPostsByUser(userID uuid.UUID) ([
 	defer rows.Close()
 
 	var posts []*entity.PostWithDetails
-
 	for rows.Next() {
-		var post entity.Post
-		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UserID)
-		if err != nil {
-			continue
+		var postIDStr string
+		if err := rows.Scan(&postIDStr); err != nil {
+			return nil, err
 		}
 
-		// Enrich with full details
-		postDetails, err := r.GetPostWithAllDetails(post.ID)
-		if err == nil {
-			posts = append(posts, postDetails)
+		postID, err := uuid.Parse(postIDStr)
+		if err != nil {
+			return nil, err
 		}
+
+		// Use existing helper
+		post, err := r.GetPostWithAllDetails(postID)
+		fmt.Printf("-> %v\n", post)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
 	}
 
 	return posts, nil

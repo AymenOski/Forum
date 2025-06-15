@@ -449,34 +449,35 @@ func (r *SQLitePostRepository) GetbyuserId(userID uuid.UUID) ([]*entity.Post, er
 	return posts, nil
 }
 
-func (r *SQLitePostRepository) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
-	query := `SELECT post_id FROM post_reaction WHERE user_id = ? AND reaction = 1`
-	rows, err := r.db.Query(query, userID.String())
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+// func (r *SQLitePostRepository) GetLikedPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+// 	query := `SELECT post_id FROM post_reaction WHERE user_id = ? AND reaction = 1`
+// 	rows, err := r.db.Query(query, userID.String())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
 
-	var posts []*entity.PostWithDetails
-	for rows.Next() {
-		var postIDStr string
-		if err := rows.Scan(&postIDStr); err != nil {
-			return nil, err
-		}
+// 	var posts []*entity.PostWithDetails
+// 	for rows.Next() {
+// 		var postIDStr string
+// 		if err := rows.Scan(&postIDStr); err != nil {
+// 			return nil, err
+// 		}
 
-		postID, err := uuid.Parse(postIDStr)
-		if err != nil {
-			return nil, err
-		}
+// 		postID, err := uuid.Parse(postIDStr)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		// Use existing helper
-		post, err := r.GetWithDetails(postID)
-		if err != nil {
-			return nil, err
-		}
+// 		// Use existing helper
+// 		post, err := r.GetWithDetails(postID)
+// 		fmt.Printf("-> %v\n",post)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		posts = append(posts, post)
-	}
+// 		posts = append(posts, post)
+// 	}
 
-	return posts, nil
-}
+// 	return posts, nil
+// }

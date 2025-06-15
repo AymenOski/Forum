@@ -14,7 +14,9 @@ import (
 
 var tmpl1 *template.Template
 
+
 func init() {
+
 	var err error
 	tmpl1, err = template.ParseGlob("./templates/*.html")
 	if err != nil {
@@ -25,21 +27,12 @@ func init() {
 func MyServer(db *sql.DB) *http.Server {
 	mux := http.NewServeMux()
 
-	// Static files
-	fileServer := http.FileServer(http.Dir("./static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
-
 	// Entity layer
 	user_infra_repo := infra_repository.NewSQLiteUserRepository(db)
-
 	session_infra_repo := infra_repository.NewSQLiteUserSessionRepository(db)
-
 	post_infra_repo := infra_repository.NewSQLitePostRepository(db)
-
 	postCategory_infra_repo := infra_repository.NewSQLitePostCategoryRepository(db)
-
 	category_infra_repo := infra_repository.NewSQLiteCategoryRepository(db)
-
 	post_reaction_infra_repo := infra_repository.NewSQLitePostReactionRepository(db)
 
 	comment_reaction_infra_repo := infra_repository.NewSQLiteCommentReactionRepository(db)
@@ -50,15 +43,10 @@ func MyServer(db *sql.DB) *http.Server {
 		&user_infra_repo, &post_reaction_infra_repo, &comment_infra_repo)
 
 	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)
-
 	rate_limiter := usecase.NewPostRateLimiter()
-
 	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo, &post_reaction_infra_repo, &session_infra_repo, rate_limiter)
-
 	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, session_infra_repo, comment_reaction_infra_repo)
-
 	category_usecase := usecase.NewCategoryService(category_infra_repo, postCategory_infra_repo, session_infra_repo, user_infra_repo)
-
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 
 	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, auth_usecase, tmpl1)
@@ -75,7 +63,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/likeposts", post_controller.HandleReactToPost)
 	mux.HandleFunc("/likecomment", comment_controller.HandleReactToComment)
 	mux.HandleFunc("/comment/create", comment_controller.HandleCreateComment)
-	mux.HandleFunc("/", auth_controller.HandleGlobal)
+	mux.HandleFunc("/", auth_controller.HandleRoot)
 
 	server := &http.Server{
 		Addr:    ":8080",
