@@ -102,7 +102,7 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 	c.ShowMainPage(w, r)
 }
 
-func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" && r.Method == http.MethodGet {
 		c.ShowMainPage(w, r)
 	} else if strings.HasPrefix(r.URL.Path, "/static/") {
@@ -146,6 +146,5 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

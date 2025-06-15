@@ -82,8 +82,8 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	// verify if the categories exist
 	categoriesIDs := make([]*uuid.UUID, 0, len(categories))
-	for _, cat := range categories {
-		c, err := pc.categoryService.GetCategoryByName(cat)
+	for _, category := range categories {
+		c, err := pc.categoryService.GetCategoryByName(category)
 		if err != nil {
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
 				"posts":           posts,

@@ -25,10 +25,6 @@ func init() {
 func MyServer(db *sql.DB) *http.Server {
 	mux := http.NewServeMux()
 
-	// Static files
-	fileServer := http.FileServer(http.Dir("./static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
-
 	// Entity layer
 	user_infra_repo := infra_repository.NewSQLiteUserRepository(db)
 
@@ -61,7 +57,7 @@ func MyServer(db *sql.DB) *http.Server {
 
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 
-	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, tmpl1)
+	post_controller := controller.NewPostController(post_usecase, comment_usecase, category_usecase, auth_usecase, tmpl1)
 
 	comment_controller := controller.NewCommentController(post_usecase, comment_usecase, category_usecase, tmpl1)
 
@@ -75,7 +71,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/likeposts", post_controller.HandleReactToPost)
 	mux.HandleFunc("/likecomment", comment_controller.HandleReactToComment)
 	mux.HandleFunc("/comment/create", comment_controller.HandleCreateComment)
-	mux.HandleFunc("/", auth_controller.HandleGlobal)
+	mux.HandleFunc("/", auth_controller.HandleRoot)
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -84,4 +80,3 @@ func MyServer(db *sql.DB) *http.Server {
 
 	return server
 }
-
