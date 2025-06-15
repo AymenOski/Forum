@@ -177,12 +177,11 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	token, err := r.Cookie("session_token")
 	isAuthenticated := err == nil
 
-	// Get category filters
+	// Get category filter
 	selectedCategoryNames := r.URL.Query()["category-filter"]
 
-	// Optional filters
+	// CHECK	
 	wantMyPosts := r.URL.Query().Get("myPosts") != ""
-	// wantLikedPosts := r.URL.Query().Get("likedPosts") != "" // future
 
 	// Get all categories
 	categories, err := pc.categoryService.GetAllCategories()
@@ -194,7 +193,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Convert selected category names to IDs
+	// Convert  category names to IDs
 	var selectedIDs []uuid.UUID
 	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
@@ -239,7 +238,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Render the result
 	pc.renderTemplate(w, "layout.html", map[string]interface{}{
 		"posts":              filteredPosts,
 		"selectedCategories": selectedMap,
