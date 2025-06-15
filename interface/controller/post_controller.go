@@ -39,7 +39,7 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -132,7 +132,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}

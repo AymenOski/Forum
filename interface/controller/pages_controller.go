@@ -13,6 +13,7 @@ type ErrorMessage struct {
 func (c *AuthController) renderTemplate(w http.ResponseWriter, TmplName string, data interface{}) {
 
 	w.Header().Set("Content-type", "text/html")
+	
 	err := c.templates.ExecuteTemplate(w, TmplName, data)
 	if err != nil {
 		c.ShowErrorPage(w, ErrorMessage{
@@ -47,7 +48,7 @@ func (c *AuthController) ShowMainPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Something went wrong while loading posts",
+			Error:      "Something Went Wrong While Loading Posts",
 		})
 		return
 	}

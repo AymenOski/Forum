@@ -33,7 +33,7 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
-			Error:      "Method not allowed",
+			Error:      "Method Not Allowed",
 		})
 		return
 	}
@@ -46,10 +46,11 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
 		// Showing the error page temporarily
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
-		})
+		c.renderTemplate(w, "register.html", map[string]interface{}{
+				"registerError": err.Error(),
+				"username":      name,
+				"email":         email,
+			})
 		return
 	}
 
@@ -75,6 +76,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		// Showing the error page temporarily
+	
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusUnauthorized,
 			Error:      err.Error(),
@@ -120,7 +122,7 @@ func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
 	}else {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusNotFound,
-			Error:      "Page Not Found.",
+			Error:      "Page Not Found",
 		})
 	}
 }

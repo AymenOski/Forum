@@ -35,7 +35,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	} else if err != nil {
 		cc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -70,7 +70,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	if err != nil {
 		cc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Something went wrong while loading posts",
+			Error:      "Something Went Wrong While Loading Posts",
 		})
 		return
 	}
@@ -107,15 +107,15 @@ func (cc *CommentController) renderTemplate(w http.ResponseWriter, template stri
 	if err != nil {
 		cc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Error rendering page",
+			Error:      "Error Rendering Page",
 		})
 	}
 }
 
-func (c *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+func (cc *CommentController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(data.StatusCode)
-	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	err := cc.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}

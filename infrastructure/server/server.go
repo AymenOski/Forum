@@ -16,6 +16,7 @@ var tmpl1 *template.Template
 
 
 func init() {
+
 	var err error
 	tmpl1, err = template.ParseGlob("./templates/*.html")
 	if err != nil {
