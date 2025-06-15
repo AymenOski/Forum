@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"forum/domain/entity"
@@ -10,6 +11,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type PostRateLimiter struct {
+	userLastPost map[uuid.UUID]time.Time
+	mutex        sync.RWMutex
+	limitTime    time.Duration
+}
+
+func NewPostRateLimiter() *PostRateLimiter {
+	return &PostRateLimiter{
+		userLastPost: make(map[uuid.UUID]time.Time),
+		limitTime:    30 * time.Second,
+	}
+}
+
 type PostService struct {
 	postRepo          repository.PostRepository
 	userRepo          repository.UserRepository
@@ -17,11 +31,12 @@ type PostService struct {
 	postAggregateRepo repository.PostAggregateRepository
 	postReactionRepo  repository.PostReactionRepository
 	sessionRepo       repository.UserSessionRepository
+	rateLimiter       *PostRateLimiter
 }
 
 func NewPostService(postRepo *repository.PostRepository, userRepo *repository.UserRepository,
 	categoryRepo *repository.CategoryRepository, postCategoryRepo *repository.PostAggregateRepository,
-	postReactionRepo *repository.PostReactionRepository, sessionRepo *repository.UserSessionRepository,
+	postReactionRepo *repository.PostReactionRepository, sessionRepo *repository.UserSessionRepository, postRateLimit *PostRateLimiter,
 ) *PostService {
 	return &PostService{
 		postRepo:          *postRepo,
@@ -30,18 +45,30 @@ func NewPostService(postRepo *repository.PostRepository, userRepo *repository.Us
 		postAggregateRepo: *postCategoryRepo,
 		postReactionRepo:  *postReactionRepo,
 		sessionRepo:       *sessionRepo,
+		rateLimiter:       postRateLimit,
 	}
 }
 
-func (ps *PostService) CreatePost(token string, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
-	// Get session and user from token
-	session, err := ps.sessionRepo.GetByToken(token)
-	if err != nil {
-		return nil, err
+func (r *PostRateLimiter) CanUserPost(userID uuid.UUID) bool {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	lastPost, exists := r.userLastPost[userID]
+	if !exists {
+		return true
 	}
+	elapsed := time.Since(lastPost)
 
-	if time.Now().After(session.ExpiresAt) {
-		return nil, errors.New("session expired")
+	if elapsed > time.Second*30 {
+		return true
+	}
+	return false
+}
+
+func (ps *PostService) CreatePost(token string, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
+	// flag-1: next field is temperoraly until we have a proper middleware
+	session, err := ps.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
 	}
 
 	user, err := ps.userRepo.GetByID(session.UserID)
@@ -50,6 +77,11 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 	}
 	if user == nil {
 		return nil, errors.New("user not found")
+	}
+
+	canPost := ps.rateLimiter.CanUserPost(user.ID)
+	if !canPost {
+		return nil, errors.New("you can't create a post now, wait a bit")
 	}
 
 	// Validate content
@@ -66,7 +98,7 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 	}
 
 	for _, categoryID := range categoryIDs {
-		category, err := ps.categoryRepo.GetByID(*categoryID)
+		category, err := ps.categoryRepo.GetByID(categoryID)
 		if err != nil {
 			return nil, err
 		}
@@ -87,59 +119,59 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 		return nil, err
 	}
 
+	ps.rateLimiter.mutex.Lock()
+	ps.rateLimiter.userLastPost[user.ID] = time.Now()
+	ps.rateLimiter.mutex.Unlock()
+
 	return post, nil
 }
 
-// ReactToPost - Like/dislike a post with toggle support.
-// Same reaction twice = remove (toggle), different reaction = update.
-// Returns the reaction entity on all operations (including delete for UI feedback).
-// Parameters: postID, userID, reaction (true=like, false=dislike)
 func (ps PostService) ReactToPost(postID uuid.UUID, token string, reaction bool) (*entity.PostReaction, error) {
-    session, err := ps.sessionRepo.GetByToken(token)
-    if err != nil {
-        return nil, err
-    }
+	session, err := ps.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
+	}
 
-    _, err = ps.userRepo.GetByID(session.UserID)
-    if err != nil {
-        return nil, err
-    }
+	_, err = ps.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
 
-    _, err = ps.postRepo.GetByID(postID)
-    if err != nil {
-        return nil, err
-    }
+	_, err = ps.postRepo.GetByID(postID)
+	if err != nil {
+		return nil, err
+	}
 
-    pr, err := ps.postReactionRepo.GetByUserAndPost(session.UserID, postID)
-    if err == nil {
-        if pr.Reaction == reaction {
-            err := ps.postReactionRepo.Delete(pr.ID)
-            if err != nil {
-                return nil, errors.New("mistake in updating the post reaction")
-            }
-            return pr, nil
-        } else if pr.Reaction != reaction {
-            pr.Reaction = reaction
-            pr.CreatedAt = time.Now()
-            err := ps.postReactionRepo.Update(pr)
-            if err != nil {
-                return nil, errors.New("mistake in updating the post reaction")
-            }
-            return pr, nil
-        }
-    }
-    PostReaction := &entity.PostReaction{
-        UserID:    session.UserID,
-        PostID:    postID,
-        Reaction:  reaction,
-        CreatedAt: time.Now(),
-    }
+	pr, err := ps.postReactionRepo.GetByUserAndPost(session.UserID, postID)
+	if err == nil {
+		if pr.Reaction == reaction {
+			err := ps.postReactionRepo.Delete(pr.ID)
+			if err != nil {
+				return nil, errors.New("mistake in updating the post reaction")
+			}
+			return pr, nil
+		} else if pr.Reaction != reaction {
+			pr.Reaction = reaction
+			pr.CreatedAt = time.Now()
+			err := ps.postReactionRepo.Update(pr)
+			if err != nil {
+				return nil, errors.New("mistake in updating the post reaction")
+			}
+			return pr, nil
+		}
+	}
+	PostReaction := &entity.PostReaction{
+		UserID:    session.UserID,
+		PostID:    postID,
+		Reaction:  reaction,
+		CreatedAt: time.Now(),
+	}
 
-    ps.postReactionRepo.Create(PostReaction)
-    if err != nil {
-        return nil, err
-    }
-    return PostReaction, nil
+	ps.postReactionRepo.Create(PostReaction)
+	if err != nil {
+		return nil, err
+	}
+	return PostReaction, nil
 }
 
 func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
@@ -148,4 +180,36 @@ func (pc *PostService) GetPosts() ([]*entity.PostWithDetails, error) {
 		return nil, err
 	}
 	return posts, nil
+}
+
+func (pc *PostService) GetUserFromSessionToken(token string) (*entity.User, error) {
+	session, err := pc.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
+	}
+
+	user, err := pc.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (ps *PostService) GetPostsWithDetailsByCategoryID(categoryID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	posts, err := ps.postRepo.GetByCategory(categoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*entity.PostWithDetails
+	for _, post := range posts {
+		details, err := ps.postAggregateRepo.GetPostWithAllDetails(post.ID)
+		if err != nil {
+			continue
+		}
+		result = append(result, details)
+	}
+
+	return result, nil
 }

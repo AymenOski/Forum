@@ -12,22 +12,22 @@ import (
 )
 
 type CommentService struct {
-	userRepo            repository.UserRepository
-	commentRepo         repository.CommentRepository
-	postRepo            repository.PostRepository
+	userRepo    repository.UserRepository
+	commentRepo repository.CommentRepository
+	postRepo    repository.PostRepository
 	commentReactionRepo repository.CommentReactionRepository
 	sessionRepo         repository.UserSessionRepository
 }
 
-func NewCommentService(userRepo *repository.UserRepository, commentRepo *repository.CommentRepository,
-	postRepo *repository.PostRepository, commentReactionRepo *repository.CommentReactionRepository, sessionRepo *repository.UserSessionRepository,
+func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
+	postRepo repository.PostRepository, sessionRepo repository.UserSessionRepository, commentReactionRepo repository.CommentReactionRepository,
 ) *CommentService {
 	return &CommentService{
-		userRepo:            *userRepo,
-		commentRepo:         *commentRepo,
-		postRepo:            *postRepo,
-		commentReactionRepo: *commentReactionRepo,
-		sessionRepo:         *sessionRepo,
+		userRepo:            userRepo,
+		commentRepo:         commentRepo,
+		postRepo:            postRepo,
+		commentReactionRepo: commentReactionRepo,
+		sessionRepo: sessionRepo,
 	}
 }
 
@@ -44,7 +44,7 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string
 		return nil, errors.New("user not found")
 	}
 	content = strings.TrimSpace(content)
-	if len(content) > 250 {
+	if len(content) > 249 {
 		return nil, errors.New("comment length excceds 250 characters")
 	} else if content == "" {
 		return nil, errors.New("comment should have at least 1 character")
@@ -55,10 +55,9 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string
 		return nil, errors.New("post not found")
 	}
 	comment := &entity.Comment{
-		Content:   content,
-		UserID:    user.ID,
-		PostID:    *postID,
-		CreatedAt: time.Now(),
+		Content: content,
+		UserID:  user.ID,
+		PostID:  *postID,
 	}
 	// fmt.Printf("comment := &entity.Comment{ %v \n",comment)
 	err = cs.commentRepo.Create(comment)
@@ -112,4 +111,19 @@ func (cs *CommentService) ReactToComment(commentID *uuid.UUID, token string, rea
 		return nil, err
 	}
 	return commentReaction, nil
+}
+
+// temperoraly until we have a proper middleware
+func (s *CommentService) GetUserFromSessionToken(token string) (*entity.User, error) {
+	session, err := s.sessionRepo.GetByToken(token)
+	if err != nil || session == nil {
+		return nil, err
+	}
+
+	user, err := s.userRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

@@ -38,7 +38,7 @@ func (r *SQLiteCategoryRepository) Create(category *entity.Category) error {
 	return nil
 }
 
-func (r *SQLiteCategoryRepository) GetByID(categoryID uuid.UUID) (*entity.Category, error) {
+func (r *SQLiteCategoryRepository) GetByID(categoryID *uuid.UUID) (*entity.Category, error) {
 	query := `SELECT id, name, created_at FROM categories WHERE id = ?`
 
 	row := r.db.QueryRow(query, categoryID.String())
@@ -112,6 +112,7 @@ func (r *SQLiteCategoryRepository) GetAll() ([]*entity.Category, error) {
 		}
 
 		categories = append(categories, category)
+		
 	}
 
 	return categories, nil

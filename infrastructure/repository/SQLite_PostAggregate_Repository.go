@@ -83,7 +83,7 @@ func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDeta
 	return postWithDetails, nil
 }
 
-// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts
+// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts , and comments!!
 func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
 	post, err := r.postRepo.GetByID(postID)
 	if err != nil {

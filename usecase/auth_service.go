@@ -113,8 +113,8 @@ func (s *AuthService) Logout(userID uuid.UUID) error {
 
 func (s *AuthService) ValidateSession(token string) (*entity.UserSession, error) {
 	session, err := s.sessionRepo.GetByToken(token)
-	if err != nil {
-		return nil, err
+	if err != nil || session == nil {
+		return nil, errors.New("invalid session")
 	}
 	if session.ExpiresAt.Before(time.Now()) {
 		return nil, errors.New("session expired")
@@ -124,7 +124,7 @@ func (s *AuthService) ValidateSession(token string) (*entity.UserSession, error)
 
 func (s *AuthService) GetUserFromSessionToken(token string) (*entity.User, error) {
 	session, err := s.sessionRepo.GetByToken(token)
-	if err != nil {
+	if err != nil || session == nil {
 		return nil, err
 	}
 

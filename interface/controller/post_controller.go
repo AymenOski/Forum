@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"forum/domain/entity"
 	"forum/usecase"
 
 	"github.com/google/uuid"
@@ -29,7 +30,9 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 }
 
 func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("session_token")
+	var username string
+	var isAuthenticated bool
+	cookie, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -51,14 +54,16 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	content := r.FormValue("content")
 	categories := r.Form["categories"]
-
+	user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
+	if err == nil && user != nil {
+		username = user.UserName
+		isAuthenticated = true
+	}
 	posts, err := pc.postService.GetPosts()
 	if err != nil {
-		pc.renderTemplate(w, "layout.html", map[string]interface{}{
-			"posts":           posts,
-			"form_error":      usecase.ErrPostNotFound,
-			"username":        nil,
-			"isAuthenticated": nil,
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
 		})
 		return
 	}
@@ -67,8 +72,8 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      usecase.ErrEmptyPostContent,
-			"username":        nil,
-			"isAuthenticated": nil,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}
@@ -81,22 +86,22 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
 				"posts":           posts,
 				"form_error":      usecase.ErrCategoryNotFound,
-				"username":        nil,
-				"isAuthenticated": nil,
+				"username":        username,
+				"isAuthenticated": isAuthenticated,
 			})
 			return
 		}
 		categoriesIDs = append(categoriesIDs, &c.ID)
 	}
 
-	_, err = pc.postService.CreatePost(token.Value, content, categoriesIDs)
+	_, err = pc.postService.CreatePost(cookie.Value, content, categoriesIDs)
 	if err != nil {
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"form_error":      err.Error(),
 			"Content":         content,
 			"posts":           posts,
-			"username":        nil,
-			"isAuthenticated": nil,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
 		})
 		return
 	}
@@ -104,22 +109,21 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (pc *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
+func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := pc.templates.ExecuteTemplate(w, template, data)
+	err := c.templates.ExecuteTemplate(w, template, data)
 	if err != nil {
-		pc.ShowErrorPage(w, ErrorMessage{
+		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Error rendering page",
 		})
 	}
 }
 
-func (pc *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(data.StatusCode)
 
-	err := pc.templates.ExecuteTemplate(w, "error.html", data)
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)
 	}
@@ -157,4 +161,62 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	}
 	pc.postService.ReactToPost(ID, token.Value, like)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method not allowed",
+		})
+		return
+	}
+
+	selectedCategoryNames := r.URL.Query()["category-filter"]
+
+	categories, err := pc.categoryService.GetAllCategories()
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Could not fetch categories",
+		})
+		return
+	}
+
+	// Convert selected category names to UUIDs
+	var selectedIDs []uuid.UUID
+	selectedMap := make(map[string]bool) // for keeping checkboxes checked
+
+	for _, selected := range selectedCategoryNames {
+		for _, cat := range categories {
+			if cat.Name == selected {
+				selectedIDs = append(selectedIDs, cat.ID)
+				selectedMap[selected] = true
+			}
+		}
+	}
+
+	// Fetch posts with full details
+	seen := make(map[uuid.UUID]bool)
+	var filteredPosts []*entity.PostWithDetails
+
+	for _, catID := range selectedIDs {
+		posts, err := pc.postService.GetPostsWithDetailsByCategoryID(catID)
+		if err != nil {
+			continue
+		}
+
+		for _, post := range posts {
+			if !seen[post.ID] {
+				filteredPosts = append(filteredPosts, post)
+				seen[post.ID] = true
+			}
+		}
+	}
+
+	pc.renderTemplate(w, "layout.html", map[string]interface{}{
+		"posts":              filteredPosts,
+		"categories":         categories,
+		"selectedCategories": selectedMap,
+	})
 }

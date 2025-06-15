@@ -42,3 +42,7 @@ func (cs *CategoryService) GetCategoryByName(name string) (*entity.Category, err
 
 	return category, nil
 }
+
+func (cs *CategoryService) GetAllCategories() ([]*entity.Category, error) {
+	return cs.categoryRepo.GetAll()
+}
