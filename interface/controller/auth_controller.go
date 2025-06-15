@@ -33,7 +33,7 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
-			Error:      "Method not allowed",
+			Error:      "Method Not Allowed",
 		})
 		return
 	}
@@ -45,11 +45,12 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.authService.Signup(name, email, password)
 	if err != nil {
+		// Showing the error page temporarily
 		c.renderTemplate(w, "register.html", map[string]interface{}{
-			"registerError": err.Error(),
-			"username":      name,
-			"email":         email,
-		})
+				"registerError": err.Error(),
+				"username":      name,
+				"email":         email,
+			})
 		return
 	}
 
@@ -65,10 +66,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodPost {
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      "Method not allowed",
-		})
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -77,12 +75,15 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		c.renderTemplate(w, "login.html", map[string]interface{}{
-			"loginError": err.Error(),
-			"email":      email,
+		// Showing the error page temporarily
+	
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
 		})
 		return
 	}
+
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -105,27 +106,27 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" && r.Method == http.MethodGet {
 		c.ShowMainPage(w, r)
-	} else if strings.HasPrefix(r.URL.Path, "/static/") {
+	}else if strings.HasPrefix(r.URL.Path, "/static/") {
 		switch r.URL.Path {
-		case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "/static/images/background.jpg":
-			http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+			case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "static/css/error.css":
+				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
 
-		case "/static/", "/static/css/", "/static/images/":
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusForbidden,
-				Error:      "StatusForbidden",
-			})
+			case "/static/", "/static/css/", "/static/images/":
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "StatusForbidden",
+				})
 
-		default:
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusForbidden,
-				Error:      "Page Not Found.",
-			})
-		}
-	} else {
+			default:
+				c.ShowErrorPage(w, ErrorMessage{
+					StatusCode: http.StatusForbidden,
+					Error:      "Page Not Found",
+				})
+	}
+	}else {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusNotFound,
-			Error:      "Page Not Found.",
+			Error:      "Page Not Found",
 		})
 	}
 }
@@ -148,3 +149,5 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+

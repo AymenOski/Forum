@@ -41,7 +41,7 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -122,14 +122,7 @@ func (c *PostController) renderTemplate(w http.ResponseWriter, template string, 
 	}
 }
 
-func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	err := c.templates.ExecuteTemplate(w, "error.html", data)
-	if err != nil {
-		http.Error(w, data.Error, data.StatusCode)
-	}
-}
 
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
@@ -139,7 +132,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
-			Error:      "Unexpected error while reading cookie",
+			Error:      "Unexpected Error While Reading Cookie",
 		})
 		return
 	}
@@ -244,3 +237,16 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		"isAuthenticated":    isAuthenticated,
 	})
 }
+
+
+func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(data.StatusCode)
+
+	err := c.templates.ExecuteTemplate(w, "error.html", data)
+	if err != nil {
+		http.Error(w, data.Error, data.StatusCode)
+	}
+}
+
+
