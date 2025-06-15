@@ -85,16 +85,18 @@
                                 </label>
                             </div>
                         </div>
+                        {{if .isAuthenticated}}
                         <div class="filter-checkboxes">
                             <label class="filter-option">
-                                <input type="checkbox" name="myPosts">
+                                <input type="radio" name="postFilter" value="myPosts">
                                 <span>My Posts</span>
                             </label>
                             <label class="filter-option">
-                                <input type="checkbox" name="likedPosts">
+                                <input type="radio" name="postFilter" value="likedPosts">
                                 <span>Liked Posts</span>
                             </label>
                         </div>
+                        {{end}}
                         <button type="submit">Apply Filters</button>
                     </form>
                 </div>
