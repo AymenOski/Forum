@@ -140,6 +140,7 @@
         <!-- Published Posts Section -->
         <section class="posts-container">
             <h2 class="posts-title">Published Posts</h2>
+            <p style="color: yellow">Debug: {{len .posts}} posts loaded</p>
             {{if .posts}}
             {{range .posts}}
             <article class="forum-post">

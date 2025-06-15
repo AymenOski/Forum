@@ -9,7 +9,7 @@ import (
 type PostRepository interface {
 	Create(post *entity.Post) error
 	GetByID(postID uuid.UUID) (*entity.Post, error)
-	GetbyuserId(Userid uuid.UUID)([]*entity.PostWithDetails)
+	GetbyuserId(Userid uuid.UUID) ([]*entity.Post, error)
 	GetAll() ([]*entity.Post, error)
 	GetByCategory(categoryID uuid.UUID) ([]*entity.Post, error)
 	Update(post *entity.Post) error

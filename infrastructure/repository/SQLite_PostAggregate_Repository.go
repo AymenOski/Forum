@@ -177,3 +177,21 @@ func (r *SQLiteUserAggregateRepository) AuthenticateUser(email, password string)
 
 	return user, session, nil
 }
+
+func (r *SQLitePostAggregateRepository) GetPostsWithDetailsByUser(userID uuid.UUID) ([]*entity.PostWithDetails, error) {
+	posts, err := r.postRepo.GetbyuserId(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var postsWithDetails []*entity.PostWithDetails
+	for _, post := range posts {
+		pwd, err := r.GetPostWithAllDetails(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		postsWithDetails = append(postsWithDetails, pwd)
+	}
+
+	return postsWithDetails, nil
+}

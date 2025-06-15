@@ -57,6 +57,7 @@ func MyServer(db *sql.DB) *http.Server {
 	mux.HandleFunc("/post/create", post_controller.HandleCreatePost)
 	mux.HandleFunc("/", auth_controller.HandleMainPage)
 	mux.HandleFunc("/filter", post_controller.HandleFilteredPosts)
+	// mux.HandleFunc("/posts/user", post_controller.HandlePostsByUser)
 
 	// mux.HandleFunc("/posts/filter", post_controller.HandleFilteredPosts)
 
