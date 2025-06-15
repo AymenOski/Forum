@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strings"
 
 	"forum/domain/entity"
 	"forum/usecase"
@@ -17,18 +16,16 @@ type PostController struct {
 	commentService  *usecase.CommentService
 	categoryService *usecase.CategoryService
 	templates       *template.Template
-	authservice     *usecase.AuthService
 }
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
-	categoryService *usecase.CategoryService, templates *template.Template, authservice *usecase.AuthService,
+	categoryService *usecase.CategoryService, templates *template.Template,
 ) *PostController {
 	return &PostController{
 		postService:     postService,
 		commentService:  commentService,
 		categoryService: categoryService,
 		templates:       templates,
-		authservice:     authservice,
 	}
 }
 
@@ -57,7 +54,6 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 
 	content := r.FormValue("content")
 	categories := r.Form["categories"]
-	// flag-1: next field is temperoraly until we have a proper middleware
 	user, err := pc.postService.GetUserFromSessionToken(cookie.Value)
 	if err == nil && user != nil {
 		username = user.UserName
@@ -135,7 +131,6 @@ func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage)
 
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
-	// Token, err := uuid.Parse(token.Value)
 	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -154,16 +149,14 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 		})
 		return
 	}
-
-	id := strings.Split(r.URL.Query().Get("id"), "/")
-
-	ID, err := uuid.Parse(id[0])
+	id := r.FormValue("postId")
+	ID, err := uuid.Parse(id)
 	if err != nil {
 		fmt.Printf("Failed to parse this ID %v to UUID: %v\n", id, err)
 		return
 	}
 	like := true
-	if id[1] == "0" {
+	if r.FormValue("isLike") == "0" {
 		like = false
 	}
 	pc.postService.ReactToPost(ID, token.Value, like)

@@ -106,22 +106,19 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 		return nil, err
 	}
 
-	comments, err := r.commentRepo.GetByPostID(postID)
+	comments, err := r.commentRepo.GetByPostIDWithDetails(postID)
 	if err != nil {
+		fmt.Println("comments error")
 		return nil, err
-	}
-	commentsValue := make([]entity.Comment, len(comments))
-	for i, c := range comments {
-		commentsValue[i] = *c
 	}
 
 	return &entity.PostWithDetails{
 		Post:         *post,
 		Author:       *author,
+		Comments:     comments,
 		Categories:   categories,
 		LikeCount:    likes,
 		DislikeCount: dislikes,
-		Comments:     commentsValue,
 	}, nil
 }
 

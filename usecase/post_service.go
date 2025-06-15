@@ -98,7 +98,7 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 	}
 
 	for _, categoryID := range categoryIDs {
-		category, err := ps.categoryRepo.GetByID(*categoryID)
+		category, err := ps.categoryRepo.GetByID(categoryID)
 		if err != nil {
 			return nil, err
 		}

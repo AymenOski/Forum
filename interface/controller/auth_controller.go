@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"forum/domain/entity"
 	"forum/usecase"
 )
 
@@ -73,6 +74,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		c.renderTemplate(w, "login.html", map[string]interface{}{
@@ -92,7 +94,12 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
-	http.Redirect(w, r, "/layout", http.StatusSeeOther)
+	// Redirect to home page
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) {
+	c.ShowMainPage(w, r)
 }
 
 func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
@@ -124,12 +131,11 @@ func (c *AuthController) HandleGlobal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// Get session token from cookie
-	// cookie, err := r.Cookie("session_token")
-	// if err == nil && cookie.Value != "" {
-	// 	// Use the LogoutByToken method to invalidate the specific session
-	// 	c.authService.Logout(cookie.Value)
-	// }
+	// Get user from context (set by auth middleware)
+	user, ok := r.Context().Value("user").(*entity.User)
+	if ok {
+		c.authService.Logout(user.ID)
+	}
 
 	// Clear session cookie
 	http.SetCookie(w, &http.Cookie{

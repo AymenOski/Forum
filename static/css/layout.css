@@ -643,13 +643,18 @@ textarea:focus {
 }
 
 .Welcome-msg {
+<<<<<<< HEAD
   display: flex;
+=======
+  display: flex; /* Changed to flex for better width control */
+>>>>>>> 534efde3240ee14a39cc9c5136f97b1aa0a8a335
   align-items: center;
   font-size: 1rem;
   font-weight: 600;
   gap: 6px;
   max-width: 250px;
   margin: 0;
+<<<<<<< HEAD
   padding: 5px 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -697,4 +702,11 @@ textarea:focus {
 .comment-content {
   margin: 5px 0 0;
   color: #c0c0c0;
+=======
+  padding: 5px 10px; /* Added padding for separation */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px; /* Subtle rounding for a polished look */
+>>>>>>> 534efde3240ee14a39cc9c5136f97b1aa0a8a335
 }
