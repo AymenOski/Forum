@@ -10,11 +10,6 @@
 </head>
 
 <body>
-    <!-- NavBar section -->
-    <input type="radio" id="theme-pink" name="theme" class="theme-radio">
-    <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
-    <input type="radio" id="theme-forest" name="theme" class="theme-radio">
-    <input type="radio" id="theme-dark" name="theme" class="theme-radio" checked>
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -59,7 +54,7 @@
             {{end}}
             <div class="post-sections">
                 <div class="post-section filter-section">
-                    <form method="GET" action="/filter">
+                    <form method="GET" action="/post/filter">
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
@@ -106,7 +101,7 @@
                         <textarea name="content" placeholder="Write your post..." required
                             maxlength="500">{{.Post.Content}}</textarea>
                         {{else}}
-                        <textarea name="content" placeholder="Write your post..." required maxlength="5000"></textarea>
+                        <textarea name="content" placeholder="Write your post..." required maxlength="450"></textarea>
                         {{end}}
                         <h4>Select Categories:</h4>
                         <div class="category-options">

@@ -14,9 +14,7 @@ import (
 
 var tmpl1 *template.Template
 
-
 func init() {
-
 	var err error
 	tmpl1, err = template.ParseGlob("./templates/*.html")
 	if err != nil {
@@ -43,9 +41,10 @@ func MyServer(db *sql.DB) *http.Server {
 		&user_infra_repo, &post_reaction_infra_repo, &comment_infra_repo)
 
 	auth_usecase := usecase.NewAuthService(user_infra_repo, session_infra_repo)
-	rate_limiter := usecase.NewPostRateLimiter()
-	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo, &post_reaction_infra_repo, &session_infra_repo, rate_limiter)
-	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, session_infra_repo, comment_reaction_infra_repo)
+	post_rate_limiter := usecase.NewPostRateLimiter()
+	post_usecase := usecase.NewPostService(&post_infra_repo, &user_infra_repo, &category_infra_repo, &post_category_infra_repo, &post_reaction_infra_repo, &session_infra_repo, post_rate_limiter)
+	comment_rate_limiter := usecase.NewCommentRateLimiter()
+	comment_usecase := usecase.NewCommentService(user_infra_repo, comment_infra_repo, post_infra_repo, session_infra_repo, comment_reaction_infra_repo, comment_rate_limiter)
 	category_usecase := usecase.NewCategoryService(category_infra_repo, postCategory_infra_repo, session_infra_repo, user_infra_repo)
 	auth_controller := controller.NewAuthController(auth_usecase, post_usecase, tmpl1)
 
@@ -53,21 +52,21 @@ func MyServer(db *sql.DB) *http.Server {
 
 	comment_controller := controller.NewCommentController(post_usecase, comment_usecase, category_usecase, tmpl1)
 
-	auth_middleware := middleware.NewAuthMiddleware(auth_usecase)
+	middleware := middleware.NewAuthMiddleware(auth_usecase)
 
-	mux.HandleFunc("/signup", auth_controller.HandleSignup)
-	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/signup", middleware.GuestOnly(auth_controller.HandleSignup))
+	mux.HandleFunc("/login", middleware.GuestOnly(auth_controller.HandleLogin))
 	mux.HandleFunc("/logout", auth_controller.HandleLogout)
-	mux.HandleFunc("/post/create", auth_middleware.VerifiedAuth(post_controller.HandleCreatePost))
-	mux.HandleFunc("/filter", post_controller.HandleFilteredPosts)
-	mux.HandleFunc("/likeposts", post_controller.HandleReactToPost)
-	mux.HandleFunc("/likecomment", comment_controller.HandleReactToComment)
-	mux.HandleFunc("/comment/create", comment_controller.HandleCreateComment)
+	mux.HandleFunc("/post/create", middleware.VerifiedAuth(post_controller.HandleCreatePost))
+	mux.HandleFunc("/post/filter", post_controller.HandleFilteredPosts)
+	mux.HandleFunc("/post/reaction", middleware.VerifiedAuth(post_controller.HandleReactToPost))
+	mux.HandleFunc("/comment/reaction", middleware.VerifiedAuth(comment_controller.HandleReactToComment))
+	mux.HandleFunc("/comment/create", middleware.VerifiedAuth(comment_controller.HandleCreateComment))
 	mux.HandleFunc("/", auth_controller.HandleRoot)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: auth_middleware.LoggerMiddleware(mux),
+		Handler: middleware.Log(mux),
 	}
 
 	return server

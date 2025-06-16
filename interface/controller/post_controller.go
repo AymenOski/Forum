@@ -1,13 +1,15 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
-	
+	"strings"
+
 	"forum/domain/entity"
 	"forum/usecase"
-	
+
 	"github.com/google/uuid"
 )
 
@@ -21,35 +23,35 @@ type PostController struct {
 
 func NewPostController(postService *usecase.PostService, commentService *usecase.CommentService,
 	categoryService *usecase.CategoryService, authService *usecase.AuthService, templates *template.Template,
-	) *PostController {
-		return &PostController{
-			postService:     postService,
-			commentService:  commentService,
-			categoryService: categoryService,
-			authService:     authService,
-			templates:       templates,
-		}
+) *PostController {
+	return &PostController{
+		postService:     postService,
+		commentService:  commentService,
+		categoryService: categoryService,
+		authService:     authService,
+		templates:       templates,
 	}
+}
 
-	func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err := c.templates.ExecuteTemplate(w, template, data)
-		if err != nil {
-			c.ShowErrorPage(w, ErrorMessage{
-				StatusCode: http.StatusInternalServerError,
-				Error:      "Error rendering page",
-			})
-		}
+func (c *PostController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	err := c.templates.ExecuteTemplate(w, template, data)
+	if err != nil {
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Error rendering page",
+		})
 	}
-	
-	func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
-		var username string
-		var isAuthenticated bool
-		cookie, err := r.Cookie("session_token")
-		if err == http.ErrNoCookie {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-			} else if err != nil {
+}
+
+func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
+	var username string
+	var isAuthenticated bool
+	cookie, err := r.Cookie("session_token")
+	if err == http.ErrNoCookie {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Unexpected Error While Reading Cookie",
@@ -81,7 +83,19 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 		return
 	}
 
+	if len(categories) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		pc.renderTemplate(w, "layout.html", map[string]interface{}{
+			"posts":           posts,
+			"form_error":      "Please select at least one category",
+			"username":        user.UserName,
+			"isAuthenticated": true,
+		})
+		return
+	}
+
 	if content == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      usecase.ErrEmptyPostContent,
@@ -91,11 +105,11 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 		return
 	}
 
-	// verify if the categories exist
 	categoriesIDs := make([]*uuid.UUID, 0, len(categories))
 	for _, category := range categories {
 		c, err := pc.categoryService.GetCategoryByName(category)
 		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			pc.renderTemplate(w, "layout.html", map[string]interface{}{
 				"posts":           posts,
 				"form_error":      usecase.ErrCategoryNotFound,
@@ -109,6 +123,13 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 
 	_, err = pc.postService.CreatePost(cookie.Value, content, categoriesIDs)
 	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "wait a bit") {
+			statusCode = http.StatusTooManyRequests // 429 for rate limiting
+		} else if strings.Contains(err.Error(), "content") {
+			statusCode = http.StatusBadRequest // 400 for validation errors
+		}
+		w.WriteHeader(statusCode)
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"form_error":      err.Error(),
 			"Content":         content,
@@ -121,7 +142,6 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
-
 
 func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("session_token")
@@ -157,7 +177,7 @@ func (pc PostController) HandleReactToPost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {	
+func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusMethodNotAllowed,
@@ -180,16 +200,42 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Get query parameters
-	selectedCategoryNames := r.URL.Query()["category-filter"]
-	Radio := r.URL.Query().Get("postFilter") 
-	var likedPosts, myPosts bool = false, false
-	if Radio == "myPosts"{
-		myPosts = true
-	} 
-	if Radio == "likedPosts"{
-		likedPosts = true
+	posts, err := pc.postService.GetPosts()
+	if err != nil {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusInternalServerError,
+			Error:      "Something went wrong while loading posts",
+		})
+		return
 	}
+
+	selectedCategoryNames := r.URL.Query()["category-filter"]
+	Radio := r.URL.Query().Get("postFilter")
+	var likedPosts, myPosts bool = false, false
+	if Radio == "myPosts" {
+		myPosts = true
+	} else if Radio == "likedPosts" {
+		likedPosts = true
+	} else {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusBadRequest,
+			Error:      "Unavailable Filter",
+		})
+		return
+
+	}
+
+	hasFilters := len(selectedCategoryNames) > 0 || myPosts || likedPosts
+	if !hasFilters {
+		pc.renderTemplate(w, "layout.html", map[string]interface{}{
+			"form_error":      errors.New("No filter is selected"),
+			"posts":           posts,
+			"username":        username,
+			"isAuthenticated": isAuthenticated,
+		})
+		return
+	}
+
 	// Get all categories for name-to-ID conversion
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
@@ -204,16 +250,24 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	var selectedIDs []uuid.UUID
 	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
+		found := false
 		for _, cat := range categories {
 			if cat.Name == selected {
+				found = true
 				selectedIDs = append(selectedIDs, cat.ID)
 				selectedMap[selected] = true
-				break // Found the category, no need to continue inner loop
+				break
 			}
+		}
+		if !found {
+			pc.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusBadRequest,
+				Error:      "invalid category name",
+			})
+			return
 		}
 	}
 
-	// Build filter
 	filter := &entity.PostFilter{
 		CategoryIDs: selectedIDs,
 		MyPosts:     myPosts,
@@ -221,7 +275,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		AuthorID:    userID,
 	}
 
-	// Get filtered posts using the service
 	filteredPosts, err := pc.postService.GetFilteredPostsWithDetails(*filter)
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
@@ -242,7 +295,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 func (c *PostController) ShowErrorPage(w http.ResponseWriter, data ErrorMessage) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(data.StatusCode)
-
 	err := c.templates.ExecuteTemplate(w, "error.html", data)
 	if err != nil {
 		http.Error(w, data.Error, data.StatusCode)

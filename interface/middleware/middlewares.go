@@ -61,9 +61,36 @@ func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (m *AuthMiddleware) LoggerMiddleware(next http.Handler) http.Handler {
+func (m *AuthMiddleware) GuestOnly(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("---> MethodType[ %s ] | Paths[ %s ]", r.Method, r.URL.Path)
+		cookie, err := r.Cookie("session_token")
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Validate session
+		_, err = m.authService.ValidateSession(cookie.Value)
+		if err != nil {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_token",
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				HttpOnly: true,
+				Secure:   false,
+			})
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	})
+}
+
+func (m *AuthMiddleware) Log(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("---> MethodType[ %s ] | Path[ %s ]", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
