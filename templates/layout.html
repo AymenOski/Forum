@@ -10,6 +10,11 @@
 </head>
 
 <body>
+    <!-- NavBar section -->
+    <input type="radio" id="theme-pink" name="theme" class="theme-radio">
+    <input type="radio" id="theme-aqua" name="theme" class="theme-radio">
+    <input type="radio" id="theme-forest" name="theme" class="theme-radio">
+    <input type="radio" id="theme-dark" name="theme" class="theme-radio" checked>
     <header class="navbar">
         <div id="in-logo">
             <div class="logo-box">Forum</div>
@@ -23,6 +28,14 @@
                 <a href="/login">Login</a>
                 <a href="/signup">Register</a>
                 {{end}}
+            </div>
+            <div class="themes">
+                <div class="theme-buttons">
+                    <label for="theme-pink">🌸</label>
+                    <label for="theme-aqua">🌊</label>
+                    <label for="theme-forest">🌲</label>
+                    <label for="theme-dark">🌙</label>
+                </div>
             </div>
         </nav>
     </header>
@@ -54,7 +67,7 @@
             {{end}}
             <div class="post-sections">
                 <div class="post-section filter-section">
-                    <form method="GET" action="/post/filter">
+                    <form method="GET" action="/filter">
                         <div class="filter-options">
                             <h4>Filter by Categories:</h4>
                             <div class="category-tags-filter">
@@ -80,18 +93,16 @@
                                 </label>
                             </div>
                         </div>
-                        {{if .isAuthenticated}}
                         <div class="filter-checkboxes">
                             <label class="filter-option">
-                                <input type="radio" name="postFilter" value="myPosts">
+                                <input type="checkbox" name="myPosts">
                                 <span>My Posts</span>
                             </label>
                             <label class="filter-option">
-                                <input type="radio" name="postFilter" value="likedPosts">
+                                <input type="checkbox" name="likedPosts">
                                 <span>Liked Posts</span>
                             </label>
                         </div>
-                        {{end}}
                         <button type="submit">Apply Filters</button>
                     </form>
                 </div>
@@ -101,7 +112,7 @@
                         <textarea name="content" placeholder="Write your post..." required
                             maxlength="500">{{.Post.Content}}</textarea>
                         {{else}}
-                        <textarea name="content" placeholder="Write your post..." required maxlength="450"></textarea>
+                        <textarea name="content" placeholder="Write your post..." required maxlength="5000"></textarea>
                         {{end}}
                         <h4>Select Categories:</h4>
                         <div class="category-options">
