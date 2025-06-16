@@ -25,10 +25,58 @@ func NewAuthController(authService *usecase.AuthService, postService *usecase.Po
 
 func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// If the method is GET that means loading the html page
+	    
 	if r.Method == http.MethodGet {
-		c.renderTemplate(w, "register.html", nil)
+        // If there are query parameters, redirect to clean URL
+        if r.URL.RawQuery != "" {
+            http.Redirect(w, r, "/signup", http.StatusSeeOther)
+            return
+        }
+        c.renderTemplate(w, "register.html", nil)
+        return
+    }
+
+	if r.Method != http.MethodPost {
+		c.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      "Method Not Allowed",
+		})
 		return
 	}
+	// if the method is POST that means the user is creating an account
+	name := r.PostFormValue("username")
+    email := r.PostFormValue("email")
+    password := r.PostFormValue("password")
+
+	_, err := c.authService.Signup(name, email, password)
+	if err != nil {
+		// Showing the error page with status code (bad Request)
+		w.WriteHeader(400)
+		c.renderTemplate(w, "register.html", map[string]interface{}{
+				"registerError": err.Error(),
+				"username":      name,
+				"email":         email,
+			})
+		return
+	}
+
+	// Redirect to login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+
+
+func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodGet {
+		// If there are query parameters, redirect to clean URL
+        if r.URL.RawQuery != "" {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+            return
+        }
+        c.renderTemplate(w, "login.html", nil)
+        return
+    }
 
 	if r.Method != http.MethodPost {
 		c.ShowErrorPage(w, ErrorMessage{
@@ -38,51 +86,21 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if the method is POST that means the user is creating an account
-	name := r.FormValue("username")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	email := r.PostFormValue("email")
+	password := r.PostFormValue("password")
 
-	user, err := c.authService.Signup(name, email, password)
+	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		// Showing the error page temporarily
-		c.renderTemplate(w, "register.html", map[string]interface{}{
-				"registerError": err.Error(),
-				"username":      name,
-				"email":         email,
+		// Showing the error page with status code (bad Request)
+		w.WriteHeader(400)
+		c.renderTemplate(w, "login.html", map[string]interface{}{
+				"loginError": err.Error(),
+				// "username":   user.UserName,
+				"email":      email,
 			})
 		return
 	}
 
-	_ = user // User created successfully
-
-	// Redirect to login page
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		c.renderTemplate(w, "login.html", nil)
-		return
-	}
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	token, user, err := c.authService.Login(email, password)
-	if err != nil {
-		// Showing the error page temporarily
-	
-		c.ShowErrorPage(w, ErrorMessage{
-			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
-		})
-		return
-	}
 
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -119,7 +137,7 @@ func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 
 			default:
 				c.ShowErrorPage(w, ErrorMessage{
-					StatusCode: http.StatusForbidden,
+					StatusCode: http.StatusNotFound,
 					Error:      "Page Not Found",
 				})
 	}
