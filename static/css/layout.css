@@ -213,9 +213,11 @@ main {
 }
 
 .category-tag input[type="checkbox"]:checked + span {
-    color: var(--primary-color);
+    /* background-color: var(--primary-color); */
+    color: #fff;
     font-weight: 600;
 }
+
 
 .category-tag:has(input[type="checkbox"]:checked) {
     background: var(--primary-color);

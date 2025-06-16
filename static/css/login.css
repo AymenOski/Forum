@@ -86,9 +86,9 @@ body::before {
 .login_container label {
     display: block;
     text-align: left;
-    margin-top: 20px;
+    margin-top: 11px;
     margin-bottom: 8px;
-    color: var(--text-color);
+    color: #FFFFFF;
     font-weight: 600;
     font-size: 14px;
     text-transform: uppercase;
