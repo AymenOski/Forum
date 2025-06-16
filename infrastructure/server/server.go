@@ -54,8 +54,8 @@ func MyServer(db *sql.DB) *http.Server {
 
 	middleware := middleware.NewAuthMiddleware(auth_usecase)
 
-	mux.HandleFunc("/signup", auth_controller.HandleSignup)
-	mux.HandleFunc("/login", auth_controller.HandleLogin)
+	mux.HandleFunc("/signup", middleware.GuestOnly(auth_controller.HandleSignup))
+	mux.HandleFunc("/login", middleware.GuestOnly(auth_controller.HandleLogin))
 	mux.HandleFunc("/logout", auth_controller.HandleLogout)
 	mux.HandleFunc("/post/create", middleware.VerifiedAuth(post_controller.HandleCreatePost))
 	mux.HandleFunc("/post/filter", post_controller.HandleFilteredPosts)
@@ -71,5 +71,3 @@ func MyServer(db *sql.DB) *http.Server {
 
 	return server
 }
-
-// TODO:

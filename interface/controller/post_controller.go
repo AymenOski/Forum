@@ -214,9 +214,15 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	var likedPosts, myPosts bool = false, false
 	if Radio == "myPosts" {
 		myPosts = true
-	}
-	if Radio == "likedPosts" {
+	} else if Radio == "likedPosts" {
 		likedPosts = true
+	} else {
+		pc.ShowErrorPage(w, ErrorMessage{
+			StatusCode: http.StatusBadRequest,
+			Error:      "Unavailable Filter",
+		})
+		return
+
 	}
 
 	hasFilters := len(selectedCategoryNames) > 0 || myPosts || likedPosts
@@ -244,16 +250,24 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 	var selectedIDs []uuid.UUID
 	selectedMap := make(map[string]bool)
 	for _, selected := range selectedCategoryNames {
+		found := false
 		for _, cat := range categories {
 			if cat.Name == selected {
+				found = true
 				selectedIDs = append(selectedIDs, cat.ID)
 				selectedMap[selected] = true
 				break
 			}
 		}
+		if !found {
+			pc.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusBadRequest,
+				Error:      "invalid category name",
+			})
+			return
+		}
 	}
 
-	// Build filter
 	filter := &entity.PostFilter{
 		CategoryIDs: selectedIDs,
 		MyPosts:     myPosts,
@@ -261,7 +275,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		AuthorID:    userID,
 	}
 
-	// Get filtered posts using the service
 	filteredPosts, err := pc.postService.GetFilteredPostsWithDetails(*filter)
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
