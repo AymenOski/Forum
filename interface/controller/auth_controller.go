@@ -24,17 +24,14 @@ func NewAuthController(authService *usecase.AuthService, postService *usecase.Po
 }
 
 func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
-	// If the method is GET that means loading the html page
-	    
 	if r.Method == http.MethodGet {
-        // If there are query parameters, redirect to clean URL
-        if r.URL.RawQuery != "" {
-            http.Redirect(w, r, "/signup", http.StatusSeeOther)
-            return
-        }
-        c.renderTemplate(w, "register.html", nil)
-        return
-    }
+		if r.URL.RawQuery != "" {
+			http.Redirect(w, r, "/signup", http.StatusSeeOther)
+			return
+		}
+		c.renderTemplate(w, "register.html", nil)
+		return
+	}
 
 	if r.Method != http.MethodPost {
 		c.ShowErrorPage(w, ErrorMessage{
@@ -45,18 +42,17 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 	// if the method is POST that means the user is creating an account
 	name := r.PostFormValue("username")
-    email := r.PostFormValue("email")
-    password := r.PostFormValue("password")
+	email := r.PostFormValue("email")
+	password := r.PostFormValue("password")
 
 	_, err := c.authService.Signup(name, email, password)
 	if err != nil {
-		// Showing the error page with status code (bad Request)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		c.renderTemplate(w, "register.html", map[string]interface{}{
-				"registerError": err.Error(),
-				"username":      name,
-				"email":         email,
-			})
+			"registerError": err.Error(),
+			"username":      name,
+			"email":         email,
+		})
 		return
 	}
 
@@ -64,19 +60,16 @@ func (c *AuthController) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-
-
 func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == http.MethodGet {
 		// If there are query parameters, redirect to clean URL
-        if r.URL.RawQuery != "" {
+		if r.URL.RawQuery != "" {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
-            return
-        }
-        c.renderTemplate(w, "login.html", nil)
-        return
-    }
+			return
+		}
+		c.renderTemplate(w, "login.html", nil)
+		return
+	}
 
 	if r.Method != http.MethodPost {
 		c.ShowErrorPage(w, ErrorMessage{
@@ -92,15 +85,14 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		// Showing the error page with status code (bad Request)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusUnauthorized)
 		c.renderTemplate(w, "login.html", map[string]interface{}{
-				"loginError": err.Error(),
-				// "username":   user.UserName,
-				"email":      email,
-			})
+			"loginError": err.Error(),
+			// "username":   user.UserName,
+			"email": email,
+		})
 		return
 	}
-
 
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -113,7 +105,6 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = user
 
-	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -124,24 +115,24 @@ func (c *AuthController) HandleMainPage(w http.ResponseWriter, r *http.Request) 
 func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" && r.Method == http.MethodGet {
 		c.ShowMainPage(w, r)
-	}else if strings.HasPrefix(r.URL.Path, "/static/") {
+	} else if strings.HasPrefix(r.URL.Path, "/static/") {
 		switch r.URL.Path {
-			case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "static/css/error.css":
-				http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+		case "/static/css/layout.css", "/static/css/login.css", "/static/css/posts.css", "/static/css/register.css", "/static/css/error.css":
+			http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
 
-			case "/static/", "/static/css/", "/static/images/":
-				c.ShowErrorPage(w, ErrorMessage{
-					StatusCode: http.StatusForbidden,
-					Error:      "StatusForbidden",
-				})
+		case "/static/", "/static/css/", "/static/images/":
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusForbidden,
+				Error:      "StatusForbidden",
+			})
 
-			default:
-				c.ShowErrorPage(w, ErrorMessage{
-					StatusCode: http.StatusNotFound,
-					Error:      "Page Not Found",
-				})
-	}
-	}else {
+		default:
+			c.ShowErrorPage(w, ErrorMessage{
+				StatusCode: http.StatusNotFound,
+				Error:      "Page Not Found",
+			})
+		}
+	} else {
 		c.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusNotFound,
 			Error:      "Page Not Found",
@@ -167,5 +158,3 @@ func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-
-

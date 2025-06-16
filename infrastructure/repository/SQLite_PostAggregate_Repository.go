@@ -214,7 +214,7 @@ func (r *SQLitePostAggregateRepository) GetFilteredPostsWithDetails(filter entit
 			u.id as author_id, u.user_name, u.email, u.created_at as user_created_at
 		FROM posts p
 		INNER JOIN user u ON p.user_id = u.id
-		LEFT JOIN post_categories pc ON p.id = pc.post_id
+		INNER JOIN post_categories pc ON p.id = pc.post_id
 	`
 
 	conditions := []string{}

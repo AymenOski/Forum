@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"forum/domain/entity"
@@ -11,24 +12,55 @@ import (
 	"github.com/google/uuid"
 )
 
+type CommentRateLimiter struct {
+	userLastComment map[uuid.UUID]time.Time
+	mutex           sync.RWMutex
+	limitTime       time.Duration
+}
+
+func NewCommentRateLimiter() *CommentRateLimiter {
+	return &CommentRateLimiter{
+		userLastComment: make(map[uuid.UUID]time.Time),
+		limitTime:       30 * time.Second,
+	}
+}
+
 type CommentService struct {
-	userRepo    repository.UserRepository
-	commentRepo repository.CommentRepository
-	postRepo    repository.PostRepository
+	userRepo            repository.UserRepository
+	commentRepo         repository.CommentRepository
+	postRepo            repository.PostRepository
 	commentReactionRepo repository.CommentReactionRepository
 	sessionRepo         repository.UserSessionRepository
+	rateLimiter         *CommentRateLimiter
 }
 
 func NewCommentService(userRepo repository.UserRepository, commentRepo repository.CommentRepository,
-	postRepo repository.PostRepository, sessionRepo repository.UserSessionRepository, commentReactionRepo repository.CommentReactionRepository,
+	postRepo repository.PostRepository, sessionRepo repository.UserSessionRepository,
+	commentReactionRepo repository.CommentReactionRepository, commentRateLimit *CommentRateLimiter,
 ) *CommentService {
 	return &CommentService{
 		userRepo:            userRepo,
 		commentRepo:         commentRepo,
 		postRepo:            postRepo,
 		commentReactionRepo: commentReactionRepo,
-		sessionRepo: sessionRepo,
+		sessionRepo:         sessionRepo,
+		rateLimiter:         commentRateLimit,
 	}
+}
+
+func (cs *CommentRateLimiter) CanUserComment(userID uuid.UUID) bool {
+	cs.mutex.RLock()
+	defer cs.mutex.RUnlock()
+	lastComment, exists := cs.userLastComment[userID]
+	if !exists {
+		return true
+	}
+	elapsed := time.Since(lastComment)
+
+	if elapsed > time.Second*30 {
+		return true
+	}
+	return false
 }
 
 func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string) (*entity.Comment, error) {
@@ -43,8 +75,14 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string
 	if user == nil {
 		return nil, errors.New("user not found")
 	}
+
+	canComment := cs.rateLimiter.CanUserComment(user.ID)
+	if !canComment {
+		return nil, errors.New("you can't create a comment now, wait a bit")
+	}
+
 	content = strings.TrimSpace(content)
-	if len(content) > 249 {
+	if len(content) > 100 {
 		return nil, errors.New("comment length excceds 250 characters")
 	} else if content == "" {
 		return nil, errors.New("comment should have at least 1 character")
@@ -59,11 +97,16 @@ func (cs *CommentService) CreateComment(postID *uuid.UUID, token, content string
 		UserID:  user.ID,
 		PostID:  *postID,
 	}
-	// fmt.Printf("comment := &entity.Comment{ %v \n",comment)
+
 	err = cs.commentRepo.Create(comment)
 	if err != nil {
 		return nil, err
 	}
+
+	cs.rateLimiter.mutex.Lock()
+	cs.rateLimiter.userLastComment[user.ID] = time.Now()
+	cs.rateLimiter.mutex.Unlock()
+
 	return comment, nil
 }
 

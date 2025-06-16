@@ -7,8 +7,7 @@
     {{range .posts}}
     <article class="forum-post" data-post-id="{{.ID}}">
         <div class="post-header">
-            <span class="post-author">Posted by {{.Author.UserName}} </span>
-            <!-- <span class="post-id">Post #{{.ID}}</span> -->
+            <span class="post-author">{{.Author.UserName}} </span>
             <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
         </div>
 
@@ -23,7 +22,7 @@
             <div class="post-stats">
                 {{if $.isAuthenticated}}
                 <!-- Like Button -->
-                <form method="POST" action="/likeposts" class="reaction-form">
+                <form method="POST" action="/post/reaction" class="reaction-form">
                     <input type="hidden" name="postId" value="{{.ID}}">
                     <input type="hidden" name="isLike" value="1">
                     <button type="submit" class="reaction-btn like-btn">
@@ -33,7 +32,7 @@
                 </form>
 
                 <!-- Dislike Button -->
-                <form method="POST" action="/likeposts" class="reaction-form">
+                <form method="POST" action="/post/reaction" class="reaction-form">
                     <input type="hidden" name="postId" value="{{.ID}}">
                     <input type="hidden" name="isLike" value="0">
                     <button type="submit" class="reaction-btn dislike-btn">
@@ -43,7 +42,6 @@
                 </form>
 
                 <!-- Comments Toggle -->
-                <!-- <form method="GET" action="/posts/{{.ID}}#comments" class="reaction-form"> -->
                 <button type="submit" class="reaction-btn comments-btn">
                     <span>💬</span>
                     <span class="count">{{len .Comments}}</span>
@@ -61,7 +59,7 @@
         <div class="comment-form">
             <form method="POST" action="/comment/create">
                 <input type="hidden" name="postId" value="{{.ID}}">
-                <textarea name="content" placeholder="Add a comment..." required maxlength="249"></textarea>
+                <textarea name="content" placeholder="Add a comment..." required maxlength="100"></textarea>
                 <button type="submit">Post Comment</button>
             </form>
         </div>
@@ -73,8 +71,9 @@
                 <span class="comment-author">Posted by {{.Author.UserName}}</span>
                 <span class="post-date">{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
                 <p class="comment-content">{{.Content}}</p>
+                {{if $.isAuthenticated}}
                 <!-- Like Button -->
-                <form method="POST" action="/likecomment" class="reaction-form">
+                <form method="POST" action="/comment/reaction" class="reaction-form">
                     <input type="hidden" name="CommentID" value="{{.ID}}">
                     <input type="hidden" name="isLike" value="1">
                     <button type="submit" class="reaction-btn like-btn">
@@ -82,9 +81,8 @@
                         <span class="count">{{.LikeCount}}</span>
                     </button>
                 </form>
-
                 <!-- Dislike Button -->
-                <form method="POST" action="/likecomment" class="reaction-form">
+                <form method="POST" action="/comment/reaction" class="reaction-form">
                     <input type="hidden" name="CommentID" value="{{.ID}}">
                     <input type="hidden" name="isLike" value="0">
                     <button type="submit" class="reaction-btn dislike-btn">
@@ -92,6 +90,10 @@
                         <span class="count">{{.DislikeCount}}</span>
                     </button>
                 </form>
+                {{else}}
+                <span class="likes">👍 {{.LikeCount}}</span>
+                <span class="dislikes">👎 {{.DislikeCount}}</span>
+                {{end}}
 
             </div>
             {{end}}

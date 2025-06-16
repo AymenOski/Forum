@@ -65,7 +65,6 @@ func (r *PostRateLimiter) CanUserPost(userID uuid.UUID) bool {
 }
 
 func (ps *PostService) CreatePost(token string, content string, categoryIDs []*uuid.UUID) (*entity.Post, error) {
-	// flag-1: next field is temperoraly until we have a proper middleware
 	session, err := ps.sessionRepo.GetByToken(token)
 	if err != nil || session == nil {
 		return nil, err
@@ -88,7 +87,7 @@ func (ps *PostService) CreatePost(token string, content string, categoryIDs []*u
 	if content == "" {
 		return nil, errors.New("post content cannot be empty")
 	}
-	if len(content) > 5000 {
+	if len(content) > 450 {
 		return nil, errors.New("post content too long (max: 5000 characters)")
 	}
 
@@ -219,6 +218,5 @@ func (s *PostService) GetPostsByUser(userID uuid.UUID) ([]*entity.PostWithDetail
 }
 
 func (ps *PostService) GetFilteredPostsWithDetails(filter entity.PostFilter) ([]*entity.PostWithDetails, error) {
-	// Use the aggregate repository for efficient filtering
 	return ps.postAggregateRepo.GetFilteredPostsWithDetails(filter)
 }

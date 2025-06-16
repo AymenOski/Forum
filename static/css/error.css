@@ -1,57 +1,93 @@
-   body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  font-family: "montserrat", sans-serif;
-  background: linear-gradient(25deg, #c91818 0%, #ffe8e8 70%, #e76740 100%);
-  overflow: hidden;
+:root {
+    --primary-color: #00BCD4;
+    --primary-light: #4DD0E1;
+    --primary-dark: #0097A7;
+    --text-color: #1C1E21;
+    --text-secondary: #65676B;
+    --bg-color: #F0F2F5;
+    --card-bg: #FFFFFF;
+    --border-color: #E4E6EA;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 15px rgba(0, 188, 212, 0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
+    --success-color: #42B883;
+    --error-color: #E74C3C;
+    --warning-color: #F39C12;
+    --like-color: #00E676;
+    --dislike-color: #FF5252;
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "montserrat", sans-serif;
+    background: linear-gradient(25deg, var(--gradient-1) 0%, var(--gradient-2) 70%, var(--gradient-3) 100%);
+    color: var(--text-color);
+    min-height: 100vh;
+    overflow: hidden;
+    line-height: 1.6;
+}
+
 .container {
-  width: 100%;
-  position:absolute;
-  top: 30%;
-  text-align: center;
-  color: #343434;
+    width: 100%;
+    position: absolute;
+    top: 30%;
+    text-align: center;
 }
 
 .container h1 {
-<<<<<<< HEAD
-  font-size: 170px;
-=======
-  font-size: 120px;
->>>>>>> origin/ussef
-  margin: 0;
-  letter-spacing: 20px; 
-  background: linear-gradient(3deg, #450A40  40% ,#D34160 1% , #450A40 60% ,  #2d0047 1%);
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-  opacity: 0.8;
-  color: transparent;
-  -webkit-background-clip: text; /* Safari fallback */
+    font-size: 120px;
+    margin: 0;
+    letter-spacing: 20px;
+    background: linear-gradient(3deg,
+            var(--heading-gradient-1) 40%,
+            var(--heading-gradient-2) 1%,
+            var(--heading-gradient-1) 60%,
+            var(--heading-gradient-3) 1%);
+    text-shadow: var(--shadow);
+    opacity: 0.8;
+    color: transparent;
+    background-clip: text;
 }
 
 .container a {
-  text-decoration: none;
-  background:#e55039aa;
-  color: #fff;
-  padding: 12px 24px;
-  display:inline-block;
-  border-radius: 25px;
-  font-size: 14px;
-  text-transform: uppercase;
-  transition: 0.4s;
-}
-.container a:hover {
-  background: #e55039;
+    text-decoration: none;
+    background: var(--primary-light);
+    color: white;
+    padding: 12px 24px;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    margin-top: 20px;
 }
 
+.container a:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
 
 @media (max-width: 768px) {
-  .container h1 {
-    font-size: 100px;
-    letter-spacing: 10px;
-  }
-  .container a {
-    padding: 10px 20px;
-    font-size: 12px;
-  }
+    .container h1 {
+        font-size: 100px;
+        letter-spacing: 10px;
+    }
+
+    .container a {
+        padding: 10px 20px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container h1 {
+        font-size: 60px;
+        letter-spacing: 5px;
+    }
 }

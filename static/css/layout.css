@@ -32,12 +32,6 @@ body {
     min-height: 100vh;
 }
 
-/* Hide theme radio buttons */
-.theme-radio {
-    display: none;
-}
-
-/* Navbar Styles */
 .navbar {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     padding: 1rem 2rem;
@@ -91,30 +85,6 @@ body {
 .auth-buttons a:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
-}
-
-.themes {
-    display: flex;
-    align-items: center;
-}
-
-.theme-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.theme-buttons label {
-    padding: 0.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: var(--transition);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.theme-buttons label:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
 }
 
 /* Main Content */
@@ -379,7 +349,7 @@ button[type="submit"]:active {
 .post-content {
     margin-bottom: 1.5rem;
     line-height: 1.6;
-    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .post-footer {
@@ -416,17 +386,17 @@ button[type="submit"]:active {
     margin: 0;
 }
 
+
 .reaction-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 20px;
+    gap: 0.2rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
     border: none;
     background: var(--bg-color);
     cursor: pointer;
     transition: var(--transition);
-    font-size: 0.9rem;
 }
 
 .like-btn {
@@ -480,6 +450,7 @@ button[type="submit"]:active {
     font-family: inherit;
     resize: vertical;
     margin-bottom: 0.5rem;
+    word-wrap: break-word;
 }
 
 .comment-form button {
@@ -525,7 +496,7 @@ button[type="submit"]:active {
 .comment-content {
     margin: 0.5rem 0;
     line-height: 1.5;
-    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .comment-reactions {
@@ -650,11 +621,6 @@ button[type="submit"]:active {
     
     .logo-box {
         font-size: 1.5rem;
-    }
-    
-    .theme-buttons {
-        flex-wrap: wrap;
-        justify-content: center;
     }
     
     .post-toggle-wrapper {

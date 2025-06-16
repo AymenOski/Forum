@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"forum/usecase"
 
@@ -31,7 +32,7 @@ func NewCommentController(postService *usecase.PostService, commentService *usec
 func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.Request) {
 	var username string
 	var isAuthenticated bool
-	// Check session token for authentication
+
 	cookie, err := r.Cookie("session_token")
 	if err == http.ErrNoCookie {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -49,6 +50,12 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 			Error:      "Method not allowed",
 		})
 		return
+	}
+
+	user, err := cc.postService.GetUserFromSessionToken(cookie.Value)
+	if err == nil && user != nil {
+		username = user.UserName
+		isAuthenticated = true
 	}
 
 	// Parse form data
@@ -73,6 +80,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 
 	content := r.FormValue("content")
 	if content == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      "Comment cannot be empty",
@@ -85,6 +93,13 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 	// Create comment using the service
 	_, err = cc.commentService.CreateComment(&postID, cookie.Value, content)
 	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "not found") {
+			statusCode = http.StatusNotFound
+		} else if strings.Contains(err.Error(), "character") || strings.Contains(err.Error(), "empty") {
+			statusCode = http.StatusBadRequest
+		}
+		w.WriteHeader(statusCode)
 		cc.renderTemplate(w, "layout.html", map[string]interface{}{
 			"posts":           posts,
 			"form_error":      err.Error(),
@@ -94,7 +109,7 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, "/?succed=true", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (cc *CommentController) renderTemplate(w http.ResponseWriter, template string, data interface{}) {
@@ -148,6 +163,6 @@ func (cc *CommentController) HandleReactToComment(w http.ResponseWriter, r *http
 		like = false
 	}
 	cc.commentService.ReactToComment(&ID, token.Value, like)
-	// pc.postService.ReactToPost(ID, token.Value, like)
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

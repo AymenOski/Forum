@@ -61,9 +61,9 @@ func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (m *AuthMiddleware) LoggerMiddleware(next http.Handler) http.Handler {
+func (m *AuthMiddleware) Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("---> MethodType[ %s ] | Paths[ %s ]", r.Method, r.URL.Path)
+		log.Printf("---> MethodType[ %s ] | Path[ %s ]", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
