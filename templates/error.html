@@ -4,16 +4,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/css/error.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <title>Page Not Found</title>
 </head>
 
+<style>
+:root {
+    --primary-color: #00BCD4;
+    --primary-light: #4DD0E1;
+    --primary-dark: #0097A7;
+    --text-color: #1C1E21;
+    --text-secondary: #65676B;
+    --bg-color: #F0F2F5;
+    --card-bg: #FFFFFF;
+    --border-color: #E4E6EA;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 15px rgba(0, 188, 212, 0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
+    --success-color: #42B883;
+    --error-color: #E74C3C;
+    --warning-color: #F39C12;
+    --like-color: #00E676;
+    --dislike-color: #FF5252;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "montserrat", sans-serif;
+    color: var(--text-color);
+    min-height: 100vh;
+    overflow: hidden;
+    line-height: 1.6;
+    background-color: #ffffff;
+  }
+
+.container {
+    width: 100%;
+    position: absolute;
+    top: 30%;
+    text-align: center;
+    background: var(--primary-light);
+}
+
+.container  {
+  display: flex;
+  flex-direction: column;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.container .title {
+  font-size: 50px;
+  color:#ffff;
+  text-decoration-line:line-through;
+}
+
+.statusCode{
+
+    font-size: 120px;
+    text-decoration-line:line-through;
+    letter-spacing: 20px;
+    background: linear-gradient(5deg, #02BCD4   40% ,#ffffff 1% , #02BCD4 60% ,  #ffff 1%);
+    text-shadow: var(--shadow);
+    opacity: 0.8;
+    color: transparent;
+    background-clip: text;
+}
+
+.StatusErr{
+font-weight: bold;
+color: gray;
+text-decoration-line: underline;
+
+
+}
+.container a {
+    text-decoration: none;
+    background:#ffff;
+    color: var(--primary-color);
+    padding: 10px 24px;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    margin: 20px 0;
+
+}
+
+.container a:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .container h1 {
+        font-size: 100px;
+        letter-spacing: 10px;
+    }
+
+    .container a {
+        padding: 10px 20px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container h1 {
+        font-size: 60px;
+        letter-spacing: 5px;
+
+    }
+    .title{
+             font-size: 20px;
+    }
+}
+
+</style>
+
 <body>
   <div class="container">
-    <h2>Oops!</h2>
-    <h1>{{.StatusCode}}</h1>
-    <p>{{.Error}}</p>
+    <h1 class="title">Oops!</h1>
+    <h1 class="statusCode">{{.StatusCode}}</h1>
+    <p class ="StatusErr">{{.Error}}</p>
       <p><a href="/">Go back to home page</a></p>
   </div>
 </body>
