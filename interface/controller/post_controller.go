@@ -49,7 +49,7 @@ func NewPostController(postService *usecase.PostService, commentService *usecase
 		if err == http.ErrNoCookie {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
-			} else if err != nil {
+		} else if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Unexpected Error While Reading Cookie",

@@ -12,7 +12,7 @@ type ErrorMessage struct {
 
 func (c *AuthController) renderTemplate(w http.ResponseWriter, TmplName string, data interface{}) {
 	w.Header().Set("Content-type", "text/html")
-	
+
 	err := c.templates.ExecuteTemplate(w, TmplName, data)
 	if err != nil {
 		c.ShowErrorPage(w, ErrorMessage{
