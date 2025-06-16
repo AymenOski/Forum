@@ -209,7 +209,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Get query parameters
 	selectedCategoryNames := r.URL.Query()["category-filter"]
 	Radio := r.URL.Query().Get("postFilter")
 	var likedPosts, myPosts bool = false, false
@@ -249,7 +248,7 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 			if cat.Name == selected {
 				selectedIDs = append(selectedIDs, cat.ID)
 				selectedMap[selected] = true
-				break // Found the category, no need to continue inner loop
+				break
 			}
 		}
 	}

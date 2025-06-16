@@ -17,7 +17,7 @@ func isValidName(name string) bool {
 	return res
 }
 
-// 🧾 Validation: Generic Input Validation
+// Validation: Generic Input Validation
 var (
 	ErrInvalidInputFormat      = errors.New("invalid input format")
 	ErrFieldTooShort           = errors.New("input is too short")
@@ -25,7 +25,7 @@ var (
 	ErrMissingFieldsGeneric    = errors.New("required fields are missing")
 )
 
-// 📩 Post Errors
+// Post Errors
 var (
 	ErrPostNotFound     = errors.New("post not found")
 	ErrEmptyPostContent = errors.New("post content is required")
@@ -35,7 +35,7 @@ var (
 	ErrPostCreation     = errors.New("failed to create post")
 )
 
-// 💬 Comment Errors
+// Comment Errors
 var (
 	ErrCommentNotFound  = errors.New("comment not found")
 	ErrEmptyComment     = errors.New("comment content is required")
@@ -45,21 +45,21 @@ var (
 	ErrCommentCreation  = errors.New("failed to create comment")
 )
 
-// 🏷️ Category Errors
+// Category Errors
 var (
 	ErrCategoryNotFound     = errors.New("category not found")
 	ErrEmptyCategoryName    = errors.New("category name is required")
 	ErrInvalidCategoryName  = errors.New("invalid category name format")
 )
 
-// 👍 Reaction Errors
+// Reaction Errors
 var (
 	ErrReactionNotFound    = errors.New("reaction not found")
 	ErrReactionExists      = errors.New("reaction already exists")
 	ErrInvalidReactionType = errors.New("invalid reaction type")
 )
 
-// 🔐 Auth/Login Errors
+// Auth/Login Errors
 var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrInvalidCredentials    = errors.New("invalid login credentials")
@@ -70,7 +70,7 @@ var (
 	ErrUserBanned            = errors.New("user account is banned")
 )
 
-// 📝 Register Errors
+// Register Errors
 var (
 	ErrEmailAlreadyExists        = errors.New("email already registered")
 	ErrNameTaken                 = errors.New("username already taken")
