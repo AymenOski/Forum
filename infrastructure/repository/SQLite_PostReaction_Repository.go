@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SQLitePostReactionRepository implements PostReactionRepository interface
 type SQLitePostReactionRepository struct {
 	db *sql.DB
 }

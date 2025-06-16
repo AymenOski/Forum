@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SQLitePostAggregateRepository implements PostAggregateRepository interface
 type SQLitePostAggregateRepository struct {
 	db               *sql.DB
 	postRepo         repository.PostRepository
@@ -84,7 +83,6 @@ func (r *SQLitePostAggregateRepository) GetFeedForUser() ([]*entity.PostWithDeta
 	return postWithDetails, nil
 }
 
-// GetPostWithAllDetails retrieves a post with author, categories, and reaction counts , and comments!!
 func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
 	post, err := r.postRepo.GetByID(postID)
 	if err != nil {
@@ -123,7 +121,6 @@ func (r *SQLitePostAggregateRepository) GetPostWithAllDetails(postID uuid.UUID) 
 	}, nil
 }
 
-// SQLiteUserAggregateRepository implements UserAggregateRepository interface
 type SQLiteUserAggregateRepository struct {
 	db          *sql.DB
 	userRepo    repository.UserRepository
@@ -152,8 +149,8 @@ func (r *SQLiteUserAggregateRepository) CreateUserSession(user *entity.User) (*e
 
 	session := &entity.UserSession{
 		UserID:       user.ID,
-		SessionToken: uuid.New().String(),            // Generate a session token
-		ExpiresAt:    time.Now().Add(24 * time.Hour), // 24 hour session
+		SessionToken: uuid.New().String(),
+		ExpiresAt:    time.Now().Add(24 * time.Hour),
 	}
 
 	err = r.sessionRepo.Create(session)
@@ -170,9 +167,6 @@ func (r *SQLiteUserAggregateRepository) AuthenticateUser(email, password string)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// Password verification should be done in the use case layer
-	// This just creates the session after authentication
 
 	// Create new session
 	session := &entity.UserSession{

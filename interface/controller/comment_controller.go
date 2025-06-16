@@ -90,7 +90,6 @@ func (cc *CommentController) HandleCreateComment(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Create comment using the service
 	_, err = cc.commentService.CreateComment(&postID, cookie.Value, content)
 	if err != nil {
 		statusCode := http.StatusInternalServerError

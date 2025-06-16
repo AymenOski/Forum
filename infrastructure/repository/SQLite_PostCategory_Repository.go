@@ -8,8 +8,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-// SQLitePostCategoryRepository implements PostCategoryRepository interface
 type SQLitePostCategoryRepository struct {
 	db *sql.DB
 }

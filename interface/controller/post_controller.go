@@ -125,9 +125,9 @@ func (pc *PostController) HandleCreatePost(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		if strings.Contains(err.Error(), "wait a bit") {
-			statusCode = http.StatusTooManyRequests // 429 for rate limiting
+			statusCode = http.StatusTooManyRequests
 		} else if strings.Contains(err.Error(), "content") {
-			statusCode = http.StatusBadRequest // 400 for validation errors
+			statusCode = http.StatusBadRequest
 		}
 		w.WriteHeader(statusCode)
 		pc.renderTemplate(w, "layout.html", map[string]interface{}{
@@ -236,7 +236,6 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Get all categories for name-to-ID conversion
 	categories, err := pc.categoryService.GetAllCategories()
 	if err != nil {
 		pc.ShowErrorPage(w, ErrorMessage{

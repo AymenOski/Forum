@@ -16,25 +16,8 @@ func NewAuthMiddleware(authService *usecase.AuthService) *AuthMiddleware {
 	return &AuthMiddleware{authService: authService}
 }
 
-func (m *AuthMiddleware) isExist(w http.ResponseWriter, r *http.Request) bool {
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		return false
-	}
-
-	// Validate session
-	user, err := m.authService.ValidateSession(cookie.Value)
-	if err != nil {
-		_ = user
-		return false
-	}
-
-	return true
-}
-
 func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get session token from cookie
 		cookie, err := r.Cookie("session_token")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -50,7 +33,7 @@ func (m *AuthMiddleware) VerifiedAuth(next http.HandlerFunc) http.HandlerFunc {
 				Path:     "/",
 				MaxAge:   -1,
 				HttpOnly: true,
-				Secure:   false, // https
+				Secure:   false,
 			})
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
@@ -90,7 +73,7 @@ func (m *AuthMiddleware) GuestOnly(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *AuthMiddleware) Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("---> MethodType[ %s ] | Path[ %s ]", r.Method, r.URL.Path)
+		log.Printf("--> MethodType[ %s ] | Path[ %s ]", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

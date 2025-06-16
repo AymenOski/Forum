@@ -11,8 +11,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-// SQLitePostRepository implements PostRepository interface
 type SQLitePostRepository struct {
 	db *sql.DB
 }
@@ -346,7 +344,6 @@ func (r *SQLitePostRepository) Delete(postID uuid.UUID) error {
 }
 
 func (r *SQLitePostRepository) GetWithDetails(postID uuid.UUID) (*entity.PostWithDetails, error) {
-	// Basic implementation - can be extended to include more details
 	post, err := r.GetByID(postID)
 	if err != nil {
 		return nil, err
@@ -358,7 +355,6 @@ func (r *SQLitePostRepository) GetWithDetails(postID uuid.UUID) (*entity.PostWit
 }
 
 func (r *SQLitePostRepository) GetAllWithDetails() ([]*entity.PostWithDetails, error) {
-	// Basic implementation - can be extended to include more details
 	posts, err := r.GetAll()
 	if err != nil {
 		return nil, err

@@ -294,10 +294,10 @@ func (r *SQLiteCommentReactionRepository) HasUserReacted(userID, commentID uuid.
 	err := r.db.QueryRow(query, userID.String(), commentID.String()).Scan(&reaction)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil, nil // User hasn't reacted
+			return false, nil, nil
 		}
 		return false, nil, fmt.Errorf("%w: %v", custom_errors.ErrDatabaseError, err)
 	}
 
-	return true, &reaction, nil // User has reacted, return the reaction value
+	return true, &reaction, nil
 }

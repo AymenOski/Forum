@@ -84,12 +84,10 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
-		// Showing the error page with status code (bad Request)
 		w.WriteHeader(http.StatusUnauthorized)
 		c.renderTemplate(w, "login.html", map[string]interface{}{
 			"loginError": err.Error(),
-			// "username":   user.UserName,
-			"email": email,
+			"email":      email,
 		})
 		return
 	}
@@ -99,7 +97,7 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    token,
 		Path:     "/",
-		MaxAge:   86400, // 24 hours
+		MaxAge:   86400,
 		HttpOnly: true,
 	})
 
@@ -141,13 +139,11 @@ func (c *AuthController) HandleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// Get user from context (set by auth middleware)
 	user, ok := r.Context().Value("user").(*entity.User)
 	if ok {
 		c.authService.Logout(user.ID)
 	}
 
-	// Clear session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
