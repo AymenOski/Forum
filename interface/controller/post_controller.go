@@ -216,13 +216,13 @@ func (pc *PostController) HandleFilteredPosts(w http.ResponseWriter, r *http.Req
 		myPosts = true
 	} else if Radio == "likedPosts" {
 		likedPosts = true
+	} else if Radio == "" {
 	} else {
 		pc.ShowErrorPage(w, ErrorMessage{
 			StatusCode: http.StatusBadRequest,
 			Error:      "Unavailable Filter",
 		})
 		return
-
 	}
 
 	hasFilters := len(selectedCategoryNames) > 0 || myPosts || likedPosts
