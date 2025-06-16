@@ -85,10 +85,9 @@ func (c *AuthController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	token, user, err := c.authService.Login(email, password)
 	if err != nil {
 		// Showing the error page with status code (bad Request)
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		c.renderTemplate(w, "login.html", map[string]interface{}{
 			"loginError": err.Error(),
-			// "username":   user.UserName,
 			"email": email,
 		})
 		return
